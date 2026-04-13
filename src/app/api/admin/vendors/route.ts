@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendCompteActiveEmail } from "@/lib/email";
 
 export async function GET() {
   try {
@@ -27,10 +28,19 @@ export async function GET() {
 export async function PUT(req: NextRequest) {
   try {
     const { id, status } = await req.json();
+
     const vendor = await prisma.vendor.update({
       where: { id },
-      data: { status, activatedAt: status === "active" ? new Date() : undefined },
+      data: {
+        status,
+        activatedAt: status === "active" ? new Date() : undefined,
+      },
     });
+
+    if (status === "active") {
+      await sendCompteActiveEmail(vendor.name, vendor.email);
+    }
+
     return NextResponse.json({ success: true, vendor });
   } catch (error) {
     console.error(error);
