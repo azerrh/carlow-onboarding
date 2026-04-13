@@ -21,7 +21,7 @@ export default function LoginPage() {
     const data = await res.json();
     if (data.success) {
       localStorage.setItem("vendorId", data.vendorId);
-      router.push("/step-2-company");
+      router.push("/dashboard");
     } else {
       setError(data.error || "Email ou mot de passe incorrect");
       setLoading(false);
