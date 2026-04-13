@@ -5,7 +5,19 @@ import { StepperBar } from "@/components/onboarding/StepperBar";
 export default function StepCompanyPage() {
   const router = useRouter();
   const [form, setForm] = useState({ company:"", siret:"", vat:"", legal:"SAS", address:"" });
-  function handleSubmit(e: React.FormEvent) { e.preventDefault(); router.push("/step-3-documents"); }
+  async function handleSubmit(e: React.FormEvent) {
+  e.preventDefault();
+  const vendorId = localStorage.getItem("vendorId");
+  const res = await fetch("/api/vendor/company", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ vendorId, ...form }),
+  });
+  const data = await res.json();
+  if (data.success) {
+    router.push("/step-3-documents");
+  }
+}
   return (
     <div style={{display:"flex",minHeight:"100vh",alignItems:"center",justifyContent:"center",background:"#f9f7f4"}}>
       <div style={{background:"white",borderRadius:12,padding:"32px",width:"100%",maxWidth:520,border:"1px solid #e5e3df"}}>

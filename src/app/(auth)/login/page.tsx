@@ -1,10 +1,9 @@
-﻿"use client";
+"use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function RegisterPage() {
+export default function LoginPage() {
   const router = useRouter();
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -14,17 +13,17 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const res = await fetch("/api/auth/register", {
+    const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ email, password }),
     });
     const data = await res.json();
     if (data.success) {
       localStorage.setItem("vendorId", data.vendorId);
       router.push("/step-2-company");
     } else {
-      setError(data.error);
+      setError(data.error || "Email ou mot de passe incorrect");
       setLoading(false);
     }
   }
@@ -37,36 +36,47 @@ export default function RegisterPage() {
           <span style={{fontWeight:500,fontSize:18}}>arlow</span>
           <span style={{color:"#888",fontSize:13,marginLeft:4}}>Portail vendeur</span>
         </div>
-        <h1 style={{fontSize:20,fontWeight:500,margin:"0 0 6px"}}>Creez votre espace vendeur</h1>
-        <p style={{color:"#666",fontSize:14,margin:"0 0 24px"}}>Vendez vos equipements EnR sur Carlow</p>
+        <h1 style={{fontSize:20,fontWeight:500,margin:"0 0 6px"}}>Connectez-vous</h1>
+        <p style={{color:"#666",fontSize:14,margin:"0 0 24px"}}>Acces a votre espace vendeur Carlow</p>
         <form onSubmit={handleSubmit}>
           <div style={{marginBottom:14}}>
-            <label style={{fontSize:13,color:"#666",display:"block",marginBottom:4}}>Nom complet</label>
-            <input value={name} onChange={e=>setName(e.target.value)} placeholder="Paul-Emile Dours" required
-              style={{width:"100%",padding:"8px 12px",borderRadius:8,border:"1px solid #e5e3df",fontSize:14,boxSizing:"border-box"}} />
-          </div>
-          <div style={{marginBottom:14}}>
-            <label style={{fontSize:13,color:"#666",display:"block",marginBottom:4}}>Email professionnel</label>
-            <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="contact@entreprise.fr" required
-              style={{width:"100%",padding:"8px 12px",borderRadius:8,border:"1px solid #e5e3df",fontSize:14,boxSizing:"border-box"}} />
+            <label style={{fontSize:13,color:"#666",display:"block",marginBottom:4}}>Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="contact@entreprise.fr"
+              required
+              style={{width:"100%",padding:"8px 12px",borderRadius:8,border:"1px solid #e5e3df",fontSize:14,boxSizing:"border-box"}}
+            />
           </div>
           <div style={{marginBottom:20}}>
             <label style={{fontSize:13,color:"#666",display:"block",marginBottom:4}}>Mot de passe</label>
-            <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="8 caracteres minimum" required minLength={8}
-              style={{width:"100%",padding:"8px 12px",borderRadius:8,border:"1px solid #e5e3df",fontSize:14,boxSizing:"border-box"}} />
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="Votre mot de passe"
+              required
+              style={{width:"100%",padding:"8px 12px",borderRadius:8,border:"1px solid #e5e3df",fontSize:14,boxSizing:"border-box"}}
+            />
           </div>
           {error && (
             <div style={{background:"#fff0f0",color:"#cc0000",padding:"8px 12px",borderRadius:8,fontSize:13,marginBottom:14}}>
               {error}
             </div>
           )}
-          <button type="submit" disabled={loading}
-            style={{width:"100%",padding:"10px",background:loading?"#f0a070":"#E87A30",color:"white",border:"none",borderRadius:8,fontSize:14,fontWeight:500,cursor:loading?"not-allowed":"pointer"}}>
-            {loading ? "Chargement..." : "Creer mon compte"}
+          <button
+            type="submit"
+            disabled={loading}
+            style={{width:"100%",padding:"10px",background:loading?"#f0a070":"#E87A30",color:"white",border:"none",borderRadius:8,fontSize:14,fontWeight:500,cursor:"pointer"}}
+          >
+            {loading ? "Connexion..." : "Se connecter"}
           </button>
         </form>
         <p style={{textAlign:"center",fontSize:13,color:"#888",marginTop:16}}>
-          Deja un compte ? <a href="/login" style={{color:"#E87A30",textDecoration:"none"}}>Se connecter</a>
+          Pas encore de compte ?{" "}
+          <a href="/register" style={{color:"#E87A30",textDecoration:"none"}}>Creer un compte</a>
         </p>
       </div>
     </div>

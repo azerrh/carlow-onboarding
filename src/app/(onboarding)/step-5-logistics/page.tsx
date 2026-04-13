@@ -5,7 +5,25 @@ import { StepperBar } from "@/components/onboarding/StepperBar";
 export default function StepLogisticsPage() {
   const router = useRouter();
   const [form, setForm] = useState({ address:"", days:"3", weight:"800", incoterms:"DDP" });
-  function handleSubmit(e: React.FormEvent) { e.preventDefault(); router.push("/step-6-confirmation"); }
+  async function handleSubmit(e: React.FormEvent) {
+  e.preventDefault();
+  const vendorId = localStorage.getItem("vendorId");
+  const res = await fetch("/api/vendor/logistics", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      vendorId,
+      address: form.address,
+      days: form.days,
+      weight: form.weight,
+      incoterms: form.incoterms,
+    }),
+  });
+  const data = await res.json();
+  if (data.success) {
+    router.push("/step-6-confirmation");
+  }
+}
   return (
     <div style={{display:"flex",minHeight:"100vh",alignItems:"center",justifyContent:"center",background:"#f9f7f4"}}>
       <div style={{background:"white",borderRadius:12,padding:"32px",width:"100%",maxWidth:520,border:"1px solid #e5e3df"}}>

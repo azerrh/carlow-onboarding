@@ -1,0 +1,48 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+
+export async function POST(req: NextRequest) {
+  try {
+    const { name, email, password } = await req.json();
+
+    if (!name || !email || !password) {
+      return NextResponse.json(
+        { error: "Tous les champs sont requis" },
+        { status: 400 }
+      );
+    }
+
+    const existing = await prisma.vendor.findUnique({
+      where: { email },
+    });
+
+    if (existing) {
+      return NextResponse.json(
+        { error: "Email deja utilise" },
+        { status: 400 }
+      );
+    }
+
+    const vendor = await prisma.vendor.create({
+      data: {
+        name,
+        email,
+        password,
+        status: "pending",
+        onboardingStep: 1,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      vendorId: vendor.id,
+      message: "Compte cree avec succes",
+    });
+
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Erreur serveur" },
+      { status: 500 }
+    );
+  }
+}

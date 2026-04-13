@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Vendor {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  password      String
+  status        String   @default("pending")
+  companyName   String?
+  siret         String?
+  vatNumber     String?
+  vatValid      Boolean  @default(false)
+  legalForm     String?
+  address       String?
+  iban          String?
+  incoterms     String?
+  onboardingStep Int     @default(1)
+  createdAt     DateTime @default(now())
+  activatedAt   DateTime?
+  documents     Document[]
+  certifications Certification[]
+}
+
+model Document {
+  id         String   @id @default(cuid())
+  vendorId   String
+  vendor     Vendor   @relation(fields: [vendorId], references: [id])
+  type       String
+  filename   String
+  s3Key      String
+  status     String   @default("pending")
+  uploadedAt DateTime @default(now())
+}
+
+model Certification {
+  id         String   @id @default(cuid())
+  vendorId   String
+  vendor     Vendor   @relation(fields: [vendorId], references: [id])
+  certType   String
+  filename   String
+  s3Key      String
+  category   String
+  uploadedAt DateTime @default(now())
+}
