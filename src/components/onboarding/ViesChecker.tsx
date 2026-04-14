@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useRef, useState } from "react";
 
 interface Props {
   value: string;
@@ -10,42 +10,46 @@ interface Props {
 export function ViesChecker({ value, onChange, onValidated }: Props) {
   const [status, setStatus] = useState<"idle"|"checking"|"valid"|"invalid">("idle");
   const [companyName, setCompanyName] = useState("");
-  const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    if (timer) clearTimeout(timer);
+  async function checkVat(nextValue: string) {
+    try {
+      const res = await fetch(`/api/vies/check?vat=${encodeURIComponent(nextValue)}`);
+      const data = await res.json();
 
-    if (!value || value.length < 6) {
+      if (data.valid) {
+        setStatus("valid");
+        setCompanyName(data.name || "");
+        onValidated(true, data.name);
+      } else {
+        setStatus("invalid");
+        setCompanyName("");
+        onValidated(false);
+      }
+    } catch {
+      setStatus("invalid");
+      onValidated(false);
+    }
+  }
+
+  function handleChange(nextRaw: string) {
+    const next = nextRaw.toUpperCase();
+    onChange(next);
+
+    if (timerRef.current) clearTimeout(timerRef.current);
+
+    if (!next || next.length < 6) {
       setStatus("idle");
+      setCompanyName("");
       onValidated(false);
       return;
     }
 
     setStatus("checking");
-
-    const t = setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/vies/check?vat=${encodeURIComponent(value)}`);
-        const data = await res.json();
-
-        if (data.valid) {
-          setStatus("valid");
-          setCompanyName(data.name || "");
-          onValidated(true, data.name);
-        } else {
-          setStatus("invalid");
-          setCompanyName("");
-          onValidated(false);
-        }
-      } catch {
-        setStatus("invalid");
-        onValidated(false);
-      }
+    timerRef.current = setTimeout(() => {
+      void checkVat(next);
     }, 1000);
-
-    setTimer(t);
-    return () => clearTimeout(t);
-  }, [value]);
+  }
 
   const badge = {
     idle:     { text: "VIES",            bg: "#f1efe8", color: "#888" },
@@ -62,7 +66,7 @@ export function ViesChecker({ value, onChange, onValidated }: Props) {
       <div style={{display:"flex",gap:8,alignItems:"center"}}>
         <input
           value={value}
-          onChange={e => onChange(e.target.value.toUpperCase())}
+          onChange={(e) => handleChange(e.target.value)}
           placeholder="FR12345678901"
           style={{flex:1,padding:"8px 10px",borderRadius:8,
             border:`1px solid ${status==="valid"?"#22a06b":status==="invalid"?"#cc0000":"#e5e3df"}`,

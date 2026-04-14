@@ -1,6 +1,11 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Brand } from "@/components/ui/Brand";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Field } from "@/components/ui/Field";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -29,61 +34,56 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{display:"flex",minHeight:"100vh",background:"#f9f7f4",alignItems:"center",justifyContent:"center"}}>
-      <div style={{width:"100%",maxWidth:420,background:"white",borderRadius:16,padding:40,boxShadow:"0 4px 24px rgba(0,0,0,0.08)",border:"1px solid #e5e3df"}}>
-        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:32}}>
-          <div style={{width:36,height:36,background:"#E87A30",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",color:"white",fontWeight:700,fontSize:18}}>C</div>
-          <span style={{fontWeight:600,fontSize:20,color:"#1a1a1a"}}>arlow</span>
-          <span style={{background:"#fff7f0",color:"#E87A30",fontSize:11,padding:"2px 8px",borderRadius:20,fontWeight:500,border:"1px solid #ffd9b8"}}>Portail vendeur</span>
-        </div>
+    <div className="portal-page grid min-h-screen place-items-center px-4 py-10">
+      <Card className="w-full max-w-[440px] p-8 sm:p-10">
+        <Brand className="mb-7" />
 
-        <h1 style={{fontSize:24,fontWeight:600,color:"#1a1a1a",margin:"0 0 6px"}}>Bon retour !</h1>
-        <p style={{color:"#666",fontSize:14,margin:"0 0 28px"}}>Connectez-vous a votre espace vendeur</p>
+        <h1 className="text-2xl font-semibold tracking-tight">Bon retour !</h1>
+        <p className="mt-1 text-sm text-[rgb(var(--muted))]">
+          Connectez-vous à votre espace vendeur
+        </p>
 
-        <form onSubmit={handleSubmit}>
-          <div style={{marginBottom:16}}>
-            <label style={{fontSize:13,fontWeight:500,color:"#333",display:"block",marginBottom:6}}>Email professionnel</label>
-            <input
+        <form onSubmit={handleSubmit} className="mt-7 space-y-4">
+          <Field label="Email professionnel">
+            <Input
               type="email"
               value={email}
-              onChange={e=>setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="contact@entreprise.fr"
               required
-              style={{width:"100%",padding:"10px 14px",borderRadius:8,border:"1.5px solid #e5e3df",fontSize:14,outline:"none",boxSizing:"border-box" as const,fontFamily:"inherit",color:"#1a1a1a",background:"white"}}
+              autoComplete="email"
             />
-          </div>
-          <div style={{marginBottom:24}}>
-            <label style={{fontSize:13,fontWeight:500,color:"#333",display:"block",marginBottom:6}}>Mot de passe</label>
-            <input
+          </Field>
+
+          <Field label="Mot de passe">
+            <Input
               type="password"
               value={password}
-              onChange={e=>setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="Votre mot de passe"
               required
-              style={{width:"100%",padding:"10px 14px",borderRadius:8,border:"1.5px solid #e5e3df",fontSize:14,outline:"none",boxSizing:"border-box" as const,fontFamily:"inherit",color:"#1a1a1a",background:"white"}}
+              autoComplete="current-password"
             />
-          </div>
+          </Field>
 
           {error && (
-            <div style={{background:"#fff0f0",color:"#cc0000",padding:"10px 14px",borderRadius:8,fontSize:13,marginBottom:16,border:"1px solid #ffd0d0"}}>
+            <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
               {error}
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{width:"100%",padding:"12px",background:loading?"#f0a070":"#E87A30",color:"white",border:"none",borderRadius:8,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}
-          >
+          <Button type="submit" disabled={loading} className="w-full">
             {loading ? "Connexion..." : "Se connecter →"}
-          </button>
+          </Button>
         </form>
 
-        <div style={{textAlign:"center",marginTop:24,paddingTop:20,borderTop:"1px solid #f1efe8"}}>
-          <span style={{fontSize:14,color:"#666"}}>Pas encore de compte ? </span>
-          <a href="/register" style={{fontSize:14,fontWeight:500,color:"#E87A30",textDecoration:"none"}}>Creer un compte</a>
+        <div className="mt-7 border-t border-black/5 pt-5 text-center text-sm text-[rgb(var(--muted))]">
+          <span>Pas encore de compte ? </span>
+          <a className="font-semibold text-[rgb(var(--primary))]" href="/register">
+            Créer un compte
+          </a>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

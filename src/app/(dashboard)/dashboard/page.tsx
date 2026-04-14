@@ -1,6 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Brand } from "@/components/ui/Brand";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { cn } from "@/lib/cn";
 
 interface Vendor {
   id: string;
@@ -26,11 +30,12 @@ export default function DashboardPage() {
       .catch(() => { router.push("/login"); });
   }, [router]);
 
-  if (loading) return (
-    <div style={{display:"flex",minHeight:"100vh",alignItems:"center",justifyContent:"center",background:"#f9f7f4"}}>
-      <div style={{fontSize:14,color:"#888"}}>Chargement...</div>
-    </div>
-  );
+  if (loading)
+    return (
+      <div className="portal-page grid min-h-screen place-items-center">
+        <div className="text-sm text-[rgb(var(--muted))]">Chargement...</div>
+      </div>
+    );
 
   const steps = [
     { label: "Compte", done: true },
@@ -49,75 +54,136 @@ export default function DashboardPage() {
                       vendor?.status === "active" ? "Compte actif" : "En cours";
 
   return (
-    <div style={{minHeight:"100vh",background:"#f9f7f4"}}>
-      <div style={{background:"white",borderBottom:"1px solid #e5e3df",padding:"14px 24px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <div style={{width:28,height:28,background:"#E87A30",borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",color:"white",fontWeight:600,fontSize:14}}>C</div>
-          <span style={{fontWeight:500,fontSize:18}}>arlow</span>
-          <span style={{color:"#888",fontSize:13,marginLeft:4}}>Portail vendeur</span>
-        </div>
-        <div style={{display:"flex",alignItems:"center",gap:12}}>
-          <span style={{fontSize:13,color:"#666"}}>{vendor?.name}</span>
-          <button onClick={()=>{ localStorage.removeItem("vendorId"); router.push("/login"); }}
-            style={{fontSize:12,color:"#888",background:"none",border:"0.5px solid #e5e3df",borderRadius:6,padding:"4px 10px",cursor:"pointer"}}>
-            Deconnexion
-          </button>
+    <div className="portal-page min-h-screen">
+      <div className="sticky top-0 z-10 border-b border-[rgb(var(--border))] bg-white/80 backdrop-blur">
+        <div className="mx-auto flex max-w-[980px] items-center justify-between px-4 py-3">
+          <Brand variant="compact" />
+          <div className="flex items-center gap-3">
+            <span className="hidden text-sm text-[rgb(var(--muted))] sm:inline">
+              {vendor?.name}
+            </span>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                localStorage.removeItem("vendorId");
+                router.push("/login");
+              }}
+            >
+              Déconnexion
+            </Button>
+          </div>
         </div>
       </div>
 
-      <div style={{maxWidth:900,margin:"0 auto",padding:"32px 24px"}}>
-        <h1 style={{fontSize:20,fontWeight:500,margin:"0 0 4px"}}>Bonjour, {vendor?.name} !</h1>
-        <p style={{color:"#666",fontSize:14,margin:"0 0 28px"}}>Voici l etat de votre dossier vendeur Carlow.</p>
+      <div className="mx-auto max-w-[980px] px-4 py-10">
+        <h1 className="text-xl font-semibold tracking-tight">
+          Bonjour, {vendor?.name} !
+        </h1>
+        <p className="mt-1 text-sm text-[rgb(var(--muted))]">
+          Voici l’état de votre dossier vendeur Carlow.
+        </p>
 
-        <div style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:12,marginBottom:28}}>
-          <div style={{background:"white",borderRadius:10,padding:"16px 20px",border:"1px solid #e5e3df"}}>
-            <div style={{fontSize:12,color:"#888",marginBottom:6}}>Statut dossier</div>
-            <div style={{fontSize:18,fontWeight:500,color:statusColor}}>{statusLabel}</div>
-          </div>
-          <div style={{background:"white",borderRadius:10,padding:"16px 20px",border:"1px solid #e5e3df"}}>
-            <div style={{fontSize:12,color:"#888",marginBottom:6}}>Progression</div>
-            <div style={{fontSize:18,fontWeight:500,color:"#E87A30"}}>{progress}%</div>
-          </div>
-          <div style={{background:"white",borderRadius:10,padding:"16px 20px",border:"1px solid #e5e3df"}}>
-            <div style={{fontSize:12,color:"#888",marginBottom:6}}>Societe</div>
-            <div style={{fontSize:15,fontWeight:500,color:"#333"}}>{vendor?.companyName || "Non renseignee"}</div>
-          </div>
+        <div className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <Card className="p-5">
+            <div className="text-xs font-medium text-[rgb(var(--muted))]">
+              Statut dossier
+            </div>
+            <div
+              className="mt-1 text-lg font-semibold"
+              style={{ color: statusColor }}
+            >
+              {statusLabel}
+            </div>
+          </Card>
+          <Card className="p-5">
+            <div className="text-xs font-medium text-[rgb(var(--muted))]">
+              Progression
+            </div>
+            <div className="mt-1 text-lg font-semibold text-[rgb(var(--primary))]">
+              {progress}%
+            </div>
+          </Card>
+          <Card className="p-5">
+            <div className="text-xs font-medium text-[rgb(var(--muted))]">
+              Société
+            </div>
+            <div className="mt-1 text-sm font-semibold text-[rgb(var(--fg))]">
+              {vendor?.companyName || "Non renseignée"}
+            </div>
+          </Card>
         </div>
 
-        <div style={{background:"white",borderRadius:10,padding:"20px 24px",border:"1px solid #e5e3df",marginBottom:20}}>
-          <div style={{fontSize:14,fontWeight:500,marginBottom:16}}>Progression du dossier</div>
-          <div style={{background:"#f1efe8",borderRadius:20,height:8,marginBottom:20}}>
-            <div style={{background:"#E87A30",borderRadius:20,height:8,width:`${progress}%`,transition:"width .5s"}} />
+        <Card className="mt-5 p-6">
+          <div className="text-sm font-semibold">Progression du dossier</div>
+          <div className="mt-4 h-2 w-full rounded-full bg-black/5">
+            <div
+              className="h-2 rounded-full bg-[rgb(var(--primary))] transition-[width] duration-500"
+              style={{ width: `${progress}%` }}
+            />
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:10}}>
+
+          <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3">
             {steps.map((step, i) => (
-              <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 12px",borderRadius:8,background:step.done?"#fff7f0":"#f9f7f4",border:`1px solid ${step.done?"#E87A30":"#e5e3df"}`}}>
-                <div style={{width:20,height:20,borderRadius:"50%",background:step.done?"#E87A30":"#e5e3df",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:"white",fontWeight:600,flexShrink:0}}>
-                  {step.done ? "v" : i+1}
+              <div
+                key={i}
+                className={cn(
+                  "flex items-center gap-2 rounded-xl border px-3 py-2.5",
+                  step.done
+                    ? "border-[rgb(var(--primary))]/40 bg-[rgb(var(--primary))]/[0.06]"
+                    : "border-[rgb(var(--border))] bg-white/40",
+                )}
+              >
+                <div
+                  className={cn(
+                    "grid h-6 w-6 place-items-center rounded-full text-[11px] font-bold",
+                    step.done
+                      ? "bg-[rgb(var(--primary))] text-white"
+                      : "bg-black/10 text-[rgb(var(--muted))]",
+                  )}
+                >
+                  {step.done ? "✓" : i + 1}
                 </div>
-                <span style={{fontSize:12,fontWeight:step.done?500:400,color:step.done?"#E87A30":"#888"}}>{step.label}</span>
+                <span
+                  className={cn(
+                    "text-xs font-medium",
+                    step.done
+                      ? "text-[rgb(var(--primary))]"
+                      : "text-[rgb(var(--muted))]",
+                  )}
+                >
+                  {step.label}
+                </span>
               </div>
             ))}
           </div>
-        </div>
+        </Card>
 
         {(vendor?.onboardingStep ?? 0) < 6 && vendor?.status !== "submitted" && (
-          <div style={{background:"#fff7f0",borderRadius:10,padding:"16px 20px",border:"1px solid #E87A30",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div className="mt-5 flex flex-col gap-3 rounded-[var(--radius)] border border-[rgb(var(--primary))]/40 bg-[rgb(var(--primary))]/[0.06] p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <div style={{fontSize:14,fontWeight:500,color:"#E87A30",marginBottom:2}}>Dossier incomplet</div>
-              <div style={{fontSize:13,color:"#666"}}>Completez votre dossier pour activer votre compte vendeur.</div>
+              <div className="text-sm font-semibold text-[rgb(var(--primary))]">
+                Dossier incomplet
+              </div>
+              <div className="mt-0.5 text-sm text-[rgb(var(--muted))]">
+                Complétez votre dossier pour activer votre compte vendeur.
+              </div>
             </div>
-            <button onClick={()=>router.push("/step-2-company")}
-              style={{padding:"8px 16px",background:"#E87A30",color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:500,cursor:"pointer",whiteSpace:"nowrap"}}>
+            <Button onClick={() => router.push("/step-2-company")}>
               Continuer
-            </button>
+            </Button>
           </div>
         )}
 
         {vendor?.status === "submitted" && (
-          <div style={{background:"#f0faf5",borderRadius:10,padding:"16px 20px",border:"1px solid #22a06b"}}>
-            <div style={{fontSize:14,fontWeight:500,color:"#22a06b",marginBottom:2}}>Dossier en cours de verification</div>
-            <div style={{fontSize:13,color:"#666"}}>Notre equipe verifie votre dossier sous 24-48h. Vous recevrez un email de confirmation.</div>
+          <div className="mt-5 rounded-[var(--radius)] border border-[rgb(var(--success))]/35 bg-[rgb(var(--success))]/[0.06] p-5">
+            <div className="text-sm font-semibold text-[rgb(var(--success))]">
+              Dossier en cours de vérification
+            </div>
+            <div className="mt-0.5 text-sm text-[rgb(var(--muted))]">
+              Notre équipe vérifie votre dossier sous 24-48h. Vous recevrez un
+              email de confirmation.
+            </div>
           </div>
         )}
       </div>
