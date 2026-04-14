@@ -27,42 +27,65 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(bytes);
     const filename = `${vendorId}/${type}/${Date.now()}_${file.name}`;
 
-    const { error } = await supabaseAdmin.storage
+    const { error: uploadError } = await supabaseAdmin.storage
       .from("documents")
       .upload(filename, buffer, {
         contentType: file.type,
-        upsert: true,
+        upsert: false, // Changed to false to avoid overwriting without record update
       });
 
-    if (error) {
-      console.error("Supabase upload error:", error);
+    if (uploadError) {
+      console.error("Supabase upload error:", uploadError);
       return NextResponse.json({ error: "Erreur upload" }, { status: 500 });
     }
 
     const { data: urlData } = supabaseAdmin.storage
       .from("documents")
       .getPublicUrl(filename);
+    const signed = await supabaseAdmin.storage
+      .from("documents")
+      .createSignedUrl(filename, 60 * 30);
 
+    if (signed.error) {
+      console.error("Supabase signed URL error:", signed.error);
+      // Continue with public URL as fallback
+    }
+
+    let transactionError = null;
     await prisma.$transaction(async (tx) => {
-      if (previous) {
-        await tx.document.delete({ where: { id: previous.id } });
+      try {
+        if (previous) {
+          await tx.document.delete({ where: { id: previous.id } });
+        }
+
+        await tx.document.create({
+          data: {
+            vendorId,
+            type,
+            filename: file.name,
+            s3Key: filename,
+            status: "uploaded",
+          },
+        });
+
+        await tx.vendor.update({
+          where: { id: vendorId },
+          data: { onboardingStep: 4 },
+        });
+      } catch (error) {
+        transactionError = error;
+        throw error;
       }
-
-      await tx.document.create({
-        data: {
-          vendorId,
-          type,
-          filename: file.name,
-          s3Key: filename,
-          status: "uploaded",
-        },
-      });
-
-      await tx.vendor.update({
-        where: { id: vendorId },
-        data: { onboardingStep: 4 },
-      });
     });
+
+    if (transactionError) {
+      // Transaction failed, remove the uploaded file
+      const { error: removeError } = await supabaseAdmin.storage
+        .from("documents")
+        .remove([filename]);
+      if (removeError) console.error("Supabase cleanup error:", removeError);
+      throw transactionError;
+    }
 
     if (previous?.s3Key) {
       const { error: removeError } = await supabaseAdmin.storage
@@ -75,7 +98,7 @@ export async function POST(req: NextRequest) {
       success: true,
       filename: file.name,
       key: filename,
-      publicUrl: urlData.publicUrl,
+      publicUrl: signed.data?.signedUrl ?? urlData.publicUrl,
     });
   } catch (error) {
     console.error(error);

@@ -27,10 +27,22 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const withUrls = documents.map((d) => {
-      const { data } = supabaseAdmin.storage.from("documents").getPublicUrl(d.s3Key);
-      return { ...d, publicUrl: data.publicUrl };
-    });
+    const withUrls = await Promise.all(
+      documents.map(async (d) => {
+        // Bucket privé: on préfère une URL signée
+        const signed = await supabaseAdmin.storage
+          .from("documents")
+          .createSignedUrl(d.s3Key, 60 * 30); // 30 minutes
+
+        if (!signed.error && signed.data?.signedUrl) {
+          return { ...d, publicUrl: signed.data.signedUrl };
+        }
+
+        // Bucket public: fallback
+        const { data } = supabaseAdmin.storage.from("documents").getPublicUrl(d.s3Key);
+        return { ...d, publicUrl: data.publicUrl };
+      }),
+    );
 
     return NextResponse.json({ success: true, documents: withUrls });
   } catch (error) {
