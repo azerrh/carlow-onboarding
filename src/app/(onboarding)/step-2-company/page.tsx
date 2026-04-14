@@ -16,9 +16,9 @@ export default function StepCompanyPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!vatValid) {
-      setError("Veuillez entrer un numero TVA valide avant de continuer.");
-      return;
+    if (form.vat.length < 4) {
+  setError("Veuillez entrer un numero TVA.");
+  return;
     }
     setLoading(true);
     setError("");

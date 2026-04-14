@@ -79,8 +79,8 @@ export function ViesChecker({ value, onChange, onValidated }: Props) {
         </div>
       )}
       {status === "invalid" && (
-        <div style={{fontSize:11,color:"#cc0000",marginTop:4}}>
-          Numero TVA non reconnu par le systeme VIES europeen
+        <div style={{fontSize:11,color:"#E87A30",marginTop:4}}>
+          Service VIES indisponible — le numero sera verifie ulterieurement
         </div>
       )}
     </div>
