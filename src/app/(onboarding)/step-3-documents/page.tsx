@@ -1,7 +1,11 @@
 ﻿"use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { StepperBar } from "@/components/onboarding/StepperBar";
+import { Brand } from "@/components/ui/Brand";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { cn } from "@/lib/cn";
 
 const DOCS = [
   { key: "kbis",    label: "K-Bis (moins de 3 mois)",  desc: "Cliquer pour deposer" },
@@ -14,12 +18,61 @@ export default function StepDocumentsPage() {
   const router = useRouter();
   const [uploads, setUploads] = useState<Record<string, "idle"|"uploading"|"done"|"error">>({});
   const [fileNames, setFileNames] = useState<Record<string, string>>({});
-  const refs = Object.fromEntries(DOCS.map(d => [d.key, useRef<HTMLInputElement>(null)]));
+  const [fileUrls, setFileUrls] = useState<Record<string, string>>({});
+  const [globalError, setGlobalError] = useState<string>("");
+  const kbisRef = useRef<HTMLInputElement>(null);
+  const statutsRef = useRef<HTMLInputElement>(null);
+  const idRef = useRef<HTMLInputElement>(null);
+  const ribRef = useRef<HTMLInputElement>(null);
+
+  const refs: Record<string, React.RefObject<HTMLInputElement | null>> = {
+    kbis: kbisRef,
+    statuts: statutsRef,
+    id: idRef,
+    rib: ribRef,
+  };
+
+  useEffect(() => {
+    const vendorId = localStorage.getItem("vendorId");
+    if (!vendorId) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/vendor/documents?vendorId=${encodeURIComponent(vendorId)}`);
+        const data = await res.json();
+        if (!res.ok || !data.success) return;
+        if (cancelled) return;
+
+        const nextUploads: Record<string, "done"> = {};
+        const nextNames: Record<string, string> = {};
+        const nextUrls: Record<string, string> = {};
+
+        for (const d of data.documents as Array<{ type: string; filename: string; publicUrl?: string }>) {
+          if (!DOCS.some((x) => x.key === d.type)) continue;
+          nextUploads[d.type] = "done";
+          nextNames[d.type] = d.filename;
+          if (d.publicUrl) nextUrls[d.type] = d.publicUrl;
+        }
+
+        setUploads((u) => ({ ...u, ...nextUploads }));
+        setFileNames((f) => ({ ...f, ...nextNames }));
+        setFileUrls((f) => ({ ...f, ...nextUrls }));
+      } catch {
+        // silencieux: step doit rester utilisable même si listing down
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function handleFile(key: string, file: File) {
     const vendorId = localStorage.getItem("vendorId");
     if (!vendorId) { alert("Reconnectez-vous"); return; }
 
+    setGlobalError("");
     setUploads(u => ({ ...u, [key]: "uploading" }));
     setFileNames(f => ({ ...f, [key]: file.name }));
 
@@ -31,93 +84,158 @@ export default function StepDocumentsPage() {
     try {
       const res = await fetch("/api/vendor/upload", { method: "POST", body: formData });
       const data = await res.json();
-      setUploads(u => ({ ...u, [key]: data.success ? "done" : "error" }));
+      if (!res.ok || !data.success) {
+        setUploads((u) => ({ ...u, [key]: "error" }));
+        setGlobalError(data?.error || "Upload impossible. Vérifiez la configuration du stockage.");
+        return;
+      }
+
+      setUploads((u) => ({ ...u, [key]: "done" }));
+      if (data.publicUrl) setFileUrls((f) => ({ ...f, [key]: data.publicUrl }));
     } catch {
       setUploads(u => ({ ...u, [key]: "error" }));
+      setGlobalError("Erreur réseau pendant l’upload.");
     }
   }
 
   const allDone = DOCS.every(d => uploads[d.key] === "done");
 
   return (
-    <div style={{display:"flex",minHeight:"100vh",background:"#f9f7f4",alignItems:"center",justifyContent:"center",padding:24}}>
-      <div style={{width:"100%",maxWidth:560,background:"white",borderRadius:16,padding:40,boxShadow:"0 4px 24px rgba(0,0,0,0.08)",border:"1px solid #e5e3df"}}>
-        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:24}}>
-          <div style={{width:36,height:36,background:"#E87A30",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",color:"white",fontWeight:700,fontSize:18}}>C</div>
-          <span style={{fontWeight:600,fontSize:20}}>arlow</span>
-        </div>
+    <div className="portal-page grid min-h-screen place-items-center px-4 py-10">
+      <Card className="w-full max-w-[640px] p-8 sm:p-10">
+        <Brand className="mb-5" />
         <StepperBar current={2} />
-        <h1 style={{fontSize:22,fontWeight:600,margin:"0 0 6px"}}>Documents reglementaires</h1>
-        <p style={{color:"#666",fontSize:14,margin:"0 0 24px"}}>Deposez les 4 documents obligatoires.</p>
 
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:24}}>
-          {DOCS.map(doc => {
+        <h1 className="mt-4 text-2xl font-semibold tracking-tight">
+          Documents réglementaires
+        </h1>
+        <p className="mt-1 text-sm text-[rgb(var(--muted))]">
+          Déposez les 4 documents obligatoires.
+        </p>
+
+        {globalError && (
+          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {globalError}
+          </div>
+        )}
+
+        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {DOCS.map((doc) => {
             const status = uploads[doc.key] || "idle";
             const isDone = status === "done";
             const isUploading = status === "uploading";
             const isError = status === "error";
 
             return (
-              <div key={doc.key}>
+              <div key={doc.key} className="space-y-2">
                 <input
                   ref={refs[doc.key]}
                   type="file"
                   accept=".pdf,.jpg,.jpeg,.png"
-                  style={{display:"none"}}
-                  onChange={e => {
+                  className="hidden"
+                  onChange={(e) => {
                     const file = e.target.files?.[0];
-                    if (file) handleFile(doc.key, file);
+                    if (file) void handleFile(doc.key, file);
+                    // permet de re-uploader le même fichier
+                    e.currentTarget.value = "";
                   }}
                 />
-                <div
+
+                <button
+                  type="button"
                   onClick={() => refs[doc.key].current?.click()}
-                  style={{
-                    border:`2px ${isDone?"solid":"dashed"} ${isDone?"#22a06b":isError?"#cc0000":"#e5e3df"}`,
-                    borderRadius:10,
-                    padding:"20px 16px",
-                    textAlign:"center",
-                    cursor:"pointer",
-                    background:isDone?"#f0faf5":isError?"#fff0f0":"#fafaf8",
-                    transition:"all 0.2s",
-                    userSelect:"none" as const,
-                  }}
+                  className={cn(
+                    "w-full rounded-2xl border-2 px-4 py-5 text-left transition",
+                    "hover:bg-black/[0.02] active:bg-black/[0.03]",
+                    isDone
+                      ? "border-[rgb(var(--success))]/50 bg-[rgb(var(--success))]/[0.06]"
+                      : isError
+                        ? "border-red-300 bg-red-50"
+                        : "border-[rgb(var(--border))] border-dashed bg-white/50",
+                  )}
                 >
-                  <div style={{fontSize:28,marginBottom:8,color:isDone?"#22a06b":isError?"#cc0000":"#aaa"}}>
-                    {isDone ? "✓" : isUploading ? "⏳" : isError ? "✗" : "+"}
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div
+                        className={cn(
+                          "text-sm font-semibold",
+                          isDone
+                            ? "text-[rgb(var(--success))]"
+                            : isError
+                              ? "text-red-700"
+                              : "text-[rgb(var(--fg))]",
+                        )}
+                      >
+                        {doc.label}
+                      </div>
+                      <div className="mt-1 text-xs text-[rgb(var(--muted))]">
+                        {isUploading
+                          ? "Upload en cours..."
+                          : isDone
+                            ? fileNames[doc.key]
+                            : isError
+                              ? "Erreur — cliquez pour réessayer"
+                              : doc.desc}
+                      </div>
+                    </div>
+
+                    <div
+                      className={cn(
+                        "grid h-9 w-9 place-items-center rounded-xl text-base font-bold",
+                        isDone
+                          ? "bg-[rgb(var(--success))] text-white"
+                          : isUploading
+                            ? "bg-black/10 text-[rgb(var(--muted))]"
+                            : isError
+                              ? "bg-red-600 text-white"
+                              : "bg-black/10 text-[rgb(var(--muted))]",
+                      )}
+                    >
+                      {isDone ? "✓" : isUploading ? "…" : isError ? "!" : "+"}
+                    </div>
                   </div>
-                  <div style={{fontSize:13,fontWeight:600,color:isDone?"#22a06b":isError?"#cc0000":"#333",marginBottom:4}}>
-                    {doc.label}
-                  </div>
-                  <div style={{fontSize:11,color:"#888"}}>
-                    {isUploading ? "Upload en cours..." :
-                     isDone ? fileNames[doc.key] :
-                     isError ? "Erreur — cliquez pour reessayer" :
-                     doc.desc}
-                  </div>
-                </div>
+                </button>
+
+                {isDone && fileUrls[doc.key] && (
+                  <a
+                    className="inline-flex text-xs font-semibold text-[rgb(var(--primary))]"
+                    href={fileUrls[doc.key]}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Voir / télécharger
+                  </a>
+                )}
               </div>
             );
           })}
         </div>
 
         {!allDone && (
-          <div style={{background:"#fff7f0",border:"1px solid #ffd9b8",borderRadius:8,padding:"10px 14px",fontSize:13,color:"#E87A30",marginBottom:16,textAlign:"center"}}>
-            Deposez les 4 documents pour continuer
+          <div className="mt-6 rounded-xl border border-[rgb(var(--primary))]/25 bg-[rgb(var(--primary))]/[0.06] px-3 py-2 text-center text-sm text-[rgb(var(--primary))]">
+            Déposez les 4 documents pour continuer
           </div>
         )}
 
-        <div style={{display:"flex",gap:12}}>
-          <button onClick={()=>router.push("/step-2-company")}
-            style={{flex:1,padding:"11px",background:"white",color:"#666",border:"1.5px solid #e5e3df",borderRadius:8,fontSize:14,cursor:"pointer",fontFamily:"inherit"}}>
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+          <Button
+            variant="secondary"
+            onClick={() => router.push("/step-2-company")}
+            className="sm:flex-1"
+          >
             Retour
-          </button>
-          <button
-            onClick={()=>{ if(allDone) router.push("/step-4-certifications"); }}
-            style={{flex:2,padding:"11px",background:allDone?"#E87A30":"#f1efe8",color:allDone?"white":"#aaa",border:"none",borderRadius:8,fontSize:14,fontWeight:600,cursor:allDone?"pointer":"not-allowed",fontFamily:"inherit"}}>
-            {allDone ? "Continuer →" : "Deposez tous les documents"}
-          </button>
+          </Button>
+          <Button
+            onClick={() => {
+              if (allDone) router.push("/step-4-certifications");
+            }}
+            disabled={!allDone}
+            className="sm:flex-[2]"
+          >
+            {allDone ? "Continuer →" : "Déposez tous les documents"}
+          </Button>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
