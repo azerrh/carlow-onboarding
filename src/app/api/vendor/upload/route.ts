@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { prisma } from "@/lib/prisma";
 
+export const runtime = "nodejs";
+
 export async function POST(req: NextRequest) {
   try {
     const supabaseAdmin = getSupabaseAdmin();
@@ -25,7 +27,7 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(bytes);
     const filename = `${vendorId}/${type}/${Date.now()}_${file.name}`;
 
-    const { data, error } = await supabaseAdmin.storage
+    const { error } = await supabaseAdmin.storage
       .from("documents")
       .upload(filename, buffer, {
         contentType: file.type,
@@ -77,6 +79,10 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+    const message =
+      error instanceof Error && error.message.startsWith("Missing env ")
+        ? error.message
+        : "Erreur serveur";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

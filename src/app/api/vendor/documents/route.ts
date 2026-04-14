@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
+export const runtime = "nodejs";
+
 export async function GET(req: NextRequest) {
   try {
     const supabaseAdmin = getSupabaseAdmin();
@@ -33,7 +35,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, documents: withUrls });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+    const message =
+      error instanceof Error && error.message.startsWith("Missing env ")
+        ? error.message
+        : "Erreur serveur";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -101,6 +107,10 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+    const message =
+      error instanceof Error && error.message.startsWith("Missing env ")
+        ? error.message
+        : "Erreur serveur";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
