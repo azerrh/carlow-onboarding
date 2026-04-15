@@ -1,21 +1,21 @@
 import { createClient } from "@supabase/supabase-js";
 
 export function getSupabaseAdmin() {
-  const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_KEY;
 
-  if (!url) {
-    throw new Error("Missing env SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL)");
-  }
-  if (!serviceRoleKey) {
-    throw new Error(
-      "Missing env SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SERVICE_KEY)",
-    );
-  }
+  if (!url) throw new Error("Missing env NEXT_PUBLIC_SUPABASE_URL");
+  if (!key) throw new Error("Missing env SUPABASE_SERVICE_KEY");
 
-  return createClient(url, serviceRoleKey, {
-    auth: { persistSession: false },
+  return createClient(url, key, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
   });
 }
 
+export const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
