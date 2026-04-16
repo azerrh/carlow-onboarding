@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendWelcomeEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,10 +13,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const existing = await prisma.vendor.findUnique({
-      where: { email },
-    });
-
+    const existing = await prisma.vendor.findUnique({ where: { email } });
     if (existing) {
       return NextResponse.json(
         { error: "Email deja utilise" },
@@ -24,25 +22,14 @@ export async function POST(req: NextRequest) {
     }
 
     const vendor = await prisma.vendor.create({
-      data: {
-        name,
-        email,
-        password,
-        status: "pending",
-        onboardingStep: 1,
-      },
+      data: { name, email, password, status: "pending", onboardingStep: 1 },
     });
 
-    return NextResponse.json({
-      success: true,
-      vendorId: vendor.id,
-      message: "Compte cree avec succes",
-    });
+    await sendWelcomeEmail(vendor.name, vendor.email);
 
+    return NextResponse.json({ success: true, vendorId: vendor.id });
   } catch (error) {
-    return NextResponse.json(
-      { error: "Erreur serveur" },
-      { status: 500 }
-    );
+    console.error(error);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
