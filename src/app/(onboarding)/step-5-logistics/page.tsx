@@ -28,10 +28,13 @@ export default function StepLogisticsPage() {
   // Pré-remplissage depuis la DB si existant
   useEffect(() => {
     const vendorId = localStorage.getItem("vendorId");
-    if (!vendorId) return;
+    if (!vendorId) {
+      router.replace("/login");
+      return;
+    }
     (async () => {
       try {
-        const res = await fetch(`/api/vendor/me?vendorId=${encodeURIComponent(vendorId)}`);
+        const res = await fetch(`/api/vendor/me?id=${encodeURIComponent(vendorId)}`);
         const data = await res.json();
         if (res.ok && data.vendor) {
           setForm((f) => ({
@@ -44,7 +47,7 @@ export default function StepLogisticsPage() {
         // silencieux
       }
     })();
-  }, []);
+  }, [router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

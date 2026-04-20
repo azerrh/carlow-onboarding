@@ -4,7 +4,8 @@ import { prisma } from "@/lib/prisma";
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
+    // Accepte les deux noms de paramètres pour compatibilité
+    const id = searchParams.get("id") ?? searchParams.get("vendorId");
 
     if (!id) {
       return NextResponse.json({ error: "ID manquant" }, { status: 400 });
@@ -19,6 +20,12 @@ export async function GET(req: NextRequest) {
         status: true,
         onboardingStep: true,
         companyName: true,
+        siret: true,
+        vatNumber: true,
+        vatValid: true,
+        legalForm: true,
+        address: true,
+        incoterms: true,
         createdAt: true,
       },
     });
