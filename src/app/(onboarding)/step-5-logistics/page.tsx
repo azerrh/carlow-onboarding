@@ -1,77 +1,229 @@
-﻿"use client";
-import { useState } from "react";
+"use client";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { StepperBar } from "@/components/onboarding/StepperBar";
+import { Brand } from "@/components/ui/Brand";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { cn } from "@/lib/cn";
+
+const INCOTERMS = [
+  { key: "DDP", label: "DDP", desc: "Droits acquittés" },
+  { key: "EXW", label: "EXW", desc: "À l'usine" },
+  { key: "DAP", label: "DAP", desc: "Destination" },
+  { key: "FCA", label: "FCA", desc: "Franco transporteur" },
+];
+
 export default function StepLogisticsPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ address:"", days:"3", weight:"800", incoterms:"DDP" });
-  async function handleSubmit(e: React.FormEvent) {
-  e.preventDefault();
-  const vendorId = localStorage.getItem("vendorId");
-  const res = await fetch("/api/vendor/logistics", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      vendorId,
-      address: form.address,
-      days: form.days,
-      weight: form.weight,
-      incoterms: form.incoterms,
-    }),
+  const [form, setForm] = useState({
+    address: "",
+    days: "3",
+    weight: "800",
+    incoterms: "DDP",
   });
-  const data = await res.json();
-  if (data.success) {
-    router.push("/step-6-confirmation");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  // Pré-remplissage depuis la DB si existant
+  useEffect(() => {
+    const vendorId = localStorage.getItem("vendorId");
+    if (!vendorId) return;
+    (async () => {
+      try {
+        const res = await fetch(`/api/vendor/me?vendorId=${encodeURIComponent(vendorId)}`);
+        const data = await res.json();
+        if (res.ok && data.vendor) {
+          setForm((f) => ({
+            ...f,
+            address: data.vendor.address ?? "",
+            incoterms: data.vendor.incoterms ?? "DDP",
+          }));
+        }
+      } catch {
+        // silencieux
+      }
+    })();
+  }, []);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setSubmitting(true);
+
+    const vendorId = localStorage.getItem("vendorId");
+    if (!vendorId) {
+      setError("Session expirée. Reconnectez-vous.");
+      setSubmitting(false);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/vendor/logistics", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vendorId,
+          address: form.address,
+          days: form.days,
+          weight: form.weight,
+          incoterms: form.incoterms,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setError(data?.error || "Erreur lors de l'enregistrement.");
+        setSubmitting(false);
+        return;
+      }
+      router.push("/step-6-confirmation");
+    } catch {
+      setError("Erreur réseau.");
+      setSubmitting(false);
+    }
   }
-}
+
   return (
-    <div style={{display:"flex",minHeight:"100vh",alignItems:"center",justifyContent:"center",background:"#f9f7f4"}}>
-      <div style={{background:"white",borderRadius:12,padding:"32px",width:"100%",maxWidth:520,border:"1px solid #e5e3df"}}>
-        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:24}}>
-          <div style={{width:28,height:28,background:"#E87A30",borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",color:"white",fontWeight:600,fontSize:14}}>C</div>
-          <span style={{fontWeight:500,fontSize:18}}>arlow</span>
-        </div>
+    <div className="portal-page grid min-h-screen place-items-center px-4 py-10">
+      <Card className="w-full max-w-[640px] p-8 sm:p-10">
+        <Brand className="mb-5" />
         <StepperBar current={4} />
-        <h1 style={{fontSize:18,fontWeight:500,margin:"0 0 6px"}}>Logistique et transport</h1>
-        <p style={{color:"#666",fontSize:13,margin:"0 0 20px"}}>Configurez vos capacites de livraison.</p>
-        <form onSubmit={handleSubmit}>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
+
+        <h1 className="mt-4 text-2xl font-semibold tracking-tight">
+          Logistique et transport
+        </h1>
+        <p className="mt-1 text-sm text-[rgb(var(--muted))]">
+          Configurez vos capacités de livraison et vos incoterms.
+        </p>
+
+        {error && (
+          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+          {/* Adresse & délai */}
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label style={{fontSize:12,color:"#666",display:"block",marginBottom:4}}>Adresse expedition</label>
-              <input value={form.address} onChange={e=>setForm({...form,address:e.target.value})} placeholder="Entrepot principal" required style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid #e5e3df",fontSize:13,boxSizing:"border-box"}} />
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-[rgb(var(--muted))]">
+                Adresse d'expédition
+              </label>
+              <input
+                type="text"
+                value={form.address}
+                onChange={(e) => setForm({ ...form, address: e.target.value })}
+                placeholder="Entrepôt principal, 75000 Paris"
+                required
+                className="h-11 w-full rounded-xl border border-[rgb(var(--border))] bg-white px-3 text-sm focus:border-[rgb(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]/20"
+              />
             </div>
             <div>
-              <label style={{fontSize:12,color:"#666",display:"block",marginBottom:4}}>Delai preparation (jours)</label>
-              <input type="number" value={form.days} onChange={e=>setForm({...form,days:e.target.value})} min="1" max="30" style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid #e5e3df",fontSize:13,boxSizing:"border-box"}} />
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-[rgb(var(--muted))]">
+                Délai de préparation
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  min={1}
+                  max={30}
+                  value={form.days}
+                  onChange={(e) => setForm({ ...form, days: e.target.value })}
+                  className="h-11 w-full rounded-xl border border-[rgb(var(--border))] bg-white px-3 pr-16 text-sm focus:border-[rgb(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]/20"
+                />
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[rgb(var(--muted))]">
+                  jours
+                </span>
+              </div>
             </div>
           </div>
-          <div style={{marginBottom:14}}>
-            <label style={{fontSize:12,color:"#666",display:"block",marginBottom:4}}>Matrice de transport</label>
-            <div style={{border:"1.5px dashed #e5e3df",borderRadius:8,padding:"14px",textAlign:"center",cursor:"pointer"}}>
-              <div style={{fontSize:12,color:"#aaa"}}>Cliquer pour deposer votre fichier Excel/CSV</div>
+
+          {/* Matrice de transport */}
+          <div>
+            <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-[rgb(var(--muted))]">
+              Matrice de transport <span className="font-normal normal-case text-[rgb(var(--muted))]/70">(optionnel)</span>
+            </label>
+            <div className="rounded-xl border-2 border-dashed border-[rgb(var(--border))] bg-white/50 p-5 text-center">
+              <div className="text-xl">📊</div>
+              <p className="mt-1 text-sm font-medium">Fichier Excel ou CSV</p>
+              <p className="mt-0.5 text-xs text-[rgb(var(--muted))]">
+                Déposez votre grille tarifaire par zone et poids
+              </p>
             </div>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}>
+
+          {/* Poids max & incoterms */}
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label style={{fontSize:12,color:"#666",display:"block",marginBottom:4}}>Poids max palette kg</label>
-              <input value={form.weight} onChange={e=>setForm({...form,weight:e.target.value})} placeholder="800" style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid #e5e3df",fontSize:13,boxSizing:"border-box"}} />
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-[rgb(var(--muted))]">
+                Poids max palette
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={form.weight}
+                  onChange={(e) => setForm({ ...form, weight: e.target.value })}
+                  placeholder="800"
+                  className="h-11 w-full rounded-xl border border-[rgb(var(--border))] bg-white px-3 pr-12 text-sm focus:border-[rgb(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]/20"
+                />
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[rgb(var(--muted))]">
+                  kg
+                </span>
+              </div>
             </div>
             <div>
-              <label style={{fontSize:12,color:"#666",display:"block",marginBottom:4}}>Incoterms</label>
-              <select value={form.incoterms} onChange={e=>setForm({...form,incoterms:e.target.value})} style={{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid #e5e3df",fontSize:13,boxSizing:"border-box"}}>
-                <option value="DDP">DDP - Droits acquittes</option>
-                <option value="EXW">EXW - A l usine</option>
-                <option value="DAP">DAP - Destination</option>
-                <option value="FCA">FCA - Franco transporteur</option>
+              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-[rgb(var(--muted))]">
+                Incoterms
+              </label>
+              <select
+                value={form.incoterms}
+                onChange={(e) => setForm({ ...form, incoterms: e.target.value })}
+                className="h-11 w-full cursor-pointer rounded-xl border border-[rgb(var(--border))] bg-white px-3 text-sm focus:border-[rgb(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]/20"
+              >
+                {INCOTERMS.map((ic) => (
+                  <option key={ic.key} value={ic.key}>
+                    {ic.label} — {ic.desc}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
-          <div style={{display:"flex",gap:12}}>
-            <button type="button" onClick={()=>router.push("/step-4-certifications")} style={{flex:1,padding:"10px",background:"white",color:"#666",border:"1px solid #e5e3df",borderRadius:8,fontSize:13,cursor:"pointer"}}>Retour</button>
-            <button type="submit" style={{flex:2,padding:"10px",background:"#E87A30",color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:500,cursor:"pointer"}}>Soumettre le dossier</button>
+
+          {/* Carte explicative incoterms */}
+          <div className="rounded-xl border border-[rgb(var(--primary))]/20 bg-[rgb(var(--primary))]/[0.05] p-4">
+            <div className="flex items-start gap-3">
+              <div className="text-base">💡</div>
+              <div>
+                <p className="text-sm font-semibold text-[rgb(var(--primary))]">
+                  Incoterm sélectionné : {form.incoterms}
+                </p>
+                <p className="mt-0.5 text-xs text-[rgb(var(--muted))]">
+                  {INCOTERMS.find((i) => i.key === form.incoterms)?.desc} — définit la répartition des frais et responsabilités de livraison.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <div className="flex flex-col gap-3 pt-2 sm:flex-row">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => router.push("/step-4-certifications")}
+              className="sm:flex-1"
+            >
+              Retour
+            </Button>
+            <Button
+              type="submit"
+              disabled={submitting}
+              className={cn("sm:flex-[2]", submitting && "opacity-60")}
+            >
+              {submitting ? "Enregistrement..." : "Continuer →"}
+            </Button>
           </div>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }
