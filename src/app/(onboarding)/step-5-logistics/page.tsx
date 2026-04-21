@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { StepperBar } from "@/components/onboarding/StepperBar";
 import { Brand } from "@/components/ui/Brand";
@@ -14,8 +14,11 @@ const INCOTERMS = [
   { key: "FCA", label: "FCA", desc: "Franco transporteur" },
 ];
 
+type MatrixState = "idle" | "uploading" | "done" | "error";
+
 export default function StepLogisticsPage() {
   const router = useRouter();
+  const matrixInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     address: "",
     days: "3",
@@ -24,6 +27,8 @@ export default function StepLogisticsPage() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [matrixState, setMatrixState] = useState<MatrixState>("idle");
+  const [matrixFilename, setMatrixFilename] = useState<string>("");
 
   // Pré-remplissage depuis la DB si existant
   useEffect(() => {
@@ -34,20 +39,67 @@ export default function StepLogisticsPage() {
     }
     (async () => {
       try {
-        const res = await fetch(`/api/vendor/me?id=${encodeURIComponent(vendorId)}`);
-        const data = await res.json();
-        if (res.ok && data.vendor) {
+        const [meRes, docsRes] = await Promise.all([
+          fetch(`/api/vendor/me?id=${encodeURIComponent(vendorId)}`),
+          fetch(`/api/vendor/documents?vendorId=${encodeURIComponent(vendorId)}`),
+        ]);
+        const meData = await meRes.json();
+        const docsData = await docsRes.json();
+
+        if (meRes.ok && meData.vendor) {
           setForm((f) => ({
             ...f,
-            address: data.vendor.address ?? "",
-            incoterms: data.vendor.incoterms ?? "DDP",
+            address: meData.vendor.address ?? "",
+            incoterms: meData.vendor.incoterms ?? "DDP",
           }));
+        }
+
+        // Récupérer la matrice de transport si déjà uploadée
+        if (docsRes.ok && docsData.success && Array.isArray(docsData.documents)) {
+          const matrix = docsData.documents.find(
+            (d: { type: string; filename: string }) => d.type === "transport_matrix"
+          );
+          if (matrix) {
+            setMatrixState("done");
+            setMatrixFilename(matrix.filename);
+          }
         }
       } catch {
         // silencieux
       }
     })();
   }, [router]);
+
+  async function handleMatrixUpload(file: File) {
+    const vendorId = localStorage.getItem("vendorId");
+    if (!vendorId) {
+      router.replace("/login");
+      return;
+    }
+
+    setError("");
+    setMatrixState("uploading");
+    setMatrixFilename(file.name);
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("vendorId", vendorId);
+    formData.append("type", "transport_matrix");
+
+    try {
+      const res = await fetch("/api/vendor/upload", { method: "POST", body: formData });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setMatrixState("error");
+        setError(data?.error || "Upload de la matrice impossible.");
+        return;
+      }
+      setMatrixState("done");
+    } catch {
+      setMatrixState("error");
+      setError("Erreur réseau pendant l'upload de la matrice.");
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -146,13 +198,57 @@ export default function StepLogisticsPage() {
             <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-[rgb(var(--muted))]">
               Matrice de transport <span className="font-normal normal-case text-[rgb(var(--muted))]/70">(optionnel)</span>
             </label>
-            <div className="rounded-xl border-2 border-dashed border-[rgb(var(--border))] bg-white/50 p-5 text-center">
-              <div className="text-xl">📊</div>
-              <p className="mt-1 text-sm font-medium">Fichier Excel ou CSV</p>
-              <p className="mt-0.5 text-xs text-[rgb(var(--muted))]">
-                Déposez votre grille tarifaire par zone et poids
+            <input
+              ref={matrixInputRef}
+              type="file"
+              accept=".xlsx,.xls,.csv,.ods"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void handleMatrixUpload(file);
+                e.currentTarget.value = "";
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => matrixInputRef.current?.click()}
+              disabled={matrixState === "uploading"}
+              className={cn(
+                "w-full rounded-xl border-2 border-dashed p-5 text-center transition",
+                "hover:bg-black/[0.02] active:bg-black/[0.03]",
+                matrixState === "done"
+                  ? "border-[rgb(var(--success))]/50 bg-[rgb(var(--success))]/[0.06]"
+                  : matrixState === "error"
+                    ? "border-red-300 bg-red-50"
+                    : matrixState === "uploading"
+                      ? "border-[rgb(var(--primary))]/40 bg-[rgb(var(--primary))]/5"
+                      : "border-[rgb(var(--border))] bg-white/50"
+              )}
+            >
+              <div className="text-xl">
+                {matrixState === "done" ? "✅" : matrixState === "uploading" ? "⏳" : matrixState === "error" ? "❌" : "📊"}
+              </div>
+              <p
+                className={cn(
+                  "mt-1 text-sm font-medium",
+                  matrixState === "done" && "text-[rgb(var(--success))]",
+                  matrixState === "error" && "text-red-700"
+                )}
+              >
+                {matrixState === "done"
+                  ? matrixFilename
+                  : matrixState === "uploading"
+                    ? "Upload en cours..."
+                    : matrixState === "error"
+                      ? "Erreur — cliquez pour réessayer"
+                      : "Fichier Excel ou CSV"}
               </p>
-            </div>
+              <p className="mt-0.5 text-xs text-[rgb(var(--muted))]">
+                {matrixState === "done"
+                  ? "Cliquez pour remplacer"
+                  : "Déposez votre grille tarifaire par zone et poids"}
+              </p>
+            </button>
           </div>
 
           {/* Poids max & incoterms */}
