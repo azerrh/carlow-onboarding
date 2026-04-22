@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function PUT(req: NextRequest) {
   try {
-    const { vendorId, address, days, weight, incoterms } = await req.json();
+    const { vendorId, address, incoterms } = await req.json();
 
     if (!vendorId) {
       return NextResponse.json(
@@ -12,13 +12,17 @@ export async function PUT(req: NextRequest) {
       );
     }
 
+    // NOTE: `days` (délai de préparation) et `weight` (poids max palette) sont
+    // affichés dans le formulaire mais ne sont PAS persistés faute de colonnes
+    // dans le schéma Vendor. Ajouter `deliveryDays` / `maxWeight` au schéma si
+    // on veut les stocker côté marketplace.
+
     const vendor = await prisma.vendor.update({
       where: { id: vendorId },
       data: {
         address,
         incoterms,
         onboardingStep: 6,
-        status: "submitted",
       },
     });
 

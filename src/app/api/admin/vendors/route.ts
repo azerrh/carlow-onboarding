@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendCompteActiveEmail } from "@/lib/email";
+import { isAdminAuthenticated } from "@/lib/adminAuth";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  if (!isAdminAuthenticated(req)) {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  }
+
   try {
     const vendors = await prisma.vendor.findMany({
       orderBy: { createdAt: "desc" },
@@ -26,6 +31,10 @@ export async function GET() {
 }
 
 export async function PUT(req: NextRequest) {
+  if (!isAdminAuthenticated(req)) {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  }
+
   try {
     const { id, status } = await req.json();
 

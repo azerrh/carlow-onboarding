@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,7 +10,11 @@ export async function POST(req: NextRequest) {
       where: { email },
     });
 
-    if (!vendor || vendor.password !== password) {
+    const passwordMatch = vendor
+      ? await bcrypt.compare(password, vendor.password)
+      : false;
+
+    if (!vendor || !passwordMatch) {
       return NextResponse.json(
         { error: "Email ou mot de passe incorrect" },
         { status: 401 }

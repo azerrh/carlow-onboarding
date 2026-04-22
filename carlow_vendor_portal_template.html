@@ -1,0 +1,171 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+.page{background:#f9f7f4;min-height:100vh;padding:0}
+.nav{background:white;border-bottom:1px solid #e5e3df;padding:0 32px;height:56px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:8px}
+.logo-icon{width:32px;height:32px;background:#E87A30;border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:16px}
+.logo-text{font-weight:600;font-size:18px;color:#1a1a1a}
+.nav-badge{background:#fff7f0;color:#E87A30;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;border:1px solid #ffd9b8}
+.nav-right{display:flex;align-items:center;gap:12px}
+.nav-user{font-size:13px;color:#666}
+.btn-logout{font-size:12px;color:#888;background:none;border:1px solid #e5e3df;border-radius:6px;padding:4px 12px;cursor:pointer}
+.hero{background:linear-gradient(135deg,#E87A30 0%,#c4621a 100%);padding:48px 32px;color:white}
+.hero h1{font-size:28px;font-weight:600;margin-bottom:8px}
+.hero p{font-size:15px;opacity:.85}
+.content{padding:32px;max-width:1000px;margin:0 auto}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
+.kpi{background:white;border-radius:10px;padding:16px 20px;border:1px solid #e5e3df}
+.kpi-label{font-size:12px;color:#888;margin-bottom:6px}
+.kpi-value{font-size:22px;font-weight:600}
+.section{background:white;border-radius:12px;border:1px solid #e5e3df;margin-bottom:20px;overflow:hidden}
+.section-header{padding:16px 20px;border-bottom:1px solid #f1efe8;display:flex;align-items:center;justify-content:space-between}
+.section-title{font-size:15px;font-weight:500;color:#1a1a1a}
+.steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:16px}
+.step{border-radius:8px;padding:12px 14px;border:1px solid #e5e3df;display:flex;align-items:center;gap:10px}
+.step.done{background:#f0faf5;border-color:#22a06b}
+.step.active{background:#fff7f0;border-color:#E87A30}
+.step-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+.step.done .step-dot{background:#22a06b;color:white}
+.step.active .step-dot{background:#E87A30;color:white}
+.step.pending .step-dot{background:#f1efe8;color:#aaa;border:1px solid #e5e3df}
+.step-label{font-size:12px;font-weight:500}
+.step.done .step-label{color:#22a06b}
+.step.active .step-label{color:#E87A30}
+.step.pending .step-label{color:#aaa}
+.progress-bar{height:6px;background:#f1efe8;border-radius:10px;margin:0 16px 16px}
+.progress-fill{height:6px;background:#E87A30;border-radius:10px;transition:width .5s}
+.docs-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px}
+.doc{border-radius:8px;padding:14px;border:2px dashed #e5e3df;text-align:center;cursor:pointer}
+.doc.uploaded{border:2px solid #22a06b;background:#f0faf5}
+.doc-icon{font-size:20px;margin-bottom:6px;color:#aaa}
+.doc.uploaded .doc-icon{color:#22a06b}
+.doc-name{font-size:11px;font-weight:500;color:#333;margin-bottom:2px}
+.doc-status{font-size:10px;color:#aaa}
+.doc.uploaded .doc-status{color:#22a06b}
+.alert{margin:16px;padding:12px 16px;border-radius:8px;font-size:13px;display:flex;align-items:center;justify-content:space-between}
+.alert.warning{background:#fff7f0;border:1px solid #ffd9b8;color:#E87A30}
+.alert.success{background:#f0faf5;border:1px solid #b8ead4;color:#22a06b}
+.btn-primary{background:#E87A30;color:white;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer}
+</style>
+
+<div class="page">
+  <div class="nav">
+    <div class="logo">
+      <div class="logo-icon">C</div>
+      <span class="logo-text">arlow</span>
+      <span class="nav-badge">Portail vendeur</span>
+    </div>
+    <div class="nav-right">
+      <span class="nav-user">Paul-Emile Dours</span>
+      <button class="btn-logout">Deconnexion</button>
+    </div>
+  </div>
+
+  <div class="hero">
+    <h1>Bonjour, Paul-Emile !</h1>
+    <p>Voici l'etat de votre dossier vendeur Carlow Marketplace EnR</p>
+  </div>
+
+  <div class="content">
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="kpi-label">Statut dossier</div>
+        <div class="kpi-value" style="color:#E87A30;font-size:16px;margin-top:4px">En cours</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Progression</div>
+        <div class="kpi-value" style="color:#E87A30">50%</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Societe</div>
+        <div class="kpi-value" style="font-size:15px;margin-top:4px">SolarTech SAS</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Inscription</div>
+        <div class="kpi-value" style="font-size:15px;margin-top:4px">15 Avr 2026</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Progression du dossier</span>
+        <span style="font-size:12px;color:#888">3 / 6 etapes</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:50%"></div></div>
+      <div class="steps-grid">
+        <div class="step done"><div class="step-dot">v</div><span class="step-label">Compte</span></div>
+        <div class="step done"><div class="step-dot">v</div><span class="step-label">Societe</span></div>
+        <div class="step done"><div class="step-dot">v</div><span class="step-label">Documents</span></div>
+        <div class="step active"><div class="step-dot">4</div><span class="step-label">Certifications</span></div>
+        <div class="step pending"><div class="step-dot">5</div><span class="step-label">Logistique</span></div>
+        <div class="step pending"><div class="step-dot">6</div><span class="step-label">Confirmation</span></div>
+      </div>
+      <div style="padding:0 16px 16px">
+        <div class="alert warning">
+          <span>Completez votre dossier pour activer votre compte vendeur</span>
+          <button class="btn-primary">Continuer →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Documents reglementaires</span>
+        <span style="font-size:12px;color:#22a06b">3 / 4 deposes</span>
+      </div>
+      <div class="docs-grid">
+        <div class="doc uploaded">
+          <div class="doc-icon">✓</div>
+          <div class="doc-name">K-Bis</div>
+          <div class="doc-status">Depose</div>
+        </div>
+        <div class="doc uploaded">
+          <div class="doc-icon">✓</div>
+          <div class="doc-name">Statuts societe</div>
+          <div class="doc-status">Depose</div>
+        </div>
+        <div class="doc uploaded">
+          <div class="doc-icon">✓</div>
+          <div class="doc-name">Piece identite</div>
+          <div class="doc-status">Depose</div>
+        </div>
+        <div class="doc">
+          <div class="doc-icon">+</div>
+          <div class="doc-name">RIB bancaire</div>
+          <div class="doc-status">A deposer</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Informations societe</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;padding:16px">
+        <div style="padding:8px 0;border-bottom:1px solid #f1efe8">
+          <div style="font-size:11px;color:#aaa;margin-bottom:2px">Raison sociale</div>
+          <div style="font-size:13px;font-weight:500;color:#333">SolarTech SAS</div>
+        </div>
+        <div style="padding:8px 0;border-bottom:1px solid #f1efe8">
+          <div style="font-size:11px;color:#aaa;margin-bottom:2px">SIRET</div>
+          <div style="font-size:13px;font-weight:500;color:#333">12345678900010</div>
+        </div>
+        <div style="padding:8px 0;border-bottom:1px solid #f1efe8">
+          <div style="font-size:11px;color:#aaa;margin-bottom:2px">N TVA</div>
+          <div style="font-size:13px;font-weight:500;color:#333">FR12345678901</div>
+        </div>
+        <div style="padding:8px 0;border-bottom:1px solid #f1efe8">
+          <div style="font-size:11px;color:#aaa;margin-bottom:2px">Forme juridique</div>
+          <div style="font-size:13px;font-weight:500;color:#333">SAS</div>
+        </div>
+        <div style="padding:8px 0;grid-column:1/-1">
+          <div style="font-size:11px;color:#aaa;margin-bottom:2px">Adresse</div>
+          <div style="font-size:13px;font-weight:500;color:#333">12 rue des Energies, 75001 Paris</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
