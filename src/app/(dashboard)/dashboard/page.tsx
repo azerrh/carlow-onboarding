@@ -656,9 +656,9 @@ export default function DashboardPage() {
         {/* Quick actions for onboarded vendors */}
         {isOnboarded && (
           <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-4">
-            <QuickAction href="/step-2-company" icon="⚙️" label="Modifier mes infos" />
+            <QuickAction href="/dashboard/catalogues" icon="📁" label="Catalogues" />
+            <QuickAction href="/dashboard/produits" icon="📦" label="Produits" />
             <QuickAction href="/step-3-documents" icon="📄" label="Mes documents" />
-            <QuickAction href="/step-5-logistics" icon="🚚" label="Logistique" />
             <QuickAction href="/account" icon="👤" label="Mon profil" />
           </div>
         )}
