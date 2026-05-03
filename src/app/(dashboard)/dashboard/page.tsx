@@ -24,6 +24,7 @@ interface DashboardStats {
   activeProductCount: number;
   orderCount: number;
   totalRevenueCents: number;
+  avgOrderValueCents: number;
   documentCount: number;
   certificationCount: number;
   unreadNotifs: number;
@@ -37,6 +38,22 @@ interface RecentOrder {
   unitPrice: number;
   status: string;
   orderedAt: string;
+}
+
+interface TopProduct {
+  name: string;
+  category: string;
+  quantitySold: number;
+  revenueCents: number;
+}
+
+interface MonthlyRevenue {
+  label: string;
+  revenue: number;
+}
+
+interface OrdersByStatus {
+  [key: string]: { count: number; label: string };
 }
 
 interface Notification {
@@ -85,7 +102,7 @@ function timeAgo(dateStr: string): string {
   const date = new Date(dateStr);
   const diffMs = now.getTime() - date.getTime();
   const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return "A l'instant";
+  if (diffMin < 1) return "A l&apos;instant";
   if (diffMin < 60) return `Il y a ${diffMin} min`;
   const diffH = Math.floor(diffMin / 60);
   if (diffH < 24) return `Il y a ${diffH}h`;
@@ -99,10 +116,14 @@ export default function DashboardPage() {
   const [vendor, setVendor] = useState<Vendor | null>(null);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
+  const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
+  const [ordersByStatus, setOrdersByStatus] = useState<OrdersByStatus>({});
+  const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenue[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showNotifs, setShowNotifs] = useState(false);
+  const [orderFilter, setOrderFilter] = useState("all");
 
   const fetchData = useCallback(async () => {
     const vendorId = localStorage.getItem("vendorId");
@@ -124,6 +145,9 @@ export default function DashboardPage() {
         setVendor(dashboardData.vendor);
         setStats(dashboardData.stats);
         setRecentOrders(dashboardData.recentOrders);
+        setTopProducts(dashboardData.topProducts ?? []);
+        setOrdersByStatus(dashboardData.ordersByStatus ?? {});
+        setMonthlyRevenue(dashboardData.monthlyRevenue ?? []);
       } else {
         router.push("/login");
         return;
@@ -191,6 +215,13 @@ export default function DashboardPage() {
       : vendor?.status === "active"
         ? "Compte actif"
         : "En cours";
+
+  const filteredOrders =
+    orderFilter === "all"
+      ? recentOrders
+      : recentOrders.filter((o) => o.status === orderFilter);
+
+  const maxMonthlyRevenue = Math.max(...monthlyRevenue.map((m) => m.revenue), 1);
 
   return (
     <div className="portal-page min-h-screen">
@@ -294,33 +325,260 @@ export default function DashboardPage() {
 
         {/* Stats cards */}
         {isOnboarded && stats && (
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <StatTile
-              label="Produits"
-              value={`${stats.activeProductCount} / ${stats.productCount}`}
-              sublabel="actifs"
-              icon="📦"
-            />
-            <StatTile
-              label="Catalogues"
-              value={stats.catalogCount}
-              icon="📁"
-            />
-            <StatTile
-              label="Commandes"
-              value={stats.orderCount}
-              icon="🛒"
-            />
-            <StatTile
-              label="Revenu total"
-              value={formatCents(stats.totalRevenueCents)}
-              icon="💰"
-            />
-          </div>
+          <>
+            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+              <StatTile
+                label="Produits"
+                value={`${stats.activeProductCount}`}
+                sublabel={`sur ${stats.productCount}`}
+                icon="📦"
+              />
+              <StatTile
+                label="Catalogues"
+                value={stats.catalogCount}
+                icon="📁"
+              />
+              <StatTile
+                label="Commandes"
+                value={stats.orderCount}
+                icon="🛒"
+              />
+              <StatTile
+                label="Revenu total"
+                value={formatCents(stats.totalRevenueCents)}
+                icon="💰"
+              />
+              <StatTile
+                label="Panier moyen"
+                value={formatCents(stats.avgOrderValueCents)}
+                icon="📊"
+              />
+              <StatTile
+                label="Docs"
+                value={stats.documentCount + stats.certificationCount}
+                sublabel="fichiers"
+                icon="📋"
+              />
+            </div>
+
+            {/* Charts row */}
+            <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+              {/* Revenue chart */}
+              <Card className="p-6 lg:col-span-2">
+                <h2 className="text-sm font-semibold">Revenus mensuels</h2>
+                {monthlyRevenue.every((m) => m.revenue === 0) ? (
+                  <div className="mt-6 text-center text-xs text-[rgb(var(--muted))]">
+                    Aucun revenu pour le moment
+                  </div>
+                ) : (
+                  <div className="mt-6 flex items-end gap-3 h-40">
+                    {monthlyRevenue.map((m, i) => {
+                      const height = maxMonthlyRevenue > 0 ? (m.revenue / maxMonthlyRevenue) * 100 : 0;
+                      return (
+                        <div key={i} className="flex flex-1 flex-col items-center gap-2">
+                          {m.revenue > 0 && (
+                            <span className="text-[10px] font-medium text-[rgb(var(--muted))]">
+                              {formatCents(m.revenue).replace("€", "€")}
+                            </span>
+                          )}
+                          <div
+                            className={cn(
+                              "w-full rounded-t-lg transition-all duration-500",
+                              height > 0
+                                ? "bg-gradient-to-t from-[rgb(var(--primary))]/80 to-[rgb(var(--primary))]/40"
+                                : "bg-black/[0.04]"
+                            )}
+                            style={{ height: `${Math.max(height, 4)}%` }}
+                          />
+                          <span className="text-[10px] text-[rgb(var(--muted))] font-medium">
+                            {m.label}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </Card>
+
+              {/* Orders by status */}
+              <Card className="p-6">
+                <h2 className="text-sm font-semibold">Commandes par statut</h2>
+                {Object.keys(ordersByStatus).length === 0 ? (
+                  <div className="mt-6 text-center text-xs text-[rgb(var(--muted))]">
+                    Aucune commande
+                  </div>
+                ) : (
+                  <div className="mt-6 space-y-3">
+                    {Object.entries(ordersByStatus).map(([label, data]) => {
+                      const style =
+                        label === "En cours"
+                          ? ORDER_STATUS_STYLES.EN_COURS
+                          : label === "Livree"
+                            ? ORDER_STATUS_STYLES.LIVREE
+                            : label === "Annulee"
+                              ? ORDER_STATUS_STYLES.ANNULEE
+                              : { bg: "bg-gray-50 border-gray-200", text: "text-gray-700" };
+                      const pct = stats.orderCount > 0 ? Math.round((data.count / stats.orderCount) * 100) : 0;
+                      return (
+                        <div key={label}>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className={cn("rounded-full border px-2 py-0.5 font-semibold", style.bg, style.text)}>
+                              {data.label}
+                            </span>
+                            <span className="font-medium">{data.count} ({pct}%)</span>
+                          </div>
+                          <div className="mt-1.5 h-1.5 w-full rounded-full bg-black/[0.04]">
+                            <div
+                              className={cn(
+                                "h-1.5 rounded-full transition-all",
+                                label === "En cours" ? "bg-amber-400" :
+                                label === "Livree" ? "bg-[rgb(var(--success))]" :
+                                label === "Annulee" ? "bg-red-400" : "bg-gray-400"
+                              )}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </Card>
+            </div>
+
+            {/* Orders + Top products */}
+            <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+              {/* Recent orders */}
+              <Card className="p-6 lg:col-span-2">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <h2 className="text-sm font-semibold">Commandes recentes</h2>
+                  <div className="flex gap-1.5">
+                    {["all", "EN_COURS", "LIVREE", "ANNULEE"].map((f) => (
+                      <button
+                        key={f}
+                        onClick={() => setOrderFilter(f)}
+                        className={cn(
+                          "rounded-lg px-2.5 py-1 text-[11px] font-medium transition",
+                          orderFilter === f
+                            ? "bg-[rgb(var(--primary))] text-white"
+                            : "bg-black/[0.04] text-[rgb(var(--muted))] hover:bg-black/[0.08]"
+                        )}
+                      >
+                        {f === "all" ? "Tous" : ORDER_STATUS_STYLES[f]?.label ?? f}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {filteredOrders.length === 0 ? (
+                  <div className="mt-6 rounded-xl border border-dashed border-[rgb(var(--border))] bg-white/50 px-4 py-8 text-center">
+                    <div className="text-2xl">🛒</div>
+                    <p className="mt-2 text-sm font-medium">Aucune commande pour l&apos;instant</p>
+                    <p className="mt-1 text-xs text-[rgb(var(--muted))]">
+                      Vos commandes apparaîtront ici.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mt-4 space-y-2">
+                    {filteredOrders.map((order) => {
+                      const style = ORDER_STATUS_STYLES[order.status] ?? ORDER_STATUS_STYLES.EN_COURS;
+                      return (
+                        <div
+                          key={order.orderId + order.productName}
+                          className="flex items-center justify-between rounded-xl border border-[rgb(var(--border))]/60 bg-white/60 px-4 py-3"
+                        >
+                          <div>
+                            <p className="text-sm font-medium">{order.productName}</p>
+                            <p className="text-xs text-[rgb(var(--muted))]">
+                              {order.buyer} · {order.quantity} un. · {timeAgo(order.orderedAt)}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm font-semibold">
+                              {formatCents(order.unitPrice * order.quantity)}
+                            </span>
+                            <span
+                              className={cn(
+                                "rounded-full border px-2 py-0.5 text-[10px] font-semibold",
+                                style.bg,
+                                style.text
+                              )}
+                            >
+                              {style.label}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </Card>
+
+              {/* Top products + Documents */}
+              <div className="space-y-6">
+                <Card className="p-6">
+                  <h2 className="text-sm font-semibold">Top produits</h2>
+                  {topProducts.length === 0 ? (
+                    <div className="mt-4 text-center text-xs text-[rgb(var(--muted))]">
+                      Aucun produit vendu
+                    </div>
+                  ) : (
+                    <div className="mt-4 space-y-3">
+                      {topProducts.map((p, i) => (
+                        <div
+                          key={p.name}
+                          className="flex items-center gap-3"
+                        >
+                          <span
+                            className={cn(
+                              "grid h-7 w-7 place-items-center rounded-lg text-xs font-bold",
+                              i === 0
+                                ? "bg-amber-100 text-amber-700"
+                                : i === 1
+                                  ? "bg-gray-100 text-gray-600"
+                                  : i === 2
+                                    ? "bg-orange-100 text-orange-700"
+                                    : "bg-black/[0.04] text-[rgb(var(--muted))]"
+                            )}
+                          >
+                            {i + 1}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium truncate">{p.name}</p>
+                            <p className="text-[10px] text-[rgb(var(--muted))]">{p.category}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs font-semibold">{p.quantitySold} vendus</p>
+                            <p className="text-[10px] text-[rgb(var(--muted))]">{formatCents(p.revenueCents)}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+
+                <Card className="p-6">
+                  <h2 className="text-sm font-semibold">Documents & Certifications</h2>
+                  <div className="mt-4 space-y-3">
+                    <DocStat
+                      label="Documents"
+                      count={stats.documentCount}
+                      href="/step-3-documents"
+                    />
+                    <DocStat
+                      label="Certifications"
+                      count={stats.certificationCount}
+                      href="/step-4-certifications"
+                    />
+                  </div>
+                </Card>
+              </div>
+            </div>
+          </>
         )}
 
         {/* Onboarding progress */}
-        {!isOnboarded ? (
+        {!isOnboarded && (
           <Card className="mt-6 p-6">
             <div className="text-sm font-semibold">Progression du dossier</div>
             <div className="mt-4 h-2 w-full rounded-full bg-black/5">
@@ -388,110 +646,20 @@ export default function DashboardPage() {
                   Dossier en cours de verification
                 </div>
                 <div className="mt-0.5 text-sm text-[rgb(var(--muted))]">
-                  Notre equipe verifie votre dossier sous 24-48h. Vous recevrez un
-                  email de confirmation.
+                  Notre equipe verifie votre dossier sous 24-48h.
                 </div>
               </div>
             )}
           </Card>
-        ) : (
-          /* Onboarded vendor: quick actions */
-          <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-4">
-            <QuickAction
-              href="/step-2-company"
-              icon="⚙️"
-              label="Modifier mes infos"
-            />
-            <QuickAction
-              href="/step-3-documents"
-              icon="📄"
-              label="Mes documents"
-            />
-            <QuickAction
-              href="/step-5-logistics"
-              icon="🚚"
-              label="Logistique"
-            />
-            <QuickAction
-              href="/account"
-              icon="👤"
-              label="Mon profil"
-            />
-          </div>
         )}
 
-        {/* Recent orders + Documents summary */}
-        {isOnboarded && stats && (
-          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-            {/* Recent orders */}
-            <Card className="p-6 lg:col-span-2">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold">Commandes recentes</h2>
-                <span className="text-xs text-[rgb(var(--muted))]">
-                  {stats.orderCount} au total
-                </span>
-              </div>
-
-              {recentOrders.length === 0 ? (
-                <div className="mt-6 rounded-xl border border-dashed border-[rgb(var(--border))] bg-white/50 px-4 py-8 text-center">
-                  <div className="text-2xl">🛒</div>
-                  <p className="mt-2 text-sm font-medium">Aucune commande pour l&apos;instant</p>
-                  <p className="mt-1 text-xs text-[rgb(var(--muted))]">
-                    Vos commandes apparaîtront ici.
-                  </p>
-                </div>
-              ) : (
-                <div className="mt-4 space-y-2">
-                  {recentOrders.map((order) => {
-                    const style = ORDER_STATUS_STYLES[order.status] ?? ORDER_STATUS_STYLES.EN_COURS;
-                    return (
-                      <div
-                        key={order.orderId + order.productName}
-                        className="flex items-center justify-between rounded-xl border border-[rgb(var(--border))]/60 bg-white/60 px-4 py-3"
-                      >
-                        <div>
-                          <p className="text-sm font-medium">{order.productName}</p>
-                          <p className="text-xs text-[rgb(var(--muted))]">
-                            {order.buyer} · {timeAgo(order.orderedAt)}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm font-semibold">
-                            {formatCents(order.unitPrice * order.quantity)}
-                          </span>
-                          <span
-                            className={cn(
-                              "rounded-full border px-2 py-0.5 text-[10px] font-semibold",
-                              style.bg,
-                              style.text
-                            )}
-                          >
-                            {style.label}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </Card>
-
-            {/* Documents & Certifications summary */}
-            <Card className="p-6">
-              <h2 className="text-sm font-semibold">Documents & Certifications</h2>
-              <div className="mt-4 space-y-3">
-                <DocStat
-                  label="Documents"
-                  count={stats.documentCount}
-                  href="/step-3-documents"
-                />
-                <DocStat
-                  label="Certifications"
-                  count={stats.certificationCount}
-                  href="/step-4-certifications"
-                />
-              </div>
-            </Card>
+        {/* Quick actions for onboarded vendors */}
+        {isOnboarded && (
+          <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-4">
+            <QuickAction href="/step-2-company" icon="⚙️" label="Modifier mes infos" />
+            <QuickAction href="/step-3-documents" icon="📄" label="Mes documents" />
+            <QuickAction href="/step-5-logistics" icon="🚚" label="Logistique" />
+            <QuickAction href="/account" icon="👤" label="Mon profil" />
           </div>
         )}
       </div>
