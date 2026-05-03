@@ -1,9 +1,5 @@
-import { config } from "dotenv";
+import "dotenv/config";
 import { defineConfig, env } from "prisma/config";
-
-// Prisma lit ce fichier : charge .env puis .env.local (comme Next.js)
-config({ path: ".env" });
-config({ path: ".env.local", override: true });
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
