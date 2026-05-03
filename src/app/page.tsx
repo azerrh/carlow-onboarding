@@ -48,6 +48,9 @@ export default function HomePage() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Brand />
           <nav className="flex items-center gap-2">
+            <Link href="/marketplace">
+              <Button variant="ghost" size="sm">Marketplace</Button>
+            </Link>
             <Link href="/login">
               <Button variant="ghost" size="sm">Se connecter</Button>
             </Link>
