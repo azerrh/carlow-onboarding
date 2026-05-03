@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/auth";
 
+/**
+ * Connexion acheteur. Renvoie un buyerId que le client stocke en
+ * localStorage (`buyerId`) — symétrique au flux vendor.
+ */
 export async function POST(req: NextRequest) {
   try {
     const { email, password } = await req.json();
@@ -15,16 +19,13 @@ export async function POST(req: NextRequest) {
 
     const normalizedEmail = String(email).trim().toLowerCase();
 
-    const vendor = await prisma.vendor.findUnique({
+    const buyer = await prisma.buyer.findUnique({
       where: { email: normalizedEmail },
     });
 
-    // On effectue toujours un compare pour éviter le timing-attack qui révèle
-    // si l'email existe ou non. `verifyPassword` retourne `false` si le hash
-    // est null/undefined.
-    const passwordMatch = await verifyPassword(password, vendor?.password);
+    const passwordMatch = await verifyPassword(password, buyer?.password);
 
-    if (!vendor || !passwordMatch) {
+    if (!buyer || !passwordMatch) {
       return NextResponse.json(
         { error: "Email ou mot de passe incorrect" },
         { status: 401 }
@@ -33,8 +34,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      vendorId: vendor.id,
-      name: vendor.name,
+      buyerId: buyer.id,
+      name: buyer.name,
     });
   } catch (error) {
     console.error(error);

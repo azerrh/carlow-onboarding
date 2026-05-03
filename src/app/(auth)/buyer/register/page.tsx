@@ -1,4 +1,5 @@
-﻿"use client";
+"use client";
+
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -9,35 +10,49 @@ import { Input } from "@/components/ui/Input";
 import { Field } from "@/components/ui/Field";
 import { cn } from "@/lib/cn";
 
-export default function RegisterPage() {
+export default function BuyerRegisterPage() {
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    phone: "",
+    address: "",
+  });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  function update<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
+    setForm((f) => ({ ...f, [key]: value }));
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
-    });
-    const data = await res.json();
-    if (data.success) {
-      localStorage.setItem("vendorId", data.vendorId);
-      router.push("/step-2-company");
-    } else {
-      setError(data.error);
+    try {
+      const res = await fetch("/api/buyer/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setError(data?.error || "Création impossible.");
+        setLoading(false);
+        return;
+      }
+      localStorage.setItem("buyerId", data.buyerId);
+      router.push("/buyer/account");
+    } catch {
+      setError("Erreur réseau.");
       setLoading(false);
     }
   }
 
   return (
     <div className="portal-page grid min-h-screen lg:grid-cols-2">
+      {/* Panneau d'info */}
       <div className="hidden lg:flex flex-col justify-center px-14 py-12">
         <div className="max-w-xl">
           <div className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-4 py-2 text-white backdrop-blur">
@@ -48,59 +63,73 @@ export default function RegisterPage() {
           </div>
 
           <h2 className="mt-8 text-4xl font-semibold tracking-tight text-[rgb(var(--fg))]">
-            Rejoignez le portail vendeur
+            Sourcez vos équipements EnR
           </h2>
           <p className="mt-3 text-base text-[rgb(var(--muted))] max-w-lg">
-            Onboarding rapide, vérifications automatiques et suivi clair de votre dossier.
+            Accédez au catalogue des vendeurs certifiés européens. Panneaux,
+            onduleurs, batteries, IRVE — tout au même endroit.
           </p>
 
           <div className="mt-8 grid grid-cols-2 gap-4 text-sm">
             <div className="rounded-2xl border border-[rgb(var(--border))] bg-white/70 p-4">
-              <div className="font-semibold">Vérification TVA (VIES)</div>
+              <div className="font-semibold">Vendeurs certifiés</div>
               <div className="mt-1 text-[rgb(var(--muted))]">
-                Validation et pré-remplissage quand possible.
+                Tous nos vendeurs sont contrôlés (TVA, K-Bis, CE).
               </div>
             </div>
             <div className="rounded-2xl border border-[rgb(var(--border))] bg-white/70 p-4">
-              <div className="font-semibold">Suivi de progression</div>
+              <div className="font-semibold">Paiement sécurisé</div>
               <div className="mt-1 text-[rgb(var(--muted))]">
-                Étapes claires du dossier jusqu’à la soumission.
+                Stripe Connect, traçabilité des transactions.
+              </div>
+            </div>
+            <div className="rounded-2xl border border-[rgb(var(--border))] bg-white/70 p-4">
+              <div className="font-semibold">Logistique transparente</div>
+              <div className="mt-1 text-[rgb(var(--muted))]">
+                Délais et incoterms affichés par chaque vendeur.
+              </div>
+            </div>
+            <div className="rounded-2xl border border-[rgb(var(--border))] bg-white/70 p-4">
+              <div className="font-semibold">Support européen</div>
+              <div className="mt-1 text-[rgb(var(--muted))]">
+                Une équipe pour vous accompagner sur chaque commande.
               </div>
             </div>
           </div>
         </div>
       </div>
 
+      {/* Formulaire */}
       <div className="grid place-items-center px-4 py-10">
         <Card className="w-full max-w-[440px] p-8 sm:p-10">
           <Brand className="mb-7" />
 
-          {/* Toggle Acheteur/Vendeur */}
-          <RoleToggle current="vendor" />
+          {/* Toggle */}
+          <RoleToggle current="buyer" />
 
           <h1 className="mt-6 text-2xl font-semibold tracking-tight">
-            Créez votre compte vendeur
+            Créez votre compte acheteur
           </h1>
           <p className="mt-1 text-sm text-[rgb(var(--muted))]">
-            Rejoignez la marketplace BtoB spécialiste EnR
+            Accès immédiat à la marketplace
           </p>
 
           <form onSubmit={handleSubmit} className="mt-7 space-y-4">
             <Field label="Nom complet">
               <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Paul-Emile Dours"
+                value={form.name}
+                onChange={(e) => update("name", e.target.value)}
+                placeholder="Marie Dupont"
                 required
                 autoComplete="name"
               />
             </Field>
-            <Field label="Email professionnel">
+            <Field label="Email">
               <Input
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="contact@entreprise.fr"
+                value={form.email}
+                onChange={(e) => update("email", e.target.value)}
+                placeholder="marie@exemple.fr"
                 required
                 autoComplete="email"
               />
@@ -108,12 +137,29 @@ export default function RegisterPage() {
             <Field label="Mot de passe" hint="8 caractères minimum">
               <Input
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={form.password}
+                onChange={(e) => update("password", e.target.value)}
                 placeholder="8 caractères minimum"
                 required
                 minLength={8}
                 autoComplete="new-password"
+              />
+            </Field>
+            <Field label="Téléphone" hint="Optionnel">
+              <Input
+                type="tel"
+                value={form.phone}
+                onChange={(e) => update("phone", e.target.value)}
+                placeholder="+33 6 12 34 56 78"
+                autoComplete="tel"
+              />
+            </Field>
+            <Field label="Adresse de livraison" hint="Optionnel">
+              <Input
+                value={form.address}
+                onChange={(e) => update("address", e.target.value)}
+                placeholder="12 rue des Lilas, 75000 Paris"
+                autoComplete="street-address"
               />
             </Field>
 
@@ -130,7 +176,10 @@ export default function RegisterPage() {
 
           <div className="mt-7 border-t border-black/5 pt-5 text-center text-sm text-[rgb(var(--muted))]">
             <span>Déjà un compte ? </span>
-            <a className="font-semibold text-[rgb(var(--primary))]" href="/login">
+            <a
+              className="font-semibold text-[rgb(var(--primary))]"
+              href="/buyer/login"
+            >
               Se connecter
             </a>
           </div>
@@ -140,11 +189,6 @@ export default function RegisterPage() {
   );
 }
 
-/**
- * Toggle entre les deux rôles (vendeur / acheteur).
- * Utilisé en haut des formulaires d'inscription pour rediriger vers
- * /register (vendeur) ou /buyer/register (acheteur).
- */
 function RoleToggle({ current }: { current: "vendor" | "buyer" }) {
   return (
     <div className="mb-1">

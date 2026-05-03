@@ -1,0 +1,918 @@
+
+===== PAGE 1 =====
+ 
+Ministère de l’Enseignement Supérieur et 
+de la Recherche Scientifique 
+Université de Gabès 
+Institut Supérieur de Gestion 
+Direction des études et des stages 
+ 
+ 
+ 
+ﻭﺯﺍﺭﺓ ﺍﻟﺘﻌﻠﻴﻢ ﺍﻟﻌﺎﻟﻲ و اﻟبحث اﻟﻌﻠمي  
+جامعة قابس  
+المعهد العالي للتصرف  
+ادارة الدراسات و التربصات  
+ 
+ 
+ 
+Institut Supérieur de Gestion de Gabès 
+Rue Jilani Habib, Gabès 6002 
+▪ Tél. : + 216 75 272 280 
+▪ Fax : + 216 75 270 686 
+Site web :www.isggb.rnu.tn 
+ 
+ 
+ 
+Projet de fin d’études pour 
+l’obtention du Diplôme de Mastère 
+professionnel en Informatique de 
+Gestion 
+ 
+Spécialité : Commerce électronique (CE) 
+ 
+ 
+Titre du projet 
+ 
+Marketplace The Green Box TN 
+ 
+ 
+ 
+Réalisé par : Baaziz Islem 
+ 
+ 
+Encadré par : Trifa Zied 
+ 
+ 
+ 
+ 
+Année universitaire : 2022-2023 
+===== PAGE 2 =====
+Titre du sujet 
+ 
+Marketplace The Green Box TN 
+ 
+ 
+ 
+الخلاصة :  
+خلال مشروعنا التخرجي، قمنا بلعب دور حاسم في   تطوير  سوق مبتكر يسمى "صندوق الأخضر تونس". هذا المشروع 
+الناشئ المتعلق بالبيئة يهدف إلى ربط المشترين والبائعين للمنتجات الصديقة للبيئة. بدورنا كمساهمين رئيسيين في المشروع،  
+نجحنا في  برمجت منصة سهلة الاستخدام تلبي احتياجات المشترين والبائعين على حد سواء، وتمكن من إتمام المعاملات  
+بسلاسة وتعزيز تجربة تسوق مستدامة. 
+ 
+المفاتيح :  صديق للبيئة، أخضر، طبيعي، صديق للبيئة، محلي المصدر، غير سام، التجارة الإلكترونية، سوق عبر الإنترنت، 
+إدارة المخزون، تصنيف المنتجات، تصفية وفرز المنتجات.  
+ 
+ 
+Résumé :  
+Au cours de notre projet de fin d'études, nous avons joué un rôle crucial dans le développement 
+d'un marché innovant appelé "The Green Box TN". Cette entreprise axée sur l'environnement 
+vise à connecter les acheteurs et les vendeurs de produits respectueux de l'environnement. En 
+tant que contributeurs clés, nous avons réussi à programmer une plateforme conviviale qui 
+répond aux besoins des acheteurs et des vendeurs, facilitant les transaction s fluides et 
+améliorant l'expérience d'achat durable. 
+ 
+Mots clés : Écologique, Vert, Naturel, respectueux de l'environnement, provenant de sources 
+locales, Non toxique, Commerce électronique, Place de ma rché en ligne, Gestion des stocks, 
+Catégorisation des produits, Filtrage et tri des produits. 
+ 
+Abstract :  
+During our graduation project, we played a crucial role in developing an innovative marketplace 
+called "The Green Box TN". This environmentally-focused venture aims to connect buyers and 
+sellers of eco -friendly products. As key contributors, we successfully programmed a user -
+friendly platform that meets the needs of both buyers and sellers, enabling smooth transactions 
+and enhancing a sustainable shopping experience. 
+ 
+Key-words : Eco-friendly, Green, Natural, environmentally friendly, locally sourced, Non -
+toxic, E -commerce, Online marketplace, Inventory management, Product categorization, 
+Product filtering and sorting. 
+ 
+===== PAGE 3 =====
+ 
+ 
+1 
+ 
+ 
+Dédicace 
+Je tiens à exprimer notre profonde reconnaissance envers notre famille, qui a été une source 
+constante de soutien, d'encouragement et d'amour tout au long de notre parcours académique. 
+Votre soutien indéfectible et votre croyance en moi ont été des moteurs essentiels de notre 
+réussite. 
+Je souhaite également adresser mes remerciements les plus sincères aux entreprises de stage 
+« SITEM » et « The Green Box TN ». Votre accueil chaleureux, votre confiance et votre 
+encadrement m'ont offert un e précieuse opportunité d'apprentissage et de croissance 
+professionnelle. Les défis stimulants auxquels j'ai été confronté au sein de votre entreprise m'ont 
+permis de mettre en pratique les connaissances acquises au cours de mes études et de développer 
+des compétences essentielles pour notre future carrière. 
+Enfin, je dédie ce rapport de PFE à notre famille bien-aimée, qui a été notre pilier pendant 
+cette période exigeante. Vos encouragements constants, votre amour inconditionnel et votre 
+compréhension ont été une source d'inspiration et de motivation inestimable. Je vous suis 
+profondément reconnaissant pour tout ce que vous avez fait et continuez de faire pour moi. 
+Que cette dédicace témoigne de notre gratitude sincère envers notre famille et envers les 
+entreprises de st age « SITEM » et « The Green Box TN ».  Leur soutien indéfectible et leur 
+confiance ont été des piliers essentiels de notre réussite académique et professionnelle." 
+ 
+ 
+ 
+  
+===== PAGE 4 =====
+2 
+ 
+Remerciement 
+Nous tenons à exprimer nos sincères remerciements à notre estimé encadrant, Monsieur 
+Trifa Zied. Nous vous témoignons notre profonde gratitude pour l'honneur singulier que vous 
+nous avez accordé en acceptant de nous encadrer, ainsi que pour votre précieuse  contribution 
+pédagogique et vos encouragements en faveur de l'innovation et de la persévérance tout au long 
+de cette période, ce qui a grandement contribué à la réussite de notre travail. 
+ 
+Nous adressons nos remerciements aux membres du jury, en particuli er à Monsieur le 
+président du jury  pour avoir gracieusement présidé le jury, ainsi qu'à Monsieur le rapporteur 
+pour avoir accepté d'examiner ce rapport de projet d'étude. 
+ 
+Nous tenons également à exprimer notre vive gratitude envers tous les enseignants qui nous 
+ont guidés tout au long de notre parcours à l'Institut Supérieur De Gestion De Gabès. 
+ 
+Enfin, nous souhaitons exprimer nos remerciements à tous nos collègues de la promotion 
+MPCE 2022/2023 pour leur collaboration sincère au cours de ces deux années. 
+  
+===== PAGE 5 =====
+3 
+ 
+Liste des figures 
+Figure 1 : Logo de SITEM................................................................................................. 12 
+Figure 2 : Chiffre clés de SITEM ...................................................................................... 13 
+Figure 3 : Bureau de SITEM ............................................................................................. 15 
+Figure 4 : Clients de SITEM .............................................................................................. 17 
+Figure 5 : concurrents de SITEM ...................................................................................... 17 
+Figure 6 : Logo de The Green Box .................................................................................... 18 
+Figure 7 : Local de The Green Box ................................................................................... 19 
+Figure 8 : Capture du site Tunisie Bio ............................................................................... 21 
+Figure 9 : Capture du site vivez nature .............................................................................. 22 
+Figure 10 : Diagramme des cas d'utilisation générale ....................................................... 29 
+Figure 11 : Diagramme de cas d'utilisation de visiteur publique ...................................... 30 
+Figure 12 : Diagramme de cas d'utilisation de visiteur authentifié ................................... 33 
+Figure 13 : Diagramme de cas d'utilisation de vendeur ..................................................... 35 
+Figure 14 : Diagramme de cas d'utilisation d'éditeur ........................................................ 36 
+Figure 15 : Diagramme de cas d'utilisation d'admin.......................................................... 37 
+Figure 16 : Diagramme de séquence du cas d’utilisation S’inscrire ................................. 38 
+Figure 17 : Diagramme de séquence du cas d’utilisation postuler tant que vendeur ........ 39 
+Figure 18 : Diagramme de séquence du cas d’utilisation passé une commande ............... 40 
+Figure 19 : Diagramme de classe....................................................................................... 41 
+Figure 20 : Architecture de mise en œuvre ........................................................................ 44 
+Figure 21 : Logo React ...................................................................................................... 45 
+Figure 22 : Logo Strapi ...................................................................................................... 45 
+Figure 23 : Logo Node js ................................................................................................... 46 
+Figure 24 : Logo npm ........................................................................................................ 46 
+Figure 25 : Logo MAMP ................................................................................................... 47 
+===== PAGE 6 =====
+4 
+ 
+Figure 26 : Logo MySQL .................................................................................................. 47 
+Figure 27 : Logo vscode .................................................................................................... 48 
+Figure 28 : Logo Github .................................................................................................... 48 
+Figure 29 : Logo postman .................................................................................................. 49 
+Figure 30 : Logo Adobe photoshop ................................................................................... 49 
+Figure 31 : Logo putty ....................................................................................................... 50 
+Figure 32 : Logo nginx ...................................................................................................... 50 
+Figure 33 : Logo UFW ...................................................................................................... 51 
+Figure 34 : Logo PM2 ....................................................................................................... 51 
+Figure 35 : Capture de page d'accueil ................................................................................ 53 
+Figure 36 : Capture de page des produits par catégorie ..................................................... 54 
+Figure 37 : Capture de page d'un produit .......................................................................... 54 
+Figure 38 : Capture de formulaire pour postuler tant qu'un vendeur ................................. 55 
+Figure 39 : Capture de profile ............................................................................................ 56 
+Figure 40 : Capture de page validation commande ........................................................... 57 
+Figure 41 : Capture de liste candidatures des vendeurs ..................................................... 57 
+Figure 42 : Capture de formulaire d'ajout d'un produit ..................................................... 58 
+ 
+  
+===== PAGE 7 =====
+5 
+ 
+Liste des tableaux 
+Tableau 1 : Ind icateurs d’attractivités dans les sites de vente des produits bio de point de 
+vue Acheteur ............................................................................................................................ 22 
+Tableau 2 : Indicateurs d'attractivités dans les sites de vente de point de vue Vendeur ... 23 
+Tableau 3 : Le cas d’utilisation « S’inscrire » ................................................................... 30 
+Tableau 4 : Le cas d’utilisation « S’inscrire newsletter » .................................................. 31 
+Tableau 5 : Le cas d’utilisation « Ajouté au panier » ........................................................ 31 
+Tableau 6 : Le cas d’utilisation « Contacté admin » ......................................................... 32 
+Tableau 7 : Le cas d’utilisation « Postuler tant que vendeur » .......................................... 32 
+Tableau 8 : Le cas d’utilisation « gérer profile » ............................................................... 33 
+Tableau 9 : Le cas d’utilisation « Passer commande » ...................................................... 34 
+Tableau 10 : Le cas d’utilisation « Consulter commande » .............................................. 34 
+Tableau 11 : Le cas d’utilisation « gérer produits » .......................................................... 35 
+Tableau 12 : Le cas d’utilisation « Générale » .................................................................. 36 
+Tableau 13 : Le cas d’utilisation « Gérer administrateur » ............................................... 37 
+ 
+  
+===== PAGE 8 =====
+6 
+ 
+Table De Matières  
+Dédicace .............................................................................................................................. 1 
+Remerciement ...................................................................................................................... 2 
+Introduction générale ........................................................................................................... 9 
+Etude préalable ................................................................................................................. 11 
+Introduction........................................................................................................................ 12 
+1. Cadre de projet ....................................................................................................... 12 
+1.1 Introduction d’entreprise de stage « SITEM » ............................................... 12 
+1.2 Présentation de l’entreprise ............................................................................ 12 
+1.2.1 Description de l’agence .................................................................................. 12 
+1.2.2  Chiffre clés de SITEM ................................................................................... 13 
+1.2.3  Structure de l’agence ..................................................................................... 14 
+1.2.4  Equipe de SITEM .......................................................................................... 15 
+1.2.5  Le déroulement de travail chez SITEM ......................................................... 15 
+1.2.6  Les objectifs et les enjeux de l’agence .......................................................... 16 
+1.2.7  Les clients de SITEM .................................................................................... 17 
+1.2.8  Les concurrents de SITEM ............................................................................ 17 
+1.3 Introduction de Startup propriétaire du site « The green box TN » ............... 18 
+1.3.1  Services .......................................................................................................... 18 
+1.3.2  Mission et vision ............................................................................................ 19 
+1.3.3  Principes et éthique ........................................................................................ 20 
+2. Etude de l’existant .................................................................................................. 20 
+3. Recherche documentaire ........................................................................................ 22 
+4. Solution proposée ................................................................................................... 23 
+5. Cahier des charges ................................................................................................. 23 
+===== PAGE 9 =====
+7 
+ 
+5.1 Objectifs du projet .......................................................................................... 24 
+5.2 Les besoins fonctionnels (Qu’est-ce que ce site doit faire ?) ......................... 24 
+5.3 Les besoins non fonctionnels (A quoi devons-nous faire attention ?) ............ 24 
+Conclusion ......................................................................................................................... 25 
+Etude Conceptuelle ........................................................................................................... 26 
+Introduction........................................................................................................................ 27 
+1. Langage de modélisation ....................................................................................... 27 
+2. Les cas d’utilisation ............................................................................................... 28 
+2.1 Identification des acteurs ................................................................................ 28 
+2.2 Description graphique des cas d’utilisation .................................................... 29 
+2.3 Description détaillée de quelques cas d’utilisation......................................... 29 
+3. Les diagrammes de séquences ............................................................................... 38 
+3.1 Diagramme de séquence du cas d’utilisation « S’inscrire » ........................... 38 
+3.2 Diagramme de séquence du cas d’utilisation « postuler tant que vendeur » .. 39 
+3.3 Diagramme de séquence du cas d’utilisation « passé une commande » ........ 40 
+4. Le diagramme de classes ....................................................................................... 40 
+5. Le schéma relationnel de la Base de Données ....................................................... 42 
+Conclusion ......................................................................................................................... 42 
+Réalisation ......................................................................................................................... 43 
+Introduction........................................................................................................................ 44 
+1. Architecture de mise en œuvre .............................................................................. 44 
+2. Environnement de travail ....................................................................................... 44 
+2.1 Logiciels et technologies adoptés ................................................................... 44 
+2.2 Langages utilisés............................................................................................. 52 
+3. Travail réalisé ......................................................................................................... 53 
+3.1 Interface d’accueil .......................................................................................... 53 
+===== PAGE 10 =====
+8 
+ 
+3.2 Interface d’affichage des produits par catégorie ............................................. 54 
+3.3 Interface d’affichage d’un produit .................................................................. 54 
+3.4 Interface candidature d’être un vendeur ......................................................... 55 
+3.5 Interface profile .............................................................................................. 56 
+3.6 Interface de validation d’une commande ........................................................ 57 
+3.7 Interface de liste des demandes d’être vendeur .............................................. 57 
+3.8 Interface d’ajout d’un produit ......................................................................... 58 
+Conclusion ......................................................................................................................... 58 
+Conclusion et perspective .................................................................................................. 59 
+Bibliographie ..................................................................................................................... 60 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+===== PAGE 11 =====
+9 
+ 
+Introduction générale 
+Le développement de l'e -commerce a révolutionné le monde des affaires en permettant aux 
+entreprises de toucher un public plus large et de proposer leurs produits et services de manière plus 
+accessible. Dans ce contexte, les marketplaces en ligne se sont rapid ement imposées comme des 
+plateformes incontournables pour les entrepreneurs à la recherche d'une visibilité accrue et d'une 
+croissance exponentielle. Ce rapport de projet de fin d'études vise à présenter le développement d'une 
+marketplace spécialisée dans la vente de produits écologiques pour la startup The Green Box TN. 
+Le marché en ligne en général a connu une expansion significative au cours de la dernière décennie. 
+Selon une étude récente publiée par [Source : https://fr.statista.com/], les ventes en ligne ont augmenté 
+de manière spectaculaire de 14.8% de total des ventes en 2020 vers 20.7% en 2025. Cette tendance à 
+la hausse est attribuable à plusieurs facteurs, notamment la facilité d'accès à Internet, l'augmentation du 
+nombre de smartphones et la commodité offerte par les achats en ligne. 
+C'est dans ce contexte favorable que The Green Box TN, une startup ambitieuse dans le 
+domaine de l'écologie, a décidé de se lancer sur le marché en ligne en créant sa propre 
+marketplace. L'objectif principal de ce projet de fin d'études est de développer et de mettre en 
+œuvre une plateforme en ligne spécialisée dans la vente de produits écologiques, offrant ainsi 
+aux consommateurs une alternative respectueuse de l'environnement pour leurs achats. 
+Le développement d'une marketplace spécialisée présente de nombreux avantages pour The Green 
+Box TN. En se focalisant sur un créneau spécifique, l'entreprise pourra attirer des consommateurs 
+passionnés par la protection de l'environnement et répondre à leurs besoins spécifiques. En offrant une 
+variété de produits écologiques provenant de différents vendeurs, la marketplace permettra également  
+aux clients de trouver tout ce dont ils ont besoin au même endroit, simplifiant ainsi leur expérience 
+d'achat. 
+Le présent rapport a pour o bjectif de résumer les différentes étapes par lesquelles nous sommes 
+passés afin de réaliser ce projet. Il est articulé autour de trois chapitres : 
+Dans le premier chapitre intitulé « Etude préalable », nous présentons la motivation qui nous a 
+encouragés à choisir ce projet, puis nous établissons une analyse de l'existant afin d'en dégager les 
+défauts et les lacunes à éviter. Enfin, nous identifions les besoins fonctionnels et non fonctionnels du 
+futur système. 
+Dans le second chapitre intitulé « Etude conceptuelle », nous commençons par identifier les acteurs 
+et les cas d'utilisation. Ensuite, nous élaborons une conception détaillée à travers le diagramme des cas 
+d'utilisation, les diagrammes de séquences, ainsi que le diagramme de classe. 
+===== PAGE 12 =====
+10 
+ 
+      Dans le dernier chapitre intitulé « Réalisation », nous présentons l'architecture et l'environnement 
+logiciel de l'application, ainsi que les langages de programmation adoptés. De plus, nous fournissons 
+des aperçus de quelques exemples d'interfaces utilisateurs. 
+Enfin, nous clôturons ce rapport par une conclusion dans laquelle nous résumons notre solution et 
+exposons quelques perspectives futures.  
+===== PAGE 13 =====
+11 
+ 
+Chapitre 1   
+  
+  
+Etude 
+préalable  
+  
+===== PAGE 14 =====
+12 
+ 
+Introduction 
+L’étude préalable consiste à comprendre le contexte du système. Il s’agit d’identifier la 
+problématique, mener une étude de l’existant et déterminer les objectifs et les fonctionnalités du futur 
+système. 
+1. Cadre de projet 
+Ce travail s'inscrit dans le cadre de notre projet de fin d'études pour l'obtention du diplôme 
+universitaire de Master professionnel en commerce électronique à l'Institut Supérieur de 
+Gestion de Gabès. À travers ce manuscrit, nous avons eu l'opportunité de développer un Site de 
+vente pour la startup The Green Box Tunisie au sein de la boîte de d éveloppement SITEM 
+informatique. Ce site est spécialisé dans la vente de produits écologiques dans le but 
+d'encourager les acheteurs à préserver notre planète. En tant qu'utilisateur de ce site, vous 
+pouvez être à la fois acheteur et/ou vendeur. 
+1.1 Introduction d’entreprise de stage « SITEM » 
+SITEM est une entreprise qui opère dans l'industrie des services professionnels. Nous apprendrons 
+tout d'abord quels sont ses principaux produits et services, sa structure organisationnelle et son modèle 
+d'affaires. Nous examinerons ensuite ses activités et ses stratégies de croissance, ainsi que son impact 
+sur l'économie. Enfin, nous aborderons les principaux défis auxquels l'entreprise est confrontée 
+aujourd'hui, et comment elle peut les gérer pour poursuivre sa croissance et sa prospérité. 
+1.2 Présentation de l’entreprise 
+1.2.1 Description de l’agence 
+ 
+Figure 1 : Logo de SITEM 
+
+===== PAGE 15 =====
+13 
+ 
+« SITEM » est une agence de communication digitale 360 disposant d’un locale en France à Paris 
+et en Tunisie à Djerba et au Lac 2, fondée en 2018 par Monsieur GHANDRI IMED. Elle a comme 
+mission d’accompagner les entreprises dans leurs stratégies de communi cation en proposant plusieurs 
+prestations telles que : l’étude et le conseil marketing, le développement web et mobile, la création du 
+contenu et le display marketing, le référencement, le conseil, l’UI/UX design et les solutions digitales. 
+L’agence a eu l’honneur de collaborer avec plusieurs marques et entreprises issues de différents secteurs 
+d’activités : Réseau de télécommunications, construction, restauration, tourisme, esthétique…  
+Au fil des années, SITEM a pu relever les défis des marques et orchest rer leurs stratégies de 
+communication en leur proposant une offre complète grâce à l’esprit créatif de l’équipe de SITEM et sa 
+capacité à penser autrement. Après avoir gagné la confiance de ses clients et pour être toujours à la 
+pointe des tendances, SITEM a décidé d’élargir son équipe de professionnels pour passer d’une agence 
+de contenu à une agence de communication & solution de web et mobile pour proposer encore plus de 
+valeur et aller de l’avant. Ses ambitions l’ont mobilisé pour étendre son projet au-delà des frontières, et 
+par conséquent dans le cadre de son développement l’agence SITEM se voit aujourd’hui comme une 
+agence communication 360° qui accompagne ses clients sur tous les volets en l’aidant à se développer 
+et en les accompagnant à la réussite . Elle a décidé de s’implanter en Afrique du Nord pour élargir ses 
+parts de marché et pérenniser les projets des clients. SITEM Djerba est composée d’une équipe de 10 
+personnes jeunes, actives et créatives qui conjuguent tous ses efforts et ses talents pou r bien satisfaire 
+ses clients. Ses experts partagent tous la même envie de créer et qui avance au -delà de la frontière. Ils 
+imaginent, innovent et transportent la présence du client sur le web vers les plus hauts sommets afin 
+d’atteindre sa satisfaction. B ref, C’est une agence digitale qui décolle avec ses clients vers l’infini. 
+L’agence parte du principe d’être toujours exemplaire en matière de professionnalisme et confiance. 
+1.2.2  Chiffre clés de SITEM 
+ 
+Figure 2 : Chiffre clés de SITEM 
+
+===== PAGE 16 =====
+14 
+ 
+1.2.3  Structure de l’agence 
+• Développement web et mobile 
+Les développeurs de SITEM développent des plateformes web et applications mobiles sur mesure 
+et adaptés aux attentes des clients, tout en leur garan tissant le profit d’une maintenance et d’un suivi 
+continu. 
+• Conseils et UI/UX Design 
+L’UX/UI Design est l’ensemble de méthodes permettant de concevoir une interface répondant 
+pleinement aux besoins d’utilisabilité de chaque utilisateur, et dans une interface agréable, ergonomique 
+et fonctionnelle. L’objectif des designers de SITEM étant de fournir la meilleure expérience utilisateur 
+possible et le meilleur design. 
+• Référencement SEO, SEA, SMO 
+Le référencement est un levier indispensable pour augmenter la visibilité des clients sur le web. Les 
+experts de SITEM proposent des stratégies de référencement conformes aux algorithmes des moteurs 
+de recherche afin de générer des prospects qualifiés. 
+• Création de contenu et display marketing 
+SITEM propose la création de contenu attrayant et l’optimisation des performances digitales de ses 
+clients. Elle transforme les visions de ses clients en réalité par la création de contenus uniques et 
+mémorables. 
+• Solutions digitales 
+Afin de répondre aux besoins de ses clients, les experts de SITEM ont produit des solutions digitales 
+innovantes et performantes. Nos stratèges sont à l’écoute totale de nos clients pour les accompagner 
+dans le processus de développement de leurs projets et pour leur offrir des solutions adaptées à leurs 
+besoins. 
+• Etude et conseils marketing 
+Les entreprises d’aujourd’hui sont confrontées à un environnement en perpétuel changement. Les 
+consultants de SITEM élaborent des études approfondies afin de mieux comprendre les évolutions du 
+marché tout en ajustant votre stratégie marketing. 
+===== PAGE 17 =====
+15 
+ 
+1.2.4  Equipe de SITEM 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+L’équipe de « SITEM Djerba » est composée d’un Responsable d’agence, un responsable du 
+développement, un développeur Full stack, trois développeurs WORDPRESS, un référenceur web / 
+SEO, un UI/UX Designer, deux designers et deux rédacteurs web.  
+1.2.5  Le déroulement de travail chez SITEM 
+SITEM travailles sur 14 postes : 5 ordinateurs portables avec 9 ordinateurs bureaux. Comme toute 
+agence de communication « SITEM » possède une série d’étapes qui conduit à la création d’un projet 
+bien fini, depuis l’élaboration du concept à l’édition et à la production du travail fini. 
+• La rencontre avec le client 
+Une réunion s’effectue entre le gérant et le client dans lequel ce dernier propose son projet et les 
+données nécessaires pour le travail demandé. 
+• Réunion entre le gérant et le responsable artistique 
+Une réunion téléphonique se déroule ensuite entre le gérant en France et le responsable artistique à 
+Djerba pour partager les idées de clients et chercher un concept bien défini pour commencer le travail 
+avec l’équipe. 
+ 
+ 
+Figure 3 : Bureau de SITEM 
+===== PAGE 18 =====
+16 
+ 
+• Lancement de travail avec l’équipe de SITEM 
+Le responsable lance le travail avec l’équipe SITEM. Le travail s’organise selon la nature du 
+projet. Nous prenons l’exemple du projet de création d’un site web. 
+• Etude Benchmark et Wire framing 
+Le travail commence par l’étude Benchmark en passant au wireframe avec le UI/UX designer qui 
+sera envoyé par le responsable au client pour confirmer l’UX design.  
+• Rédaction Web 
+Entre temps, les rédacteurs web rédigent le contenu du site attentivement avec les normes 
+demandées par le client.  
+• Création de Visuelles 
+Le graphiste commence à créer les visuelles du site web selon la charte graphique du projet.  
+• UI design  
+ Dès que le client valide le wireframe, le UI/UX designer commence par l’UI design selon la charte 
+graphique du projet et avec les visuelles crée par le graphiste et le contenu réalisé par les rédacteurs web. 
+Chaque page web terminé par le designer sera en voyé au client par une capture vidéo pour donner la 
+validation et passer à la création des autres pages du site. 
+• Développement Web  
+Une fois le design est confirmé, un lien xd  est transmis au développeur pour commencer à 
+développer le site web. 
+1.2.6  Les objectifs et les enjeux de l’agence 
+Le plus important chez SITEM, c’est la satisfaction du client, ses collaborateurs suivent 
+minutieusement le processus et s’organisent de ma nière à répondre aux objectifs spécifiques au brief. 
+En fait, les missions de l’agence s’articles autour des axes suivants :  
+Être toujours à la pointe des tendances  
+Rendre un service de qualité  
+Offrir un meilleur accueil aux clients 
+Être une force de pr oposition et de conseil à la clientèle pour être compétitifs et réactifs face aux 
+demandes sur marché. 
+Satisfaction des clients  
+===== PAGE 19 =====
+17 
+ 
+Offrir l’opportunité à chaque collaborateur pour se développer au sein de l’entreprise 
+Offrir les moyens et le plan pour chaque profil  
+Jouer un rôle positif dans la formation et l’intégration des jeunes diplômés dans la vie 
+professionnelle. 
+1.2.7  Les clients de SITEM 
+« SITEM » possède des clients fidèles de différents secteurs tout au long de son parcours de travail. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+1.2.8  Les concurrents de SITEM 
+Puisqu’elle n’est pas la seule agence de communication à Paris nous pouvons  citer quelques 
+concurrents de SITEM : 
+ 
+Figure 5 : concurrents de SITEM 
+Figure 4 : Clients de SITEM 
+===== PAGE 20 =====
+18 
+ 
+Conclusion 
+En conclusion, SITEM est une entreprise innovante qui offre des services professionnels de grande 
+qualité à ses clients. Elle possède une structure organisationnelle solide et une stratégie de croissance 
+efficace, et elle est en mesure d'accroître sa présence sur le marché des services professionnels. Avec 
+une vision et une stratégie claire, SITEM a les outils nécessaires pour réussir et se développer à long 
+terme. 
+ 
+1.3 Introduction de Startup propriétaire du site « The green box 
+TN » 
+ 
+Figure 6 : Logo de The Green Box 
+The Green Box est un espace de coworking écologique, implanté à Menzah 6, Ariana. Il offre des 
+espaces de travail ouverts, des bureaux privatifs, ainsi que des salles de réunion et de con férence, 
+destinés aux étudiants, aux professionnels et aux organisations. Dotée d'une équipe de jeunes 
+entrepreneurs engagés, qui partagent une vision idéaliste d'un monde plus respectueux de 
+l'environnement, The Green Box se positionne comme un acteur dét erminé à promouvoir un mode de 
+vie et de travail en harmonie avec les principes écologiques. 
+1.3.1  Services 
+The Green Box offre un espace propice à l'exercice des activités professionnelles et académiques, 
+ainsi qu'au développement de réseaux relationnels. Leurs prestations ne se limitent pas à la simple mise 
+à disposition d'un espace de coworking, mais englobent également la création d'une communauté dédiée 
+aux jeunes entrepreneurs, le soutien aux startups en phase d'amorçage, ainsi que l'organisation 
+d'événements internes en partenariat avec diverses organisations et entreprises partageant des valeurs 
+communes. 
+
+===== PAGE 21 =====
+19 
+ 
+ 
+Figure 7 : Local de The Green Box 
+ 
+The Green Box se charge de l'organisation et de l'accueil d'événements, comprenant des ateliers et 
+des conférences portant sur des thématiques éco-responsables. En l'espace de cinq mois à peine depuis 
+sa fondation, The Green Box a déjà orchestré plus de cinq événements en étroite collaboration avec 
+divers partenaires. 
+Il dispose de deux espaces ouverts, de quatre bureaux privatifs ainsi que d'une salle de réunion et 
+de conférence. Cet espace de coworking met à disposition des commodités telles qu'une cuisine et un 
+espace de détente dédiés à la communauté. 
+1.3.2  Mission et vision 
+ 
+The Green Box s'emploie à offrir des prestations d'une qualité supérieure. En fin de compte, les clients 
+peuvent s'appuyer sur la confiance et ressentir un sentiment d'appartenance à une communauté 
+d'individus animés par la préoccupation de la plan ète et de l'avenir des entreprises écologiques en 
+Tunisie. La vision de The Green Box consiste à devenir le tout premier foyer favorisant l'innovation 
+verte en Tunisie en soutenant et en accompagnant les start -ups écologiques. Ils ont adopté ce qu'ils 
+qualifient de "philosophie verte", estimant qu'elle représente la voie à suivre pour mener une existence 
+durable et pérenne. Ils s'efforcent de métamorphoser le monde du coworking en le teintant de plus de 
+vert, tout en favorisant les individus partageant les mêmes aspirations et cherchant un lieu où pouvoir 
+exercer un impact significatif. 
+
+===== PAGE 22 =====
+20 
+ 
+1.3.3  Principes et éthique  
+The Green Box propose un environnement de travail optimal qui découle de ses principes et de son 
+éthique irréprochable : 
+-Respect et équité, garantissant des relations harmonieuses et justes. 
+-Confiance et intégrité, assurant une conduite irréprochable et transparente. 
+-Mentalité de croissance, favorisant le développement continu et l'apprentissage. 
+-Travail d'équipe, encourageant la collaboration et la synergie entre les membres. 
+-Équilibre entre vie professionnelle et personnelle, reconnaissant l'importance de concilier les deux 
+sphères. 
+-Incidence sur le monde, visant à avoir un impact positif et durable sur la société. 
+-Écoresponsabilité, adoptant des pratiques respectueuses de l'environnement. 
+2. Etude de l’existant 
+L’étude de l’existant permet de déterminer les points faibles et les points forts d’un produit actuel 
+en vue d’en prendre en considération lors de la conception et la réalisation d’un nouveau produit. 
+Le site web « Tunisie Bio » [ https://tunisiebio.tn ] : 
+Ce site est spécialisé dans la vente en ligne des produits bio, Il met à la disposition des utilisateurs 
+les services suivants : 
+- Créer une compte acheteur. 
+- Consulter le site. 
+- Acheter des produits. 
+Avantages : 
+- Présence de deux moyens de paiement soit à la livraison soit en ligne avec paymee. 
+- Simplicité d’utilisation du site web. 
+Inconvénients : 
+- Présentation du site moyenne (Frontend) sur toute la présentation des catégories lors du survol 
+de la souris. 
+- Pour vendre sur ce site il faut contacter l’administrateur, Que lui peuvent partager des produits 
+sur le site. 
+===== PAGE 23 =====
+21 
+ 
+- L’affichage des cartes de produit en mobile est totalement irritant pour les yeux. 
+Spécification technique du site : 
+Site réaliser avec le CMS WordPress, utilise la plugin WooCommerce. 
+ 
+Figure 8 : Capture du site Tunisie Bio 
+Le site web « vivez nature » [ https://www.viveznature.com ] : 
+Ce site est spécialisé dans la vente en ligne des produits bio & naturels, Il met à la disposition des 
+utilisateurs les services suivants : 
+- Créer une compte acheteur. 
+- Consulter le site. 
+- Acheter des produits. 
+Avantages : 
+- Présence de différents moyens de paiement, à la livraison, en ligne avec clicktopay, virement 
+bancaire et avec un chèque. 
+- Simplicité d’utilisation du site web. 
+Inconvénients : 
+- Pour vendre sur ce site il faut contacter l’administrateur, Que lui peuvent partager des produits 
+sur le site. 
+- Responsivité du site trop faible composants non ergonomique sur mobile et tablette. 
+Spécification technique du site : 
+Site réaliser avec la CMS Prestashop. 
+
+===== PAGE 24 =====
+22 
+ 
+ 
+Figure 9 : Capture du site vivez nature 
+ 
+ 
+3. Recherche documentaire 
+Pour mieux cerner les différentes dimensions qui peuvent intéresser les Acheteurs, nous avons mené 
+une recherche documentaire sur le web focalisée sur les témoignages dans de s forums autour du sujet. 
+Nous avons ainsi pu recenser une liste d'indicateurs d'attractivité classés par catégorie d'acteurs et triés 
+par ordre d'importance. Ces indicateurs sont donnés par les tableaux suivants : 
+Tableau 1 : Indicateurs d’attractivités dans les sites de vente des produits bio de point de vue Acheteur 
+Ordre d’importance Indicateur 
+1 Interface attirante 
+2 Interface utilisateur conviviale 
+3 Conception responsive 
+4 Panier d'achat et processus de commande 
+5 Système de gestion des commandes 
+6 Sécurité des données 
+
+===== PAGE 25 =====
+23 
+ 
+ 
+Tableau 2 : Indicateurs d'attractivités dans les sites de vente de point de vue Vendeur 
+Ordre d’importance Indicateur 
+1 Inscription des vendeurs 
+2 Gestion des produits 
+3 Assistance aux vendeurs 
+4 Promotion des vendeurs 
+5 Interface utilisateur conviviale 
+4. Solution proposée 
+En considérant les résultats donnés par l’étude de l’existant, le développement de ce site de vente 
+doit offrir à ses utilisateurs des interface simple et ergonomiques, permettant d’acheter et vendre tout en 
+sécurise leurs informations. 
+Notre solution apporte plusieurs valeurs ajoutées : 
+L’interface client est totalement responsive pour donner aux utilisateurs le choix d’uti liser soit un 
+pc, un smart phone ou une tablette. 
+Deux méthodes de paiement soit à la livraison soit le paiement en ligne en utilisant paymee. 
+Chaque entreprise ou individue peuvent être un vendeur, il suffit juste de postuler via un formulaire 
+et attendre la réponse et l’activation de son compte ou il peut ajouter et gérer ses produits. 
+NB : les produits ajouter par les vendeurs sont classé comme brouillon en attendant de les publier 
+par un administrateur pour des raisons de sécurité et pour vérifier si le produit ajouté est en accord avec 
+les règles du site. 
+5. Cahier des charges 
+Afin de réussir tout projet, une phase d’analyse de besoins fonctionnels et non fonctionnels doit être 
+prise en considération. Cette phase mettra le focus sur les fonctionnalités prévues dans notre site web. 
+===== PAGE 26 =====
+24 
+ 
+5.1 Objectifs du projet  
+-  Promouvoir les produits écologiques : L'objectif principal est de mettre en avant des produits 
+respectueux de l'environnement, encourageant ainsi un mode de consommation durable. 
+- Faciliter l'accès aux produits écologiques : Permettre aux consommateurs d'accéder facilement 
+à une large gamme de produits écologiques, en rassemblant différents vendeurs sur une même 
+plateforme. 
+- Favoriser l'engagement des vendeurs et des acheteurs : Encourager les vendeurs à proposer des 
+produits écologiques de qualité et offrir des incitations aux acheteurs pour choisir des produits 
+respectueux de l'environnement. 
+-  Promouvoir l'innovation écologique : Soutenir les entrepreneurs et les fabricants qui 
+développent de nouvel les solutions et technologies écologiques, en leur offrant une visibilité sur la 
+plateforme. 
+Ces objectifs visent à créer une place de marché dynamique et engagée, offrant une solution pratique 
+pour soutenir un mode de vie plus respectueux de l'environnement et encourager le développement d'une 
+économie verte. 
+5.2 Les besoins fonctionnels (Qu’est-ce que ce site doit faire ?) 
+- Fournis un catalogue des produits classé par catégories et sous catégories avec un système de 
+filtrage. 
+- Authentification pour utilisateurs. 
+- Moyen pour postuler tant que vendeur 
+- Authentification pour vendeur. 
+- Partage des produits par vendeurs eux même. 
+5.3 Les besoins non fonctionnels (A quoi devons-nous faire 
+attention ?) 
+- Les produits ajouter par vendeurs ne s’affiche qu’après validation d’administrateur. 
+- Frontend (ergonomique et acceptable pour tous les générations). 
+===== PAGE 27 =====
+25 
+ 
+Conclusion 
+Dans ce premier chapitre, nous avons présenté le contexte général de notre projet ainsi que 
+l'entreprise de stage et l'entreprise propriétaire du site. Ensuite, nous avons établi l'étude de l'existant qui 
+nous a guidés vers une solution que nous jugeons pertinente. Par la suite, nous avons fixé un cahier des 
+charges détaillant les besoins fonctionnels et non fonctionnels.  
+Dans le chapitre suivant, nous allons nous intéresser à l'étude conceptuelle de ce projet.  
+===== PAGE 28 =====
+26 
+ 
+ 
+Chapitre 2  
+  
+  
+Etude 
+Conceptuelle  
+  
+===== PAGE 29 =====
+27 
+ 
+Introduction 
+La phase de conception est la phase initiale de la création et de la mise en œuvre de notre 
+projet. En fait, elle représente une étape importante de réflexion dans le cycle de développement 
+logiciel, après la phase d'analyse et de spécification. Dans ce chapitre, nous allons, en premier 
+lieu, justifier notre choix du langage de modélisation et de la méthodologie de conception 
+adoptés. Ensuite, nous allons présenter en détails la conception du projet à travers les 
+diagrammes UML suivants : les diagrammes des cas d'utilisation, les diagrammes de séquence 
+et le diagramme de classes. 
+1. Langage de modélisation 
+Après validation de notre compréhension des besoins des utilisateurs et la proposition de 
+notre solution, nous essayons dans cet te phase de conception de décrire de manière non 
+ambiguë, en utilisant un langage de modélisation, le fonctionnement futur du système et de 
+clarifier ses aspects techniques afin d'en faciliter la réalisation. Pour ce faire, nous avons choisi 
+le langage de modélisation UML (Unified Modeling Language). UML est un langage unifié de 
+modélisation objets. Ce n'est pas une méthode, il ne donne pas de solution pour la mise en 
+œuvre d'un projet. C'est avant tout un formalisme graphique issu de notations employées da ns 
+différentes méthodes objets. UML nous permet, à travers toute une collection de diagrammes, 
+d'établir une communication entre les utilisateurs et nous en tant qu'informaticiens, ce qui 
+permet de mieux décrire les besoins utilisateurs et de les documente r très clairement dans le 
+cadre d'une gestion de projet de développement qui va de la conception jusqu'au déploiement 
+de l'application dans le réseau. 
+Toutefois, pour éviter de surcharger le rapport et d'entrer dans certains détails techniques,  
+Nous présenterons que quelques diagrammes que nous avons jugés utiles pour comprendre le projet. 
+Ces diagrammes incluent les diagrammes des cas d'utilisation, les diagrammes de classes, les 
+diagrammes de séquences et le diagramme d'activité. 
+===== PAGE 30 =====
+28 
+ 
+2. Les cas d’utilisation 
+Un cas d’utilisation représente une unité discrète d’interaction entre les acteurs (utilisateurs) et le 
+système. L’ensemble des cas d’utilisation est représenté par un diagramme UML qui donne une vision 
+globale du comportement fonctionnel du système 
+2.1 Identification des acteurs 
+Un acteur représente l’abstraction d’un rôle joué par des entités externes qui interagissent 
+directement avec le système. Les acteurs peuvent être classés selon la manière d’accéder aux services 
+de notre site, les droits d’accès et les privilèges de chacun. 
+Pour ce système il y’on a cinq acteurs : 
+Visiteur public : il peut consulter les catégories, les sous catégories, les produits, s’inscrire à la 
+newsletter, postuler tant que vendeur, contacter l’administration du site, ajouter des produits au panier 
+et s’inscrire pour pouvoir posséder sa commande. 
+Visiteur authentifié : il hérite les cas d’utilisation du visiteur simple comme il peut passer une 
+commande, gérer son profile et consulter ses commandes. 
+Author : il possède des produits où il peut les modifier ou les supprimer comme il peut ajouter des 
+nouveaux produits. 
+Editor : il hérite les cas d’utilisation d’utilisateur Author comme il peut gérer la liste d’admission 
+pour être vendeur, la messagerie, les dossiers, la liste des emails de newsletter, les catégories et les sous 
+catégories, les produits et les commandes ainsi les utilisateurs. 
+Super Admin  : il hérite les cas d’utilisation d’utilisateur Editor comme il peut gérer les 
+administrateurs. 
+ 
+===== PAGE 31 =====
+29 
+ 
+2.2 Description graphique des cas d’utilisation 
+Le diagramme des cas d’utilisation ci -dessous illustre le rôle des acteurs et leurs interactions de 
+système. 
+ 
+Figure 10 : Diagramme des cas d'utilisation générale 
+ 
+ 
+       2.3 Description détaillée de quelques cas d’utilisation 
+Dans ce qui suit, nous classons les cas d’utilisation de notre système par acteur. 
+Les cas d’utilisation du visiteur public 
+
+===== PAGE 32 =====
+30 
+ 
+ 
+Figure 11 : Diagramme de cas d'utilisation de visiteur publique 
+ 
+Tableau 3 : Le cas d’utilisation « S’inscrire » 
+Cas d’utilisation Inscrire 
+Pré condition ----- 
+Post condition Nouvel utilisateur ajouté à la base des données. 
+Scénario 
+minimal 
+1. Le visiteur accède au site. 
+2. Le système affiche la page d’accueil. 
+3. Le visiteur demande la page d’inscription. 
+4. Le système lui affiche un formulaire à remplir. 
+5. Le visiteur remplit le formulaire et valide. 
+6. Le système vérifie les données saisies puis il ajoute le nouvel 
+utilisateur à la base de données et affiche un message de confirmation. 
+7. Le système redirige l’utilisateur vers son espace privé. 
+
+===== PAGE 33 =====
+31 
+ 
+Tableau 4 : Le cas d’utilisation « S’inscrire newsletter » 
+Cas 
+d’utilisation 
+Inscrire newsletter 
+Pré condition ----- 
+Post condition Nouvel email ajouté à la base des données. 
+Scénario 
+minimal 
+1. Le visiteur accède au site. 
+2. Le système affiche la page d’accueil. 
+3. Le visiteur entré son email et valide. 
+4. Le système affiche un message de succès. 
+Scénario 
+alternatif 
+Si l’email entré par l’utilisateur et déjà existante le système affiche un 
+message d’erreur. 
+ 
+Tableau 5 : Le cas d’utilisation « Ajouté au panier » 
+Cas 
+d’utilisation 
+Ajouté au panier 
+Pré condition ----- 
+Post condition Nouvel produit ajouté à la stockage local du navigateur. 
+Scénario 
+minimal 
+1. Le visiteur demande les produits. 
+2. Le système affiche la page des produits par catégorie. 
+3. Le visiteur sélectionne un produit. 
+4. Le système affiche la page du produit. 
+5. Le visiteur ajout le produit au panier. 
+6. Le système ajout le produit au stockage local du navigateur 
+Scénario 
+alternatif 
+L’utilisateur peut supprimer un ou plusieurs produits du panier aussi de 
+remis à 0 (rendre vide). 
+===== PAGE 34 =====
+32 
+ 
+ 
+Tableau 6 : Le cas d’utilisation « Contacté admin » 
+Cas 
+d’utilisation 
+Contacté admin  
+Pré condition ----- 
+Post condition Nouvel mail émet au boit de réception mail d’admin. 
+Scénario 
+minimal 
+1. Le visiteur demande la page de contact. 
+2. Le système affiche la page contact. 
+3. Le visiteur remplir le formulaire. 
+4. Le système affiche un message de succès. 
+Scénario 
+alternatif 
+Si l’un des champs obligatoires de formulaire associé reste vide ou si l’une 
+des données saisies est erronée alors le système affiche un message d’erreur et 
+le visiteur doivent corriger le formulaire. 
+ 
+Tableau 7 : Le cas d’utilisation « Postuler tant que vendeur » 
+Cas 
+d’utilisation 
+Postuler tant que vendeur  
+Pré condition ----- 
+Post condition Nouvel demande vendeur ajouté à la base des données. 
+Scénario 
+minimal 
+1. Le visiteur demande la page « Become a seller ». 
+2. Le système affiche un formulaire. 
+3. Le visiteur remplir le formulaire. 
+4. Le système affiche un message de succès. 
+Scénario 
+alternatif 
+Si l’un des champs obligatoires de formulaire associé reste vide ou si l’une 
+des données saisies est erronée alors le système affiche un message d’erreur et 
+le visiteur doivent corriger le formulaire. 
+ 
+===== PAGE 35 =====
+33 
+ 
+Les cas d’utilisation d’utilisateur authentifié 
+ 
+Figure 12 : Diagramme de cas d'utilisation de visiteur authentifié 
+ 
+ 
+Tableau 8 : Le cas d’utilisation « gérer profile » 
+Cas 
+d’utilisation 
+Gérer profile (Consulter et/ou modifier) 
+Pré condition Visiteur authentifié 
+Post condition Mise à jour de la base des données en cas de modification 
+Scénario 
+minimal 
+1. Le visiteur demande la page de gestion de profile. 
+2. Le système affiche le profile. 
+3. Le visiteur modifier sont les données de profile et sauvegarde. 
+4. Le système affiche un message de confirmation de l’action. 
+ 
+Scénario 
+alternatif 
+Si l’un des champs obligatoires de formulaire associé reste vide ou si l’une 
+des données saisies est erronée alors le système affiche un message d’erreur et 
+le visiteur doivent corriger le formulaire. 
+ 
+ 
+ 

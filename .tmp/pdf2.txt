@@ -1,0 +1,889 @@
+
+===== PAGE 1 =====
+ 
+Ministère de l’Enseignement Supérieur et de 
+la Recherche Scientifique 
+Université de Gabès 
+Institut Supérieur de Gestion  
+Direction des études et des stages 
+ 
+ 
+ 
+ﻭﺯﺍﺭﺓﺍﻟﺘﻌﻠﻴﻢﺍﻟﻌﺎﻟﻲﻭ ﺍﻟبحث 
+ﺍﻟﻌﻠمﻲ 
+جامعة قابس  
+المعهد العالي للتصرف 
+ادارة الدراسات و التربصات  
+ 
+Institut Supérieur de Gestion de Gabès 
+Rue Jilani Habib, Gabès 6002 
+Tél. : + 216 75 272 280 
+Fax : + 216 75 270 686 
+Site web :www.isggb.rnu.tn 
+ 
+ 
+ 
+Projet de fin d’études pour 
+l’obtention du diplôme de mastère 
+professionnel 
+Spécialité : Commerce Electronique 
+ 
+Titre du projet 
+La conception et Réalisation d'une application Web de vente de 
+Matériel Informatique et Electronique de la Société "GIMS" 
+ 
+ 
+Réalisé par : Samar Ayadi  
+Encadré par :Dr. Maryam Elamine 
+ 
+ 
+ 
+ 
+ 
+ 
+Année universitaire : 2024 - 2025
+===== PAGE 2 =====
+ 
+ 
+===== PAGE 3 =====
+ 
+ 
+Dédicace 
+ 
+A mes chers parents 
+ 
+Aucune dédicace ne pourra jamais exprimer l’amour profond que je vous porte. Votre soutien 
+constant et votre présence à chaque étape ont été une source inestimable de force et de 
+motivation. 
+ 
+Votre patience, vos conseils avisés et vos encouragements m’ont permis des surmonter 
+chaque obstacle avec sérénité et confiance. Les sacrifices et les efforts que vus avec 
+consenties pour permettre cette réussite toute ma reconnaissance et mon admiration. 
+ 
+Chaque réussite de ce projet reflète votre amour et votre soutien indéfectible. Votre 
+bienveillance et votre générosité ont transformé chaque défi en opportunité d’apprentissage. 
+Ce travail est le fruit de votre engagement et votre dévouement. 
+ 
+Que votre amour continue d’inspirer et d’éclairer le chemin vers de nouveaux 
+accomplissements. À traves revient toute la gratitude et l’affection pour avoir rendu cette 
+réussite possible. 
+ 
+Samar
+===== PAGE 4 =====
+ 
+ 
+ 
+Remerciements 
+Je tiens tout d’abord mes vifs remerciements à mon professeur, Mme Maryam Elamine, 
+mon encadrante, pour son suivi rigoureux, ses orientations pertinentes et son 
+accompagnement précieux tout au long de ce projet. 
+Mes remerciements d’adressent  également aux membres du jury pour l’intérêt porté à mon 
+travail ainsi que pour leurs remarques constructives. 
+Je souhaite aussi remercier l’ensemble du corps enseignant du département informatique. 
+ 
+Enfin, j’exprime ma gratitude à la société GIMS pour  m’avoir offert l’opportunité de 
+réaliser ce projet dans un cadre professionnel stimulant et enrichissant. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+===== PAGE 5 =====
+ 
+ 
+La Conception et Réalisation d’une application web de vente de Matériel 
+Informatique et Electronique de la Société « GIMS » 
+ 
+Résumé : 
+ 
+Dans le cadre de mon stage de fin d’études, j’ai développé  une application web de vente de 
+Matériel Informatique et Electronique de la société GIMS. 
+Cette plateforme  intègre la gestion des produits, commande des devis personnalisé et des 
+réclamations clients. Dévelo ppée avec des technologie React.js Nodes.js et MongoDB selon 
+une méthodologie en Spirale, cette solution moderne permet aux clients de consulter le 
+catalogue effectuer des achat en ligne .Ce projet m’a permis de renforcer mes compétences 
+techniques tout en participant  à la transformation digitale de l’entreprise. 
+ 
+Abstract : 
+ 
+As part of my final year internships, I developed a web application for the sale of computer 
+and electronic equipment for the company GIMS. This platform centralizes the management 
+of product, orders, personalized quotes, and costumers to browse the catalog, Macke online 
+purchases, and manage their requests efficiently. 
+This project was a significant opportunity to enhance my technical competencies while 
+actively contributing to the company digital evolution. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+===== PAGE 6 =====
+ 
+ 
+Table de matières 
+ 
+Introduction générale ................................ ................................ ................................ ...........1 
+Chapitre1 : Étude préalable ................................ ................................ ................................ .4 
+1.1 Introduction ................................ ................................ ................................ .................. 4 
+1.2 Recueil ................................ ................................ ................................ ......................... 4 
+1.2.1 Définition du champ de l’étude : GIMS ................................ ................................ ..4 
+1.2.2 Description du stage ................................ ................................ ............................... 5 
+1.2.3 Présentation du projet ................................ ................................ ............................. 6 
+1.2.4 Objectifs à atteindre ................................ ................................ ............................... 6 
+1.3 Étude de l’existant ................................ ................................ ................................ ........7 
+1.3.1 Problématique ................................ ................................ ................................ ........7 
+1.3.2 Solution proposée ................................ ................................ ................................ ...7 
+1.4 Étude des besoins ................................ ................................ ................................ ..........8 
+1.4.1 Besoins fonctionnels ................................ ................................ .............................. 8 
+1.4.2 Besoins non fonctionnels ................................ ................................ ........................ 9 
+1.5 Méthodologie de travail ................................ ................................ ..............................  10 
+1.6 Conclusion ................................ ................................ ................................ ..................  11 
+Chapitre2 : Étude Conceptuelle ................................ ................................ .........................  13 
+2.1 Introduction ................................ ................................ ................................ ................  13 
+2.2 Description de méthodologie de conception ................................ ................................  13 
+2.3  Identification des acteurs ................................ ................................ ............................  14 
+2.4 Diagramme de  cas d’utilisation ................................ ................................ ..................  14 
+2.4.1  Le modèle graphique ................................ ................................ ...........................  15 
+2.4.2  Description textuelle ................................ ................................ ...........................  17 
+2.5 Diagramme de séquences ................................ ................................ ............................  21 
+2.5.1  Diagramme de séquences du cas d’utilisation : « S’authentifier » ........................  21 
+===== PAGE 7 =====
+ 
+ 
+2.5.2  Diagramme de séquences du cas d’utilisation : «Ajouter un Produit» ..................  22 
+2.5.3. Diagramme de séquence de cas d’utilisation « Consulter le demande de devis » .. 24 
+2.5.4. Diagramme de séquence  Cas d’utilisation : « gestion de réclamation » ...............  25 
+2.6  Diagramme d’activités ................................ ................................ ...............................  26 
+2.7 Diagramme de classes ................................ ................................ ................................ . 29 
+2.7.1 Liste de donnés ................................ ................................ ................................ .... 29 
+2.9   Modèle de données NoSQL avec MongoDB ................................ .............................  34 
+2.10  Conclusion ................................ ................................ ................................ ...............  35 
+Chapitre 3 : Réalisation ................................ ................................ ................................ ...... 37 
+3.1 Introduction ................................ ................................ ................................ ................  37 
+3.2  Architecture de l’application ................................ ................................ ......................  37 
+3.3 Environnement de travail ................................ ................................ ............................  38 
+3.3.1 Outils de développement ................................ ................................ ......................  39 
+3.3.2 Environnement de conception ................................ ................................ ..............  41 
+3.3.3 Système de gestion de données ................................ ................................ .............  42 
+3.4  Exemple d’interface ................................ ................................ ................................ ... 43 
+3.5  Conclusion ................................ ................................ ................................ .................  63 
+Conclusion générale ................................ ................................ ................................ ............ 64 
+Webographie ................................ ................................ ................................ .......................  65 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+===== PAGE 8 =====
+ 
+ 
+Liste des figures 
+ 
+Figure 1: Logo de la Société « GIMS » ................................ ................................ ........................  5 
+Figure 2 : Diagramme de cas d'utilisation des acteurs « Visiteur, Client » ................................ .. 15 
+Figure 3: Diagramme de cas d’utilisation de l’acteur « Administrateur» ................................ .... 16 
+Figure 4 : Diagramme de séquences du cas d’utilisation « S’authentifier» ................................ . 22 
+Figure 5: Diagramme de séquences du cas d’utilisation «Ajouter un Produit» ............................  23 
+Figure 6 : Diagramme de séquences du cas d’utilisation « Consulter le demande de devis » ...... 24 
+Figure 7: Diagramme de séquences du cas d’utilisation «gestion de reclmation ».......................  25 
+Figure 8: Diagramme d’activité du cas d’utilisation «soumettre une réclamation » ....................  27 
+Figure 9: Diagramme d’activités du cas d’utilisation «S’authentifier» ................................ ........ 28 
+Figure 10: Diagramme de Classe Globale ................................ ................................ ..................  33 
+Figure 11: Architecture MVC ................................ ................................ ................................ .... 38 
+Figure 12: Logo de Visual Studio Code ................................ ................................ .....................  39 
+Figure 13: Logo de JavaScript ................................ ................................ ................................ ... 39 
+Figure 14: Logo de React.js ................................ ................................ ................................ ....... 40 
+Figure 15: Logo d’Express................................ ................................ ................................ ......... 40 
+Figure 16: Logo de node.js ................................ ................................ ................................ ........ 41 
+Figure 17 logo de Draw.io ................................ ................................ ................................ ......... 41 
+Figure 18: Logo de MongoDB ................................ ................................ ................................ ... 42 
+Figure 19 : Interface d’Inscription................................ ................................ ..............................  43 
+Figure 20: Interface de connexion ................................ ................................ ..............................  44 
+Figure 21: Page d'accueil ................................ ................................ ................................ ........... 45 
+Figure 22: Interface Qui Sommes –Nous ................................ ................................ ...................  46 
+Figure 23: Interface Nos Services ................................ ................................ ..............................  47 
+Figure 24: Interface Contact ................................ ................................ ................................ ...... 48 
+Figure 25: Interface les informations personnelle ................................ ................................ ....... 49 
+Figure 26: Interface Historique de commande ................................ ................................ ............ 50 
+Figure 27: Interface Mes demande de devis ................................ ................................ ...............  51 
+Figure 28: Interface de tableau de bord ................................ ................................ ......................  52 
+Figure 29: Interface suprimer client ................................ ................................ ...........................  53 
+Figure 30: Interface gestion de produit ................................ ................................ .......................  55 
+Figure 31: Interface de consulter commande ................................ ................................ ..............  56 
+===== PAGE 9 =====
+ 
+ 
+Figure 32: Interface consulté de demande devis ................................ ................................ ......... 58 
+Figure 33: Interface de gestion de promotion ................................ ................................ .............  58 
+Figure 34: Interface de gestion de Réclamation ................................ ................................ .......... 59 
+Figure 35: Interface de détaille de produit ................................ ................................ ..................  60 
+Figure 36: Interface de panier ................................ ................................ ................................ .... 60 
+Figure 37: Processus de passer une commande ................................ ................................ .......... 62 
+Figure 38: Interface de paiement en ligne ................................ ................................ ..................  63 
+ 
+ 
+===== PAGE 10 =====
+ 
+ 
+Liste des tableaux 
+ 
+Tableau 1 : Description textuelle du cas d’utilisation : « S’authentifier» ...............................  17 
+Tableau 2 : Description textuelle du cas d’utilisation : « S’inscrire» ................................ ..... 18 
+Tableau 3 : Description textuelle du cas d’utilisation : « Ajouter  un produit » ......................  19 
+Tableau 4 : Description textuelle du cas d’utilisation : « Passer Commandes» ......................  20 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+===== PAGE 11 =====
+Introduction générale 
+1 
+ 
+Introduction générale 
+La transformation numérique représente aujourd’hui un levier essentiel de com pétitivité pour 
+les entr eprises, n otamment le secteur du commerce, ou la digitalisation et l’ess or du e -
+commerce redéfinissant en profondeur les modes de consommation. L’accessibilité croissante 
+d’internet et des technologies mobiles a bouleversé les comportements  d’achat. Contraignant 
+les organisations ont p roposé des solution s digitales perf ormantes, ergonomiques et 
+sécurisées. Dans un marché hautement concurrentiel, la capacité à offrir une expérience client 
+fluide, personnalisée et fiable n’est plus une option, mais un impératif stratégique pour attirer, 
+convertir et fidéliser une clientèle de plus en plus exigeante [1]. 
+Ce mémoire porte sur la Conception et Réalisation d’une applic ation Web de Vente de 
+Matériel Informatique et Electronique de la Société «  GIMS ». Dans un contexte marqu é 
+pour la généralisation des achats en ligne et l’accélération de la transformation digitale, 
+l’entreprise cherche à renforcer sa présence sur le web, à élargir sa clientèle et à optimiser la 
+gestion de ses activités commerciales. 
+L’objectif de ce projet e st de proposer une solution web robuste, performante  et évolutive, 
+permettant à GIMS de répondre aux attentes du marché tout en modernisant son 
+fonctionnement interne. Ce  travail s’inscrit également dans une démarche pédagogique, 
+mettant en pratique les co mpétences techniques et managériales acquise durant le parcours 
+académique, tout en répondant à un besoins concret du monde professionnel. 
+La réalisation de ce projet a un suivi structuré, débute  par une analy se approfondie des 
+besoins fonctionnels de l’entreprise et une étude de l’existant. Cette  phase initiale a permis 
+d’identifier précisément les fonctionnalités attendues ainsi que les contraintes techniques. 
+Ensuite, une  méthodologie complète a été effectuée à l’aide du  diagramme UML ( cas 
+d’utilisation, séquence, classe ), garantissant une v ersion claire et organisé du système à 
+développer. 
+Sur le plan technique, les choix se sont portés sur des technologies modernes et performantes, 
+adaptées aux exigences du projet : 
+-Frontend: React.js, associé à  vite pour une interface dynamique, réactive  et hautement 
+performante. 
+-Backend: Node.js, pour les constructions d’API robustes et scalables. 
+-Base de données : MongoDB, pour une gestion flexible et efficace des données. 
+===== PAGE 12 =====
+Introduction générale 
+2 
+ 
+Afin de présenter une version complè te et  détaillée de la démarche suivie, ce mémoire est 
+organisé en trois chapitres : 
+-Chapitre 1  : Ce chapitre est consacré à l’analyse du contexte général du projet,  la 
+présentation d’accueil, ainsi qu’à l’identification des besoins fonctionnels et non fonctio nnels 
+qui orientent la conception de la solution proposée. Il expose également la justification des 
+choix méthodologique adoptés, permettant d’établir une base solide pour la suite du 
+développement et de garantir une démarche cohérente et structurée. 
+-Chapitre2 : Ce chapitre est consacré à la conception du système. Il présente la modélisation 
+complète de l’application. La définition de son architecture générale ainsi que la structure des 
+bases de données. De plus il inclut l’élaboration des différents diagrammes UML nécessaire à 
+la visualisation et l’organisation des composants du projet. 
+-chapitre3 : Ce chapitre dédié à la mi se en œuvre pratique du projet. I l décrit le 
+développement de l’application web, il inclu t également la présentation  et le développement 
+des technologies utilisées, de l’architecture logicielle appliqué, ainsi que des modules et 
+interface réalisée. 
+Ce rapport se clôture par une conclusion générale synthétisant l’ensemble du projet. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+===== PAGE 13 =====
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Chapitre1 : Étude préalable 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+===== PAGE 14 =====
+Chapitre1 : Étude préalable 
+4 
+ 
+Chapitre1 : Étude préalable 
+1.1 Introduction 
+L’étude préalable représente une phase cruciale dans la conduite d’un projet informatique. 
+Elle vise à examiner en profondeur l’état du système, à  en identifier les limites et de définir 
+avec précision les besoins qui devront satisfaire à la solution envisagée. 
+Dans le cadre de ce mémoire, menée au sein de la société GIMS, la mission confiée 
+consiste La Conception et Réalisation d’une application Web de Vente de Matériel 
+Informatique et Electronique de la soci été «  GIMS », visant à développer une solution 
+numérique performante et adaptée aux besoins de l’entreprise. 
+Ce chapitre expose le contexte du stage et les objectifs poursuivis par le projet. Il présente 
+également l’analyse de l’existant, met en lumière la  problématique rencontré e et décrit la 
+solution proposée pour y répondre efficacement. Par ailleurs, il détaille l es besoins 
+fonctionnels et non fonctionnels, tout en précisant la méthodologie adoptée afin de garantir  la 
+cohérence de la  démarche suivie. 
+1.2 Recueil 
+1.2.1 Définition du champ de l’étude : GIMS 
+La société GIMS (Générale d’Informatique et d’Electronique du Sud) , Fondée en 2008, 
+est spécialisée dans la commercialisation de matéri el Informatique et électronique . Son siège 
+est situé à Gabes, En Tunisie, A l’Avenu Jilani Lahbib, Sidi Marzoug, en face de l’insti tut 
+Supérieur de Gestion de Gabès. 
+GIMS se distingue par la diversité et la qualité de ses produits et services,  destinés à  une 
+clientèle variée. 
+L’entreprise s’adresse en tant aux particuliers  qu’aux organismes publics  et privés, et se 
+positionne comme un acteur majeur du secteur informatique dans le sud de la Tunisie. Afin de 
+consolider sa présence sur le marché,  GIMS a développé des partenariats stratégiques solides 
+avec des acteurs régionaux de pr emier plan témoignant  de sa crédibilité et de son expertise. 
+Parmi ses principaux partenaires figurent : 
+ Groupe Chimique Tunisien (GCT) 
+ Société Tunisienne de L’Electricité et de Gaz (STEG) 
+===== PAGE 15 =====
+Chapitre1 : Étude préalable 
+5 
+ 
+ Cimenterie de Gabès 
+Parallèlement, GIMS entretient des collaboratio ns étroites avec  le milieu universitaire  local 
+renforçant ainsi son ancrage territoriale .Elle collabore notamment avec : 
+ Institut Supérieur des Etude Technologiques de Gabès (ISET Gabès) 
+ Faculté des Sciences de Gabès  
+ 
+ 
+Figure 1: Logo de la Société « GIMS » 
+ 
+1.2.2 Description du stage 
+Dans le cadre de notre  formation à L’institut Supérieur de Gestion de Gabè s, nous avons 
+effectué un stage d’une durée, du 17 mars au 17 juin 2025 , au sien de la société  GIMS 
+(Générale d’Informatique et d’Electronique du Sud). 
+Au cours de cette période, nous avons eu l’opportunité de nous intégrer pleinement  à l’équipe 
+de l’entreprise. Cette  immersion professionnelle nous a permis d’appliquer concrètement les 
+connaissances théoriques acquises au cours de n otre parcours académique et de renforcer nos 
+compétences notamment dans le domaine de développement web. 
+Ce stage s’ est révélé être  une expérience enrichissante, nous confrontan t aux exigences d u 
+milieu  professionnel, tout en nous préparant de manière concrète à nos futures responsabilités 
+dans le monde du travail. Il a également favorisé not re  compréhension des processus 
+organisationnels et de la gestion de projet en entreprise. 
+ 
+===== PAGE 16 =====
+Chapitre1 : Étude préalable 
+6 
+ 
+1.2.3   Présentation du projet 
+Le projet de fin d’étude, réalisé  dans le cadre d’ un stage au sien de GIMS, porte sur La 
+Conception et Réalisation d’une application Web de Vente de Matériel Informatique et 
+Electronique de la société « GIMS ». 
+Cette application a pour  vocation de servir de ca nal de vente en ligne principal  pour 
+l’entreprise, lui permettant de  commercialiser son catalogue de produit auprès d’une clientèle 
+de particuliers et de professionnels. 
+Le projet s’articule autour de la création d’une application web responsive, accessible depuis 
+tous les appareils , et offrant une expérience utilisateur moderne et intuitive. Son  
+développement suivra  une architecture MVC (Model Vue Contrôleur) afin de garantir une 
+basse de code maintenable, évolutive et parfaitement structurée. 
+1.2.4 Objectifs à atteindre 
+Le projet avise à développer une a pplication web de vente en ligne performant e, intuitive et 
+sécurisée, capable de répondre aux besoins croissants des clients et d’optimiser l’efficacité des 
+processus commerciaux. 
+Pour atteindre cet objectif, l’application web intégrera les fonctionnalités suivantes : 
+1. Application Fonctionnelle : Permette  aux clients de consulter le c atalogue, passer des 
+commandes et effectuer des paiements en ligne de manières sécurisée. 
+2. Gestion des commandes spéciales et des devis  : Proposer un service de devis sur 
+mesure pour les commandes volumineuses ou spécifiques, destiné aux professionnels 
+et acheteurs en grande quantité.  
+3. Permettre aux clients de soumettre de réclamation concernant des produits défectueux 
+ou des problèmes rencontrés, afin de faciliter leur résolution. 
+4. Expansion de la clientèle  : Inclure un module pour signale r facilement tout problème 
+lié à une commande ou un produit, avec un suivi structuré et efficace. 
+5. Optimisation de la gestion des ventes  : Automatiser et simplifier la gestion des 
+commandes, des de vis et du catalogue  de produits afin de réduire les erreurs  et 
+améliorer l’efficacité globale. 
+===== PAGE 17 =====
+Chapitre1 : Étude préalable 
+7 
+ 
+1.3  Étude de l’existant 
+L’étude de l’existant consiste à analyser le modèle de fonctionnement de l’entreprise afin 
+d’identifier ses limites, ses contra inte et ses a xes d’amélioration . Elle consiste une étape 
+essentielle pour comp rendre les difficultés rencontrée s et définir une solution numérique 
+adaptée, capable de répondre efficacement aux  besoins stratégique et opérationnels de 
+GIMS. 
+1.3.1 Problématique 
+L’entreprise GIMS repose actuellement sur un modèle de vente exclusivement physique qui, 
+bien qu’ayant permis de fidéliser une clientèle locale, révèle plusieurs limites face aux 
+exigences du marché moderne. Cette configuration restreint sa portée géographique et 
+complique l’accès pour les clients éloignés ou disposant d’horaires contraignant.  
+Par ailleurs, La gestion manuelle de s stocks et des commandes est  sujette à l’erreur et ne 
+permet pas un suivi en temps réel des disponibilités. Les interactions avec la clientèle,  bien 
+que présente sur les réseaux sociaux , restent informelles et peu structurées, ce que nuit à la 
+qualité de service et à la valorisation de l’offre. 
+En l’absence d’outils dédié s, la collecte et l’analyse des données clients sont limitées, 
+réduisant la capacité de l’entreprise à personnaliser son offre et à affiner sa stratégie 
+marketing. Dans un contexte concurrentiel de plus en plus exige ant, ces lacunes expo sent 
+GIMS à un risque significatif d’érosion de ses parts de marché. 
+Ainsi, la problématique centrale de ce projet peut se formuler de la manière suivante : 
+-Comment GIMS peut -elle moderniser son modèle commercial en intégrant une stratégie 
+digitale afin de surmonter les contraintes du canal physique, élargir sa clientèle, optimiser ses 
+processus internes et renforcer sa position concurrentielle sur le marché tunisien ? 
+1.3.2 Solution proposée 
+Afin de répondre aux défis rencontrés par la société GIMS, et  s’adapter aux nouvelles 
+exigences du marché, nous avons conçus et développé une application web. 
+Cette Solution s’articule autour des axes stratégiques : 
+ Expansion de la présence commerciale : application  permet à GIMS de dépasser les 
+contraintes de  la vente physique en proposant une boutique en lig ne accessible 
+===== PAGE 18 =====
+Chapitre1 : Étude préalable 
+8 
+ 
+24h/24h 7j/7. Cette transition numérique rep résente une opportunité stratégique pour 
+élargir la clientèle au -delà de la région de Gabès et renforcer la visibilité de 
+l’entreprise sur un marché de plus en plus concurrentiel. 
+ Optimisation des processus de gestion  : L’application intègre des fonctionna lités 
+avancées pour automatiser et rationaliser la gestion des produits,  des commandes et 
+devenir  plus fiable, réduisant ainsi les erreurs liées aux traitements  améliorant 
+l’efficacité opérationnelle. 
+ Amélioration de l’expérience client  : Application off re une interface moderne, 
+intuitive et sécurisée, permettent aux utilisateurs de  : Consulter  les produit et leurs 
+caractéristiques détaillées, ajouter  des articles au panier et finaliser leur achat et 
+bénéficier d ’un parcours d’achat simplifié  et conforme aux standards commerce en 
+ligne. 
+ En synthèse, cette application web e-commerce représente une réponse innovante et adapté 
+aux besoins de GIMS, lui permettant de moderniser ses pratique commerciale, de renforcer sa 
+compétitivité et d ’offrir à sa clientèle une expérience d’achat en ligne fluide, sécurisée et 
+professionnelle. 
+1.4  Étude des besoins 
+L’étude de besoins consiste à analyser et formaliser les attentes des utilisateurs et les 
+contraintes du système, en identifiant la fonctionnalité à fournir (besoins fonctionnels) et le 
+critère de qualité et performance à respecter (besoins non fonctionnels). 
+1.4.1   Besoins fonctionnels 
+Les besoins fonctionnels décrits ci -dessous définisse nt l’ensemble des fonctionnalités 
+essentielles qui permettent à chaque utilisateur qu’i l soit un simple visiteur, un client 
+enregistré ou un administrateur d ’interagir efficacement avec le système et de réaliser ses 
+objectifs. 
+Pour le Visiteur : 
+-Consulter les détails du site 
+-Consulter les catalogues  
+-Chercher un produit 
+===== PAGE 19 =====
+Chapitre1 : Étude préalable 
+9 
+ 
+-Consulter les promotions 
+-S’inscrire 
+Pour le client : 
+-Accéder à son espace  
+-Gérer son compte (Modifier, Supprimer) 
+-Consulter le produit (Ajouter au panier, voir le détail d’un produit) 
+-Gérer panier (Modifier la quantité, Supprimer, Valider) 
+-Passer une commande 
+-Suivre l’évolution de la commande 
+-Soumettre une demande de devis 
+-Envoyer une Réclamation 
+Pour l’Administrateur : 
+-Gérer client (Modifier, Supprimer) 
+-Gérer les produits (Ajouter, Modifier, Supprimer) 
+-Consulter commande (Accepter, Refuser) 
+-Consulter la demande de devis (Envoyer Devis, Supprimer Devis) 
+-Gérer les promotions (Ajouter, Modifier, Supprimer) 
+-Gérer Réclamation (Répondre, Supprimer Réclamation) 
+1.4.2 Besoins non fonctionnels 
+Les besoins non fonctionnels définissent la qualité et le fonctionnement de l’application. 
+Ils garantissent   sa robustesse et son efficacité. Offrant  ainsi une expérience optimale aux 
+utilisateurs. 
+1. Sécurité  : La protection des données sensible et la confidentialité des informations 
+personnelles sont prioritaires.  
+2. Fiabilité : Le système doit assurer un fonctionnement stable, avec un taux de disponibilité 
+élevé. 
+===== PAGE 20 =====
+Chapitre1 : Étude préalable 
+10 
+ 
+Cette fiabilité optimisée garanti une navigation fluide et une expérience satisfaisante. 
+3. Ergonomie  : L’interface doit être intuitive, claire  et facile à prendre en main. Une 
+conception bien pensée permet aux utilisateurs d’accomplir leurs tâches sans confusion. 
+5. Responsive design  : L’application doit s’ adapter à tous les appareils, cet  affichage 
+responsif assure une accessibilité optimale, quel que soit le dispositif utilisé. 
+6. Maintenabilité  : Une interface modulaire et une documentation complète facilitent les  
+mises à jour et la résolution des anomalies. Cette flexibilité permet des évolutions  futures 
+sans compromettre la stabilité du système. 
+1.5 Méthodologie de travail  
+Pour le développement de l’application web, nous avons choisi la méthodologie en spirale . 
+Cette méthode est particulièrement adapté e aux projets complexes et évolutif s, car elle 
+combine les avantage s des approche s séquentielles et itérative s, permettent  d’intégrer 
+progressivement les besoins des utilisateurs tout en gérant efficacement les risques à chaque 
+étape. 
+La méthodologie en spirale est un modèle de développement  logiciel itératif et incrémental, 
+dans lequel le processus de développement est repr ésenté sous forme d’une spirale composée 
+de cycles successifs. Chaque cycle comprend des phases de pl anification, analyse des risques 
+développement/prototypage et validation, permett ant d’améliorer progressivement le 
+projet.[2] 
+ Planification : Définir les objectifs du cycle, les tâches, les ressources nécessaires et 
+le calendrier. 
+ Analyse de risque  : Identifier les problèmes potentiels (technique, fonctionnel) et 
+prévoir des solutions. 
+ Développement : Concevoir et réaliser le logiciel ou un prototype foncti onnel pour 
+tester les idées. 
+ Test/Validation : Tester et évaluer le produit développ é ou le prototype par rappo rt 
+aux objectifs et aux besoins.  
+Caractéristiques principales :  
+ Itérative et incrémentale : le  projet est développé par petite s étapes successives, 
+chaque cycle apportant des améliorations. 
+===== PAGE 21 =====
+Chapitre1 : Étude préalable 
+11 
+ 
+ Prototypage : création  de versions partielles ou simplifiées pour  tester et valider les 
+fonctionnalités. 
+ Validation continue : chaque cycle se termine par une vérification et une évaluation 
+après validation et  retour du responsable de projet, afin d’assurer une progression 
+contrôlée et de maintenir la qualité de travail. 
+ Flexibilité : possibilité de revenir sur une tâche  précédente pour corriger ou améliorer 
+à répondre l’ensemble de projet, ce qui permet adapta bilité er réactivité face aux 
+besoins changeants. 
+1.6 Conclusion 
+En conclusion, notre étude préalable a permis de cerner avec précision les besoins de GIMS. 
+Nous avons mis en évidence la nécessité  d’une transformation digitale pour moderniser 
+l’entreprise, fluidifier son opération et améliorer l’expérience client. La solution web proposée 
+à la fois moderne et sécurisée, est une réponse directe à ces défis. 
+Le prochain chapitre abordera la conception détaillée de cette application, marquant ainsi le 
+passage  de l’analyse à la  réalisation concrète. 
+ 
+ 
+ 
+ 
+ 
+ 
+===== PAGE 22 =====
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+CHAPITRE 2 : Étude conceptuelle
+===== PAGE 23 =====
+CHAPITRE 2 : Étude conceptuelle 
+13 
+ 
+CHAPITRE2 : Étude Conceptuelle 
+2.1 Introduction 
+La réussite d'un projet informatique repose sur une phase de conception minutieuse où chaque 
+élément doit être pensé avec rigueur et clarté. Ce chapitre présente la modélisation détaillée de 
+notre application à travers UML (Unified Modeling Language), méthode éprouvée pour 
+transformer les besoins fonctionnels en une architecture technique robuste, étape cruciale qui 
+précède le développement et en garantit la qualité. 
+Notre démarche est structurée en deux axes principaux : 
+La modélisation du comportemen t : Nous identifions  d’abord les acteurs et décrirons leur 
+interaction avec le système grâce aux diagrammes de cas d’utilisation, d e séquence s et 
+d’activités. 
+La modélisation de la structure  : Nous définirons ensuite l’architecture statique et la 
+pertinence des données via le diagramme de classes et le modèle de données MongoDB. 
+Ce travail de modélisation sert de plan directeur indisp ensable pour orienter et sécuriser la 
+phase de développement.  
+2.2   Description de méthodologie de conception 
+Le langage de Modélisation Unifié (UML), est un s tandard de modélisation visuel  et un 
+langage formel d’ingénierie logicielle. Il permet de spécif ier, visualiser, construire et 
+documenter un système orienté objet de manière rigoureuse et standardisée. 
+UML  n’est pas une méthodologie de développement, mais un langage neutre qui s’intègre à 
+n’importe quel processus de développement : comme le cycle en V ou agile. 
+Son excellence réside dans sa capacité à fournir une vue complète et cohérente du système 
+grâce à une suite de diagrammes, classes en deux catégories principales : 
+ Diagramme de structure: Ils décrivent les éléments statiques du système et leur s 
+relations. Ils servent de «  plan statique  » et incluent les diagrammes de classes (pour les 
+relations entre les entités), les diagrammes de composant (pour l’organisation des modules) et 
+les diagrammes de déploiement (pour les répartitions physique des logiciels). 
+ Diagrammes de comportement  : Ils capturent les aspects dynamiques et les 
+interactions au sein du système. On Y trouve les diagrammes de cas d’utilisation (pour les 
+fonctionnalités du point de vue de l’utilisateur) et les diagrammes des séquences  pour les flux 
+===== PAGE 24 =====
+CHAPITRE 2 : Étude conceptuelle 
+14 
+ 
+d’interaction entre objets) et les diagrammes d’activités (pour l es processus flux de travail) . 
+[3] 
+2.3   Identification des acteurs 
+Un acteur est une entité externe (humain, système ou organisation) qui interagit avec le 
+système pour attein dre un objectif spécifique, son rôle est  de déclencher des fonctionnalités 
+ou de recevoir des services. 
+Notre analyse identifie trois acteurs principaux : 
+ Visiteur : Un utilisateur non authentifié qui peut accéder à certaines fonctionnalités 
+publiques de l’application. 
+ Client : Un utilisateur authentifié qui peut interagir avec des fonctionnalités liées à 
+son        compte, son panier et ses commandes. 
+ Administrateur : Un utilisateur avec des privilèges de gestion, il gère les clients, 
+les produits, les promotions, les commandes, les devis et les réclamations. 
+2.4   Diagramme de  cas d’utilisation 
+Le diagramme de cas d’utilisation est un diagramme de comportement  du Langage de 
+Modélisation unifié (UML) qui permet de modéliser les exigences fonctionnelles d’un 
+système. 
+Il représente l’interaction entre les utilisateurs externes  (nommés acteurs) et les 
+fonctionnalités qu’ils peuvent utiliser. Cet outil de modélisation visuelle est fondamental pour 
+la capture e t l’analyse des besoins, car il fournit un aperçu concis des services offerts par le 
+système de point de vue utilisateur. [4]  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+===== PAGE 25 =====
+CHAPITRE 2 : Étude conceptuelle 
+15 
+ 
+2.4.1  Le modèle graphique  
+ 
+ 
+Figure 2 : diagramme de cas d'utilisation des acteurs « Visiteur, Client » 
+===== PAGE 26 =====
+CHAPITRE 2 : Étude conceptuelle 
+16 
+ 
+ 
+Figure 3: Diagramme de cas d’utilisation de l’acteur « Administrateur» 
+ 
+ 
+ 
+===== PAGE 27 =====
+CHAPITRE 2 : Étude conceptuelle 
+17 
+ 
+2.4.2  Description textuelle 
+Tableau 1 : Description textuelle du cas d’utilisation : « S’authentifier» 
+Cas d’utilisation S’authentifier 
+Acteur Client, Administrateur 
+Objectifs Accéder à son compte sur l’application. 
+Pré-condition L’utilisateur doit avoir un compte  créé  dans 
+le système. 
+Post-condition L’utilisateur connecté est redirigé vers la page 
+spécifique. 
+Scénario nominal 1. L’utilisateur accède à la page connexion. 
+2. le  système présente le formulaire 
+d’authentification. 
+3. l’utilisateur saisit son adresse email et son 
+mot de passe. 
+4. le système vérifie les informations. 
+5. le système authentifie l’utilisateur et le 
+redirige vers l’interface appropriée. 
+Scénario alternatif - les informations d’identification sont 
+incorrectes.  
+- le système affiche un message d’erreur. 
+- l’ utilisateur peut réessayer. 
+===== PAGE 28 =====
+CHAPITRE 2 : Étude conceptuelle 
+18 
+ 
+Tableau 2 : Description textuelle du cas d’utilisation : « S’inscrire» 
+Cas d’utilisation S’inscrire 
+Acteur Visiteur 
+Objectif Permettre à un nouvel acteur de créer un 
+compte en saisit ses informations 
+personnelles et ses identifiants uniques. 
+Pré-Condition L’acteur n’est pas encore inscrit et accède à la 
+page d’inscription. 
+Post-Condition Le compte est  créé avec succès et les 
+données sont sauvegardées dans la base de 
+données. 
+Scénario nominal 1-l’acteur accède la page d’ inscription de 
+l’application. 
+2. le système affiche le formulaire.   
+3-l’acteur saisit les informations personnelles. 
+4-le système v alide les données et affiche un  
+message de succès. 
+Scénario alternatif -Erreur de saisie ou information invalides. 
+-le système affiche un message d’erreur. 
+ 
+-l’acteur corrige l’erreur. 
+ 
+-le formulaire valide et affiche un message de 
+succès. 
+ 
+ 
+ 
+ 
+ 
+===== PAGE 29 =====
+CHAPITRE 2 : Étude conceptuelle 
+19 
+ 
+Tableau 3 : Description textuelle du cas d’utilisation : « Ajouter  un produit » 
+ 
+ 
+ 
+ 
+Cas d’utilisation  Ajouter un produit 
+Acteur Administrateur 
+Objectif Ajouter un nouveau produit au catalogue avec 
+ses caractéristiques complètes. 
+Pré-condition L’administrateur est authentifié et autorisé. 
+Post-condition Le produit est c réé avec succès et persistant 
+dans la base de données. 
+Scénario nominale 1. L’administrateur accède à l’interface d’ajout 
+d’un produit. 
+2. Le  système affiche le formulaire avec les 
+champs obligatoires. 
+3. L’administrateur saisit les informations. 
+4. Le système valide les données est enregistré 
+le produit. 
+5. Le système affiche un message de succès. 
+Scénario alternatif -Données invalides. 
+-Le système affiche un message d’erreur 
+contextuel. 
+-L’administrateur corrige et ajoute le produit. 
+===== PAGE 30 =====
+CHAPITRE 2 : Étude conceptuelle 
+20 
+ 
+Tableau 4 : Description textuelle du cas d’utilisation : « Passer Commandes» 
+ 
+Cas d’utilisation  Passer Commandes 
+Acteur Client 
+Objectif  Finaliser l’achat des produits sélectionnés en 
+validant le produit, en choisissant le mode de 
+livraison et  de paiement et en confirmant la 
+commande. 
+Pré-condition 1. Le Client doit être authentifié. 
+2. Le  panier doit contenir au moins un 
+produit. 
+3. Les produits doivent être en Stock. 
+Post-condition 1. La commande est enregistrée avec le statut 
+« en attente ». 
+2. Les stocks des produits sont mis ajour. 
+Scénario-nominale 1. Le Client accède à son panier  
+2. Le  Système affiche le récapitulatif des 
+articles et le total. 
+3. Le client choisit le mode de livraison et d e 
+paiement. 
+4. Le client valide la commande. 
+5. Le système vérifie le stock. 
+6. Le système enregistre la commande. 
+7. Le système  affiche une confirmation de 
+commande. 
+Scénario-alternatif -Client non connecté. 
+-le système affiche un message de redirection 
+vers l’interface login. 
+===== PAGE 31 =====
+CHAPITRE 2 : Étude conceptuelle 
+21 
+ 
+2.5  Diagramme de séquences  
+Un diagramme de séquences est un type de diagramme de comportement défini par le langage 
+UML (Unified Modeling Language) qui modélise les interactions dynamiques entre des objets 
+dans un système. Son objectif principal est de représenter visuellement l’ordre chronologique 
+dans lequel les messages sont échangés entre les différentes parties d’un système pour réaliser 
+une fonctionnalité spécifique, typiquement d’un cas d’utilisation. 
+2.5.1  Diagramme de séquences du cas d’utilisation : « S’authentifier » 
+Ce diagramme de séquence modélise le processus complet d’ authentification d’utilisateur en 
+articulant les interactions entre l’acteur, interface, le Contrôleur  et la base de donnés. 
+L’utilisateur initie la séquences en accédant à la page de connexion, ce qui amène l’interface à 
+afficher le formulaire d’identification contenant les champs email et mot de passe. 
+Après avoir saisi ses informations d’authentification et soumis le formulaire, l’interface  
+envoie les données au contrôleur. Le contrôleur ensuit e interroge la basse de données pou r 
+vérifier l’existence de l’ utilisateur. Une fois le résultat obtenu, le contrôleur transmet cette 
+information à l’interface. 
+Selon le résultat retourné par la base de données, deux scenarios sont possibles : Si l’email est 
+trouvé et que le mot de passe est correct, l’interface   rediriger l’utilisateur vers l a page 
+d’accueil, si l’email n’est pas trouvé ou que le mot de passe  est incorrect, l’interface affiche 
+un message d’erreur. 
+ 
+===== PAGE 32 =====
+CHAPITRE 2 : Étude conceptuelle 
+22 
+ 
+ 
+ Figure 4 : Diagramme de séquences du cas d’utilisation « S’authentifier»  
+2.5.2  Diagramme de séquences du cas d’utilisation : «Ajouter un Produit» 
+Le processus d’ajout d’un produit débute lorsque l’administrateur accède à l’interface 
+frontend, remplit le formulaire de  produit avec les informations nécessaires, puis soumet le 
+formulaire. 
+Ensuite, l’interface transmet les données saisies au contrôleur. Le contrôleur procède alors à la 
+validation des informations (vérification des champs). 
+Si les  données sont valides, le contrôleur envoie une requête à la base de données afin de 
+sauvegarder le nouveau produit. Après confirmation de la sauvegarde, le contrôleur envoie 
+une réponse de succès à l’interface, qui affiche un message confirmant l’ajout d’un produit. 
+===== PAGE 33 =====
+CHAPITRE 2 : Étude conceptuelle 
+23 
+ 
+Si les données  sont invalides, le contrôleur renvoie un message d’erreur à l’interface, qui 
+informe l’administrateur des corrections nécessaires avant une nouvelle soumission. 
+ 
+ 
+Figure 5: Diagramme de séquences du cas d’utilisation «Ajouter un Produit» 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+===== PAGE 34 =====
+CHAPITRE 2 : Étude conceptuelle 
+24 
+ 
+2.5.3. Diagramme de séquence de cas d’utilisation « Consulter le demande de devis » 
+Le processus de gestion des devis débute lorsque l’utilisateur accède à l’interface dédiée. Le 
+système récupère automatiquement l’ensemble des devis la bas e de données via le contrôleur, 
+puis afficher la liste complète de devis. Lorsque  l’utilisateur choisit d’envoyer un devis, le 
+système met à jour son statut a envoyé dans la base de donnes est confirmé l’o pération par un 
+message de succé s.de même, si l’adm inistrateur décide de supprimer un devis, le système le 
+retirer définitivement de la base de donnes et notifié de l’utilisateur de la suppression réussie. 
+ 
+Figure 6 : Diagramme de séquences du cas d’utilisation « Consulter le demande de 
+devis » 
+ 
+ 
+ 
+===== PAGE 35 =====
+CHAPITRE 2 : Étude conceptuelle 
+25 
+ 
+2.5.4. Diagramme de séquence  Cas d’utilisation : « gestion de réclamation »  
+Le processus de gestion des réclamations commence lorsque l’utilisateur accédé à l’interface 
+dédiée. Le  système récupère automatiquement toutes les réclamations  depuis la base de 
+données via le contrôleur, puis affiche la liste complète avec leurs détails. L ‘utilisateur peut 
+ensuite répondre à une réclamation, ce   qui met à jour le statut répondus et gérer  une 
+confirmation, ou la supprimer sur le système avec une notification de suppression réussie. 
+ 
+Figure 7: Diagramme de séquences du cas d’utilisation «gestion de reclmation » 

@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -9,7 +10,7 @@ import { Input } from "@/components/ui/Input";
 import { Field } from "@/components/ui/Field";
 import { cn } from "@/lib/cn";
 
-export default function LoginPage() {
+export default function BuyerLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,17 +21,22 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-    const data = await res.json();
-    if (data.success) {
-      localStorage.setItem("vendorId", data.vendorId);
-      router.push("/dashboard");
-    } else {
-      setError(data.error || "Email ou mot de passe incorrect");
+    try {
+      const res = await fetch("/api/buyer/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setError(data?.error || "Email ou mot de passe incorrect");
+        setLoading(false);
+        return;
+      }
+      localStorage.setItem("buyerId", data.buyerId);
+      router.push("/buyer/account");
+    } catch {
+      setError("Erreur réseau.");
       setLoading(false);
     }
   }
@@ -40,20 +46,23 @@ export default function LoginPage() {
       <Card className="w-full max-w-[440px] p-8 sm:p-10">
         <Brand className="mb-7" />
 
-        <RoleLoginToggle current="vendor" />
+        {/* Toggle vendeur/acheteur sur le login aussi */}
+        <RoleLoginToggle current="buyer" />
 
-        <h1 className="mt-6 text-2xl font-semibold tracking-tight">Bon retour !</h1>
+        <h1 className="mt-6 text-2xl font-semibold tracking-tight">
+          Espace acheteur
+        </h1>
         <p className="mt-1 text-sm text-[rgb(var(--muted))]">
-          Connectez-vous à votre espace vendeur
+          Connectez-vous pour accéder à la marketplace
         </p>
 
         <form onSubmit={handleSubmit} className="mt-7 space-y-4">
-          <Field label="Email professionnel">
+          <Field label="Email">
             <Input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="contact@entreprise.fr"
+              placeholder="marie@exemple.fr"
               required
               autoComplete="email"
             />
@@ -83,7 +92,10 @@ export default function LoginPage() {
 
         <div className="mt-7 border-t border-black/5 pt-5 text-center text-sm text-[rgb(var(--muted))]">
           <span>Pas encore de compte ? </span>
-          <a className="font-semibold text-[rgb(var(--primary))]" href="/register">
+          <a
+            className="font-semibold text-[rgb(var(--primary))]"
+            href="/buyer/register"
+          >
             Créer un compte
           </a>
         </div>

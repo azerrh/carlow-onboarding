@@ -6,26 +6,48 @@ datasource db {
   provider = "postgresql"
 }
 
+/* ============================================================
+   USERS / VENDORS / BUYERS
+   ============================================================ */
+
 model Vendor {
-  id            String   @id @default(cuid())
-  name          String
-  email         String   @unique
-  password      String
-  status        String   @default("pending")
-  companyName   String?
-  siret         String?
-  vatNumber     String?
-  vatValid      Boolean  @default(false)
-  legalForm     String?
-  address       String?
-  iban          String?
-  incoterms     String?
-  onboardingStep Int     @default(1)
-  createdAt     DateTime @default(now())
-  activatedAt   DateTime?
-  documents     Document[]
-  certifications Certification[]
+  id              String          @id @default(cuid())
+  name            String
+  email           String          @unique
+  password        String
+  status          String          @default("pending")
+  companyName     String?
+  siret           String?
+  vatNumber       String?
+  vatValid        Boolean         @default(false)
+  legalForm       String?
+  address         String?
+  iban            String?
+  incoterms       String?
+  onboardingStep  Int             @default(1)
+  createdAt       DateTime        @default(now())
+  activatedAt     DateTime?
+  documents       Document[]
+  certifications  Certification[]
+  catalogs        Catalog[]
+  notifications   Notification[]
 }
+
+model Buyer {
+  id            String         @id @default(cuid())
+  name          String
+  email         String         @unique
+  password      String
+  phone         String?
+  address       String?
+  createdAt     DateTime       @default(now())
+  orders        Order[]
+  notifications Notification[]
+}
+
+/* ============================================================
+   ONBOARDING DOCS / CERTIFICATIONS
+   ============================================================ */
 
 model Document {
   id         String   @id @default(cuid())
@@ -47,4 +69,106 @@ model Certification {
   s3Key      String
   category   String
   uploadedAt DateTime @default(now())
+}
+
+/* ============================================================
+   CATALOG / PRODUCTS / PHOTOS
+   ============================================================ */
+
+model Catalog {
+  id          String    @id @default(cuid())
+  vendorId    String
+  vendor      Vendor    @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  name        String?
+  description String?
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  catalogId   String
+  catalog     Catalog     @relation(fields: [catalogId], references: [id], onDelete: Cascade)
+  name        String
+  reference   String?
+  description String?
+  price       Float
+  weightKg    Float?
+  dimensions  String?
+  category    String?
+  stock       Int         @default(0)
+  active      Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  photos      Photo[]
+  orderLines  OrderLine[]
+
+  @@index([catalogId])
+  @@index([category])
+}
+
+model Photo {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  order     Int      @default(0)
+  primary   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+}
+
+/* ============================================================
+   ORDERS
+   ============================================================ */
+
+model Order {
+  id        String      @id @default(cuid())
+  buyerId   String
+  buyer     Buyer       @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  status    String      @default("EN_COURS") // EN_COURS | LIVREE | ANNULEE
+  totalCents Int        @default(0)
+  orderedAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  lines     OrderLine[]
+
+  @@index([buyerId])
+  @@index([status])
+}
+
+model OrderLine {
+  id            String   @id @default(cuid())
+  orderId       String
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id])
+  quantity      Int      @default(1)
+  unitPriceCents Int
+  createdAt     DateTime @default(now())
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+/* ============================================================
+   NOTIFICATIONS
+   ============================================================ */
+
+model Notification {
+  id        String   @id @default(cuid())
+  // Une notification est rattachée à un Vendor OU un Buyer (jamais les deux)
+  vendorId  String?
+  vendor    Vendor?  @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  buyerId   String?
+  buyer     Buyer?   @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  content   String
+  readAt    DateTime?
+  sentAt    DateTime @default(now())
+
+  @@index([vendorId])
+  @@index([buyerId])
+  @@index([sentAt])
 }

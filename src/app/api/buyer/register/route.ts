@@ -1,19 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sendWelcomeEmail } from "@/lib/email";
 import {
   hashPassword,
   isValidEmail,
   validatePasswordStrength,
 } from "@/lib/auth";
 
+/**
+ * Inscription acheteur (compte client de la marketplace).
+ * Symétrique à /api/auth/register mais cible le modèle Buyer.
+ */
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password } = await req.json();
+    const { name, email, password, phone, address } = await req.json();
 
     if (!name || !email || !password) {
       return NextResponse.json(
-        { error: "Tous les champs sont requis" },
+        { error: "Nom, email et mot de passe requis" },
         { status: 400 }
       );
     }
@@ -29,7 +32,7 @@ export async function POST(req: NextRequest) {
 
     const normalizedEmail = String(email).trim().toLowerCase();
 
-    const existing = await prisma.vendor.findUnique({
+    const existing = await prisma.buyer.findUnique({
       where: { email: normalizedEmail },
     });
     if (existing) {
@@ -41,19 +44,18 @@ export async function POST(req: NextRequest) {
 
     const hashedPassword = await hashPassword(password);
 
-    const vendor = await prisma.vendor.create({
+    const buyer = await prisma.buyer.create({
       data: {
         name: String(name).trim(),
         email: normalizedEmail,
         password: hashedPassword,
-        status: "pending",
-        onboardingStep: 1,
+        phone: phone ? String(phone).trim() : null,
+        address: address ? String(address).trim() : null,
       },
+      select: { id: true, name: true, email: true },
     });
 
-    await sendWelcomeEmail(vendor.name, vendor.email);
-
-    return NextResponse.json({ success: true, vendorId: vendor.id });
+    return NextResponse.json({ success: true, buyerId: buyer.id });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
