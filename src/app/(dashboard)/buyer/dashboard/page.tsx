@@ -63,20 +63,6 @@ function formatCents(cents: number): string {
   }).format(cents / 100);
 }
 
-function timeAgo(dateStr: string): string {
-  const now = new Date();
-  const date = new Date(dateStr);
-  const diffMs = now.getTime() - date.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return "A l&apos;instant";
-  if (diffMin < 60) return `Il y a ${diffMin} min`;
-  const diffH = Math.floor(diffMin / 60);
-  if (diffH < 24) return `Il y a ${diffH}h`;
-  const diffD = Math.floor(diffH / 24);
-  if (diffD < 7) return `Il y a ${diffD}j`;
-  return date.toLocaleDateString("fr-FR");
-}
-
 export default function BuyerDashboardPage() {
   const router = useRouter();
   const [buyerId, setBuyerId] = useState<string | null>(null);
@@ -97,13 +83,8 @@ export default function BuyerDashboardPage() {
   const fetchData = useCallback(async () => {
     if (!buyerId) return;
     try {
-      const [statsRes, ordersRes] = await Promise.all([
-        fetch(`/api/buyer/dashboard-stats?id=${buyerId}`),
-        fetch(`/api/buyer/orders?id=${buyerId}`),
-      ]);
-
+      const statsRes = await fetch(`/api/buyer/dashboard-stats?id=${buyerId}`);
       const statsData = await statsRes.json();
-      const ordersData = await ordersRes.json();
 
       if (statsData.success) {
         setBuyer(statsData.buyer);
@@ -112,10 +93,6 @@ export default function BuyerDashboardPage() {
       } else {
         router.replace("/buyer/login");
         return;
-      }
-
-      if (ordersData.success) {
-        // Already have recent orders from stats, but could merge if needed
       }
     } catch {
       router.replace("/buyer/login");
@@ -199,11 +176,13 @@ export default function BuyerDashboardPage() {
         {/* Stats */}
         {stats && (
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <StatTile
-              label="Commandes"
-              value={buyer._count.orders}
-              icon="🛒"
-            />
+            <Link href="/buyer/orders" className="block cursor-pointer">
+              <StatTile
+                label="Commandes"
+                value={buyer._count.orders}
+                icon="🛒"
+              />
+            </Link>
             <StatTile
               label="En cours"
               value={stats.ordersInProgress}
@@ -264,6 +243,9 @@ export default function BuyerDashboardPage() {
         <Card className="mt-6 p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold">Commandes recentes</h2>
+            <Link href="/buyer/orders" className="text-xs font-medium text-[rgb(var(--link))] hover:underline">
+              Voir toutes →
+            </Link>
           </div>
 
           {recentOrders.length === 0 ? (
@@ -282,9 +264,10 @@ export default function BuyerDashboardPage() {
               {recentOrders.map((order) => {
                 const style = ORDER_STATUS_STYLES[order.status] ?? ORDER_STATUS_STYLES.EN_COURS;
                 return (
-                  <div
+                  <Link
                     key={order.id}
-                    className="rounded-xl border border-[rgb(var(--border))]/60 bg-white/60 p-4"
+                    href={`/buyer/orders/${order.id}`}
+                    className="block rounded-xl border border-[rgb(var(--border))]/60 bg-white/60 p-4 transition hover:border-[rgb(var(--success))]/30 hover:bg-[rgb(var(--success))]/[0.04]"
                   >
                     <div className="flex items-center justify-between">
                       <div>
@@ -313,7 +296,6 @@ export default function BuyerDashboardPage() {
                         </span>
                       </div>
                     </div>
-                    {/* Order lines detail */}
                     {order.lines.length > 1 && (
                       <div className="mt-3 border-t border-[rgb(var(--border))]/50 pt-3">
                         {order.lines.map((l, i) => (
@@ -326,7 +308,7 @@ export default function BuyerDashboardPage() {
                         ))}
                       </div>
                     )}
-                  </div>
+                  </Link>
                 );
               })}
             </div>
@@ -336,18 +318,18 @@ export default function BuyerDashboardPage() {
         {/* Quick actions */}
         <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <Link
-            href="/buyer/account"
+            href="/buyer/orders"
             className="flex items-center gap-3 rounded-xl border border-[rgb(var(--border))]/60 bg-white/60 px-4 py-3 text-sm font-medium transition hover:border-[rgb(var(--success))]/30 hover:bg-[rgb(var(--success))]/[0.04]"
           >
-            <span className="text-base">👤</span>
-            Mon profil
+            <span className="text-base">📦</span>
+            Mes commandes
           </Link>
           <Link
             href="/buyer/account"
             className="flex items-center gap-3 rounded-xl border border-[rgb(var(--border))]/60 bg-white/60 px-4 py-3 text-sm font-medium transition hover:border-[rgb(var(--success))]/30 hover:bg-[rgb(var(--success))]/[0.04]"
           >
-            <span className="text-base">⚙️</span>
-            Parametres
+            <span className="text-base">👤</span>
+            Mon profil
           </Link>
           <button
             onClick={handleLogout}
