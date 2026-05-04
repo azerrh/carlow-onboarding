@@ -13,8 +13,49 @@
   --primary-contrast: 255 255 255;
   --success: 34 160 107; /* #22a06b */
   --danger: 204 0 0; /* #cc0000 */
+  --link: 232 122 48; /* same as primary */
 
   --radius: 14px;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.7; }
+  100% { transform: scale(0.95); opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out both;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.5s ease-out both;
+}
+
+.animate-slide-up-1 {
+  animation: slide-up 0.5s ease-out 0.05s both;
+}
+
+.animate-slide-up-2 {
+  animation: slide-up 0.5s ease-out 0.1s both;
+}
+
+.animate-slide-up-3 {
+  animation: slide-up 0.5s ease-out 0.15s both;
+}
+
+.animate-slide-up-4 {
+  animation: slide-up 0.5s ease-out 0.2s both;
 }
 
 *,
