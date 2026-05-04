@@ -112,37 +112,6 @@ export default function AdminDashboardPage() {
         </div>
       ) : (
         <>
-          {/* Welcome Banner */}
-          <div className="animate-slide-up mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-[rgb(var(--primary))] via-[rgb(var(--primary))]/90 to-[#c46020] p-6 text-white sm:p-8">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-lg font-semibold sm:text-xl">Bienvenue sur Carlow Admin</h2>
-                <p className="mt-1 text-sm text-white/80">
-                  {stats && (
-                    <>
-                      {stats.totalUsers} utilisateurs · {stats.totalVendors} vendeurs · {stats.totalProducts} produits · {stats.totalOrders} commandes
-                    </>
-                  )}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <QuickAction
-                  href="/admin/vendeurs?statut=EN_ATTENTE"
-                  label={`${stats?.pendingVendors ?? 0} en attente`}
-                  sublabel="Vendeurs"
-                />
-                <QuickAction
-                  href="/admin/commandes?statut=EN_COURS"
-                  label={`${stats?.ordersInProgress ?? 0} en cours`}
-                  sublabel="Commandes"
-                />
-              </div>
-            </div>
-            {/* Decorative circles */}
-            <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10 sm:h-48 sm:w-48" />
-            <div className="pointer-events-none absolute -bottom-12 -right-12 h-40 w-40 rounded-full bg-white/5 sm:h-56 sm:w-56" />
-          </div>
-
           {/* Stat Cards */}
           <div className="animate-slide-up-1 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
@@ -501,18 +470,6 @@ function OrderStatus({ status }: { status: string }) {
     <span className={cn("inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold", m.cls)}>
       {m.label}
     </span>
-  );
-}
-
-function QuickAction({ href, label, sublabel }: { href: string; label: string; sublabel: string }) {
-  return (
-    <Link
-      href={href}
-      className="rounded-xl bg-white/20 px-4 py-2 text-left backdrop-blur transition hover:bg-white/30"
-    >
-      <div className="text-lg font-bold">{label}</div>
-      <div className="text-[11px] text-white/70">{sublabel}</div>
-    </Link>
   );
 }
 
