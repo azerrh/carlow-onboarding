@@ -129,13 +129,19 @@ function MarketplaceInner() {
       </header>
 
       {/* Hero */}
-      <section className="mx-auto max-w-6xl px-4 pt-12 pb-8">
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-          Marketplace <span className="text-[rgb(var(--primary))]">EnR</span>
-        </h1>
-        <p className="mt-2 text-base text-[rgb(var(--muted))]">
-          Equipements d&apos;energies renouvelables neufs et reconditionnes.
-        </p>
+      <section className="relative mx-auto max-w-6xl px-4 pt-10 pb-6">
+        <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-[rgb(var(--primary))] via-[rgb(var(--primary))]/90 to-[#c46020] p-8 text-white sm:p-12">
+          <div className="max-w-lg">
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+              Marketplace EnR
+            </h1>
+            <p className="mt-2 text-sm text-white/80 sm:text-base">
+              Equipements d&apos;energies renouvelables neufs et reconditionnes. Panneaux solaires, onduleurs, batteries et plus.
+            </p>
+          </div>
+          <div className="pointer-events-none absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10 sm:h-48 sm:w-48" />
+          <div className="pointer-events-none absolute -bottom-12 -right-12 h-40 w-40 rounded-full bg-white/5 sm:h-56 sm:w-56" />
+        </div>
       </section>
 
       {/* Filters */}
@@ -193,16 +199,16 @@ function MarketplaceInner() {
             {filtered.map((p) => (
               <Card
                 key={p.id}
-                className="group flex flex-col overflow-hidden transition hover:border-[rgb(var(--primary))]/30"
+                className="group flex flex-col overflow-hidden transition hover:border-[rgb(var(--primary))]/30 hover:shadow-sm"
               >
-                {/* Image placeholder */}
-                <div className="relative aspect-[4/3] bg-[#f8f9fc]">
+                {/* Image */}
+                <Link href={`/marketplace/${p.id}`} className="relative aspect-[4/3] bg-[#f8f9fc] block">
                   {p.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={p.imageUrl}
                       alt={p.name}
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-cover transition group-hover:scale-[1.02]"
                     />
                   ) : (
                     <div className="grid h-full place-items-center text-[rgb(var(--muted))]">
@@ -220,15 +226,15 @@ function MarketplaceInner() {
                       </span>
                     </div>
                   )}
-                </div>
+                </Link>
 
                 <div className="flex flex-1 flex-col p-4">
                   <div className="flex-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="text-sm font-semibold leading-tight">
+                    <Link href={`/marketplace/${p.id}`}>
+                      <h3 className="text-sm font-semibold leading-tight hover:text-[rgb(var(--primary))] transition">
                         {p.name}
                       </h3>
-                    </div>
+                    </Link>
                     {p.category && (
                       <span className="mt-1.5 inline-block rounded-md bg-[rgb(var(--primary))]/8 px-1.5 py-0.5 text-[10px] font-semibold text-[rgb(var(--primary))]">
                         {p.category}
@@ -243,12 +249,14 @@ function MarketplaceInner() {
 
                   <div className="mt-3 flex items-end justify-between">
                     <div>
-                      <div className="text-lg font-semibold">
-                        {p.price.toLocaleString("fr-FR", {
-                          style: "currency",
-                          currency: "EUR",
-                        })}
-                      </div>
+                      <Link href={`/marketplace/${p.id}`}>
+                        <span className="text-lg font-semibold hover:text-[rgb(var(--primary))] transition">
+                          {p.price.toLocaleString("fr-FR", {
+                            style: "currency",
+                            currency: "EUR",
+                          })}
+                        </span>
+                      </Link>
                       <div className="text-[10px] text-[rgb(var(--muted))]">
                         {p.vendor.name}
                       </div>
