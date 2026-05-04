@@ -126,7 +126,7 @@ export default function AdminProduitsPage() {
             onClick={() => setShowCreate(true)}
             disabled={catalogs.length === 0}
             className={cn(
-              "inline-flex items-center gap-2 rounded-xl bg-[#6366f1] px-4 py-2 text-sm font-semibold text-white hover:bg-[#5558e6]",
+              "inline-flex items-center gap-2 rounded-xl bg-[rgb(var(--primary))] px-4 py-2 text-sm font-semibold text-white hover:bg-[rgb(var(--primary))]/90",
               catalogs.length === 0 && "cursor-not-allowed opacity-50"
             )}
             title={catalogs.length === 0 ? "Aucun catalogue disponible — créer d'abord un vendeur+catalogue" : ""}
@@ -145,82 +145,99 @@ export default function AdminProduitsPage() {
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Tile label="Total produits" value={stats.total} tone="indigo" />
+      <div className="animate-slide-up grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Tile label="Total produits" value={stats.total} tone="primary" />
         <Tile label="Actifs" value={stats.active} tone="emerald" />
         <Tile label="Sans photo" value={stats.noPhoto} tone="amber" />
-        <Tile label="Stock zéro" value={stats.zeroStock} tone="rose" />
+        <Tile label="Stock zero" value={stats.zeroStock} tone="rose" />
       </div>
 
-      <div className="mt-6 rounded-2xl border border-[rgb(var(--border))] bg-white p-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative flex-1 min-w-[240px]">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[rgb(var(--muted))]">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
-                <circle cx="11" cy="11" r="7" />
-                <path d="M20 20l-3-3" />
-              </svg>
-            </span>
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Nom, référence, catégorie…"
-              className="h-10 w-full rounded-xl border border-[rgb(var(--border))] bg-[#f8f9fc] pl-9 pr-3 text-sm focus:border-[#6366f1] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6366f1]/15"
-            />
+      <div className="animate-slide-up-1 mt-6 rounded-2xl border border-[rgb(var(--border))] bg-white">
+        <div className="border-b border-[rgb(var(--border))] px-5 py-4">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="grid h-8 w-8 place-items-center rounded-lg bg-[rgb(var(--primary))]/10 text-[rgb(var(--primary))]">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+                  <path d="M5 8h14l-1 12H6L5 8z" />
+                  <path d="M9 8V6a3 3 0 0 1 6 0v2" />
+                </svg>
+              </div>
+              <h2 className="text-sm font-semibold">Liste des produits</h2>
+            </div>
+            <span className="text-xs text-[rgb(var(--muted))]">{filtered.length} resultat{filtered.length > 1 ? "s" : ""}</span>
           </div>
-          <select
-            value={catalogFilter}
-            onChange={(e) => setCatalogFilter(e.target.value)}
-            className="h-10 cursor-pointer rounded-xl border border-[rgb(var(--border))] bg-[#f8f9fc] px-3 text-sm"
-          >
-            <option value="ALL">Tous les catalogues</option>
-            {catalogs.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name ?? `Catalogue ${c.id.slice(0, 6)}`} — {c.vendor.name}
-              </option>
-            ))}
-          </select>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-            className="h-10 cursor-pointer rounded-xl border border-[rgb(var(--border))] bg-[#f8f9fc] px-3 text-sm"
-          >
-            <option value="ALL">Tous statuts</option>
-            <option value="ACTIVE">Actifs</option>
-            <option value="INACTIVE">Inactifs</option>
-          </select>
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="h-10 cursor-pointer rounded-xl border border-[rgb(var(--border))] bg-[#f8f9fc] px-3 text-sm"
-          >
-            <option value="ALL">Toutes catégories</option>
-            {categories.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={() => {
-              setSearch("");
-              setCatalogFilter("ALL");
-              setStatusFilter("ALL");
-              setCategoryFilter("ALL");
-            }}
-            className="h-10 rounded-xl bg-[#6366f1] px-4 text-sm font-semibold text-white hover:bg-[#5558e6]"
-          >
-            Filtrer
-          </button>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative flex-1 min-w-[220px]">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[rgb(var(--muted))]">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="M20 20l-3-3" />
+                </svg>
+              </span>
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Nom, reference, categorie…"
+                className="h-10 w-full rounded-xl border border-[rgb(var(--border))] bg-white pl-9 pr-3 text-sm transition focus:border-[rgb(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]/20"
+              />
+            </div>
+            <select
+              value={catalogFilter}
+              onChange={(e) => setCatalogFilter(e.target.value)}
+              className="h-10 cursor-pointer rounded-xl border border-[rgb(var(--border))] bg-white px-3 text-sm transition focus:border-[rgb(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]/20"
+            >
+              <option value="ALL">Tous les catalogues</option>
+              {catalogs.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name ?? `Catalogue ${c.id.slice(0, 6)}`} — {c.vendor.name}
+                </option>
+              ))}
+            </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+              className="h-10 cursor-pointer rounded-xl border border-[rgb(var(--border))] bg-white px-3 text-sm transition focus:border-[rgb(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]/20"
+            >
+              <option value="ALL">Tous statuts</option>
+              <option value="ACTIVE">Actifs</option>
+              <option value="INACTIVE">Inactifs</option>
+            </select>
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="h-10 cursor-pointer rounded-xl border border-[rgb(var(--border))] bg-white px-3 text-sm transition focus:border-[rgb(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]/20"
+            >
+              <option value="ALL">Toutes categories</option>
+              {categories.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => { setSearch(""); setCatalogFilter("ALL"); setStatusFilter("ALL"); setCategoryFilter("ALL"); }}
+              className="h-10 rounded-xl bg-[rgb(var(--primary))] px-4 text-sm font-semibold text-white transition hover:bg-[rgb(var(--primary))]/90"
+            >
+              Reset
+            </button>
+          </div>
         </div>
 
         <div className="mt-4 overflow-x-auto">
           {loading ? (
-            <p className="py-8 text-center text-sm text-[rgb(var(--muted))]">Chargement…</p>
+            <div className="py-12 text-center">
+              <p className="text-sm text-[rgb(var(--muted))]">Chargement…</p>
+            </div>
           ) : filtered.length === 0 ? (
-            <p className="py-12 text-center text-sm text-[rgb(var(--muted))]">
-              Aucun produit trouvé.
-            </p>
+            <div className="py-12 text-center">
+              <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-black/[0.03] text-[rgb(var(--muted))]">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-5 w-5">
+                  <path d="M5 8h14l-1 12H6L5 8z" />
+                  <path d="M9 8V6a3 3 0 0 1 6 0v2" />
+                </svg>
+              </div>
+              <p className="mt-3 text-sm font-medium">Aucun produit trouve</p>
+              <p className="mt-1 text-xs text-[rgb(var(--muted))]">Essayez de modifier vos filtres.</p>
+            </div>
           ) : (
             <table className="w-full border-collapse text-sm">
               <thead>
@@ -265,7 +282,7 @@ export default function AdminProduitsPage() {
                       <div className="flex items-center gap-2 text-xs text-[rgb(var(--muted))]">
                         {p.reference && <span className="font-mono">{p.reference}</span>}
                         {p.category && (
-                          <span className="rounded-md bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-700">
+                          <span className="rounded-md bg-[rgb(var(--primary))]/10 px-1.5 py-0.5 text-[10px] font-semibold text-[rgb(var(--primary))]">
                             {p.category}
                           </span>
                         )}
@@ -286,31 +303,31 @@ export default function AdminProduitsPage() {
                       })}
                     </td>
                     <td className="py-3 pr-3">
-                      <span
-                        className={cn(
-                          "rounded-md px-2 py-0.5 text-xs font-semibold",
-                          p.stock === 0
-                            ? "bg-rose-100 text-rose-700"
-                            : p.stock < 10
-                              ? "bg-amber-100 text-amber-700"
-                              : "bg-emerald-100 text-emerald-700"
-                        )}
-                      >
-                        {p.stock}
-                      </span>
+                        <span
+                          className={cn(
+                            "rounded-md px-2 py-0.5 text-xs font-semibold",
+                            p.stock === 0
+                              ? "bg-rose-100 text-rose-700"
+                              : p.stock < 10
+                                ? "bg-amber-100 text-amber-700"
+                                : "bg-[rgb(var(--success))]/10 text-[rgb(var(--success))]"
+                          )}
+                        >
+                          {p.stock}
+                        </span>
                     </td>
                     <td className="py-3 pr-3">
-                      <button
-                        onClick={() => toggleActive(p)}
-                        className={cn(
-                          "inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold transition",
-                          p.active
-                            ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-                            : "bg-black/[0.06] text-[rgb(var(--muted))] hover:bg-black/[0.1]"
-                        )}
-                      >
-                        {p.active ? "Actif" : "Inactif"}
-                      </button>
+                        <button
+                          onClick={() => toggleActive(p)}
+                          className={cn(
+                            "inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold transition",
+                            p.active
+                              ? "bg-[rgb(var(--success))]/10 text-[rgb(var(--success))] hover:bg-[rgb(var(--success))]/20"
+                              : "bg-black/[0.06] text-[rgb(var(--muted))] hover:bg-black/[0.1]"
+                          )}
+                        >
+                          {p.active ? "Actif" : "Inactif"}
+                        </button>
                     </td>
                     <td className="py-3 pr-3">
                       <div className="flex items-center gap-1.5">
@@ -349,34 +366,18 @@ export default function AdminProduitsPage() {
 
 /* ---- Sub-components ---- */
 
-function Tile({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number;
-  tone: "indigo" | "amber" | "emerald" | "rose";
-}) {
+function Tile({ label, value, tone }: { label: string; value: number; tone: "primary" | "amber" | "emerald" | "rose" }) {
   const map = {
-    indigo: { bg: "bg-indigo-50", icon: "bg-indigo-200/70 text-indigo-700" },
-    amber: { bg: "bg-amber-50", icon: "bg-amber-200/70 text-amber-700" },
-    emerald: { bg: "bg-emerald-50", icon: "bg-emerald-200/70 text-emerald-700" },
-    rose: { bg: "bg-rose-50", icon: "bg-rose-200/70 text-rose-600" },
+    primary: { bg: "bg-[rgb(var(--primary))]/10", text: "text-[rgb(var(--primary))]" },
+    amber: { bg: "bg-amber-50", text: "text-amber-700" },
+    emerald: { bg: "bg-[rgb(var(--success))]/10", text: "text-[rgb(var(--success))]" },
+    rose: { bg: "bg-rose-50", text: "text-rose-600" },
   } as const;
   const t = map[tone];
   return (
-    <div className={cn("flex items-center gap-4 rounded-2xl p-5", t.bg)}>
-      <span className={cn("grid h-12 w-12 place-items-center rounded-full", t.icon)}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-6 w-6">
-          <path d="M5 8h14l-1 12H6L5 8z" />
-          <path d="M9 8V6a3 3 0 0 1 6 0v2" />
-        </svg>
-      </span>
-      <div>
-        <div className="text-xs font-medium text-[rgb(var(--muted))]">{label}</div>
-        <div className="text-2xl font-semibold tracking-tight">{value}</div>
-      </div>
+    <div className={cn("overflow-hidden rounded-2xl p-5 transition hover:shadow-sm", t.bg)}>
+      <div className="text-xs font-medium text-[rgb(var(--muted))]">{label}</div>
+      <div className={cn("mt-2 text-2xl font-bold tracking-tight", t.text)}>{value.toLocaleString()}</div>
     </div>
   );
 }
@@ -532,7 +533,7 @@ function CreateProductModal({
               rows={3}
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              className="w-full rounded-xl border border-[rgb(var(--border))] bg-white p-3 text-sm focus:border-[#6366f1] focus:outline-none focus:ring-2 focus:ring-[#6366f1]/15"
+              className="w-full rounded-xl border border-[rgb(var(--border))] bg-white p-3 text-sm transition focus:border-[rgb(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]/20"
             />
           </Field>
 
@@ -547,10 +548,10 @@ function CreateProductModal({
             <button
               type="submit"
               disabled={submitting || !form.catalogId}
-              className={cn(
-                "h-10 rounded-xl bg-[#6366f1] px-4 text-sm font-semibold text-white hover:bg-[#5558e6]",
-                (submitting || !form.catalogId) && "opacity-60"
-              )}
+                className={cn(
+                  "h-10 rounded-xl bg-[rgb(var(--primary))] px-4 text-sm font-semibold text-white transition hover:bg-[rgb(var(--primary))]/90",
+                  (submitting || !form.catalogId) && "opacity-60"
+                )}
             >
               {submitting ? "Création…" : "Créer le produit"}
             </button>
@@ -584,7 +585,7 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
-      className="h-10 w-full rounded-xl border border-[rgb(var(--border))] bg-white px-3 text-sm focus:border-[#6366f1] focus:outline-none focus:ring-2 focus:ring-[#6366f1]/15"
+      className="h-10 w-full rounded-xl border border-[rgb(var(--border))] bg-white px-3 text-sm transition focus:border-[rgb(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]/20"
     />
   );
 }

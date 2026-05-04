@@ -14,10 +14,10 @@ interface OrderRow {
   _count: { lines: number };
 }
 
-const STATUS_META: Record<string, { label: string; cls: string }> = {
-  EN_COURS: { label: "En cours", cls: "bg-amber-100 text-amber-700" },
-  LIVREE: { label: "Livrée", cls: "bg-emerald-100 text-emerald-700" },
-  ANNULEE: { label: "Annulée", cls: "bg-rose-100 text-rose-700" },
+const STATUS_META: Record<string, { label: string; cls: string; dot: string }> = {
+  EN_COURS: { label: "En cours", cls: "bg-amber-100 text-amber-700", dot: "bg-amber-400" },
+  LIVREE: { label: "Livree", cls: "bg-[rgb(var(--success))]/10 text-[rgb(var(--success))]", dot: "bg-[rgb(var(--success))]" },
+  ANNULEE: { label: "Annulee", cls: "bg-rose-100 text-rose-700", dot: "bg-rose-400" },
 };
 
 export default function Page() {
@@ -87,49 +87,80 @@ function Inner() {
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Tile label="Total" value={stats.total} tone="indigo" />
+      <div className="animate-slide-up grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Tile label="Total" value={stats.total} tone="primary" />
         <Tile label="En cours" value={stats.enCours} tone="amber" />
-        <Tile label="Livrées" value={stats.livrees} tone="emerald" />
-        <Tile label="Annulées" value={stats.annulees} tone="rose" />
+        <Tile label="Livrees" value={stats.livrees} tone="emerald" />
+        <Tile label="Annulees" value={stats.annulees} tone="rose" />
       </div>
 
-      <div className="mt-6 rounded-2xl border border-[rgb(var(--border))] bg-white p-4">
-        <div className="mb-4 flex flex-wrap items-center gap-2">
-          {(["ALL", "EN_COURS", "LIVREE", "ANNULEE"] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={cn(
-                "rounded-full px-3 py-1.5 text-xs font-semibold transition",
-                filter === f
-                  ? "bg-[#6366f1] text-white"
-                  : "bg-black/[0.04] text-[rgb(var(--muted))] hover:bg-black/[0.08]"
-              )}
-            >
-              {f === "ALL" ? "Toutes" : STATUS_META[f].label}
-            </button>
-          ))}
+      <div className="animate-slide-up-1 mt-6 rounded-2xl border border-[rgb(var(--border))] bg-white">
+        {/* Header */}
+        <div className="border-b border-[rgb(var(--border))] px-5 py-4">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="grid h-8 w-8 place-items-center rounded-lg bg-[rgb(var(--primary))]/10 text-[rgb(var(--primary))]">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+                  <circle cx="9" cy="20" r="1.5" />
+                  <circle cx="17" cy="20" r="1.5" />
+                  <path d="M3 4h2l2.5 11h11l2-8H6" />
+                </svg>
+              </div>
+              <h2 className="text-sm font-semibold">Liste des commandes</h2>
+            </div>
+            <span className="text-xs text-[rgb(var(--muted))]">{filtered.length} resultat{filtered.length > 1 ? "s" : ""}</span>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {(["ALL", "EN_COURS", "LIVREE", "ANNULEE"] as const).map((f) => {
+              const isActive = filter === f;
+              return (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition",
+                    isActive
+                      ? "bg-[rgb(var(--primary))] text-white"
+                      : "bg-black/[0.04] text-[rgb(var(--muted))] hover:bg-black/[0.08]"
+                  )}
+                >
+                  {f !== "ALL" && <span className={cn("h-1.5 w-1.5 rounded-full", isActive ? "bg-white" : STATUS_META[f].dot)} />}
+                  {f === "ALL" ? "Toutes" : STATUS_META[f].label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {loading ? (
-          <p className="py-8 text-center text-sm text-[rgb(var(--muted))]">Chargement…</p>
+          <div className="py-12 text-center">
+            <p className="text-sm text-[rgb(var(--muted))]">Chargement…</p>
+          </div>
         ) : filtered.length === 0 ? (
-          <p className="py-12 text-center text-sm text-[rgb(var(--muted))]">
-            Aucune commande.
-          </p>
+          <div className="py-12 text-center">
+            <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-black/[0.03] text-[rgb(var(--muted))]">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-5 w-5">
+                <circle cx="9" cy="20" r="1.5" />
+                <circle cx="17" cy="20" r="1.5" />
+                <path d="M3 4h2l2.5 11h11l2-8H6" />
+              </svg>
+            </div>
+            <p className="mt-3 text-sm font-medium">Aucune commande</p>
+            <p className="mt-1 text-xs text-[rgb(var(--muted))]">Les commandes apparaitront ici une fois passees.</p>
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="border-b border-[rgb(var(--border))] text-left text-[11px] font-semibold uppercase tracking-wider text-[rgb(var(--muted))]">
-                  <th className="py-3 pr-3">#</th>
-                  <th className="py-3 pr-3">Client</th>
-                  <th className="py-3 pr-3">Lignes</th>
-                  <th className="py-3 pr-3">Total</th>
-                  <th className="py-3 pr-3">Date</th>
-                  <th className="py-3 pr-3">Statut</th>
-                  <th className="py-3 pr-3">Actions</th>
+                  <th className="px-5 py-3">#</th>
+                  <th className="px-5 py-3">Client</th>
+                  <th className="px-5 py-3">Lignes</th>
+                  <th className="px-5 py-3">Total</th>
+                  <th className="px-5 py-3">Date</th>
+                  <th className="px-5 py-3">Statut</th>
+                  <th className="px-5 py-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -138,42 +169,50 @@ function Inner() {
                   return (
                     <tr
                       key={o.id}
-                      className="border-b border-[rgb(var(--border))]/60 last:border-0 hover:bg-black/[0.015]"
+                      className="border-b border-[rgb(var(--border))]/50 last:border-0 transition hover:bg-black/[0.01]"
                     >
-                      <td className="py-3 pr-3 font-mono text-xs">#{o.id.slice(0, 8)}</td>
-                      <td className="py-3 pr-3">
-                        <div className="font-semibold">{o.buyer.name}</div>
-                        <div className="text-xs text-[rgb(var(--muted))]">{o.buyer.email}</div>
+                      <td className="px-5 py-3 font-mono text-xs font-semibold">#{o.id.slice(0, 8)}</td>
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[rgb(var(--primary))]/10 text-xs font-bold text-[rgb(var(--primary))]">
+                            {o.buyer.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="font-semibold">{o.buyer.name}</div>
+                            <div className="text-xs text-[rgb(var(--muted))]">{o.buyer.email}</div>
+                          </div>
+                        </div>
                       </td>
-                      <td className="py-3 pr-3 text-[rgb(var(--muted))]">{o._count.lines}</td>
-                      <td className="py-3 pr-3 font-semibold">
+                      <td className="px-5 py-3 text-[rgb(var(--muted))]">{o._count.lines}</td>
+                      <td className="px-5 py-3 font-semibold">
                         {(o.totalCents / 100).toLocaleString("fr-FR", {
                           style: "currency",
                           currency: "EUR",
                         })}
                       </td>
-                      <td className="py-3 pr-3 text-[rgb(var(--muted))]">
+                      <td className="px-5 py-3 text-[rgb(var(--muted))]">
                         {new Date(o.orderedAt).toLocaleDateString("fr-FR")}
                       </td>
-                      <td className="py-3 pr-3">
+                      <td className="px-5 py-3">
                         <span
                           className={cn(
-                            "inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                            "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold",
                             meta?.cls ?? "bg-black/[0.06] text-[rgb(var(--muted))]"
                           )}
                         >
+                          <span className={cn("h-1.5 w-1.5 rounded-full", meta?.dot ?? "bg-gray-400")} />
                           {meta?.label ?? o.status}
                         </span>
                       </td>
-                      <td className="py-3 pr-3">
+                      <td className="px-5 py-3">
                         <select
                           value={o.status}
                           onChange={(e) => setStatus(o.id, e.target.value)}
-                          className="h-8 cursor-pointer rounded-md border border-[rgb(var(--border))] bg-white px-2 text-xs"
+                          className="h-8 cursor-pointer rounded-lg border border-[rgb(var(--border))] bg-white px-2.5 text-xs font-medium transition hover:border-[rgb(var(--primary))]/30 focus:border-[rgb(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]/20"
                         >
                           <option value="EN_COURS">En cours</option>
-                          <option value="LIVREE">Livrée</option>
-                          <option value="ANNULEE">Annulée</option>
+                          <option value="LIVREE">Livree</option>
+                          <option value="ANNULEE">Annulee</option>
                         </select>
                       </td>
                     </tr>
@@ -195,19 +234,19 @@ function Tile({
 }: {
   label: string;
   value: number;
-  tone: "indigo" | "amber" | "emerald" | "rose";
+  tone: "primary" | "amber" | "emerald" | "rose";
 }) {
   const map = {
-    indigo: { bg: "bg-indigo-50", text: "text-indigo-700" },
+    primary: { bg: "bg-[rgb(var(--primary))]/10", text: "text-[rgb(var(--primary))]" },
     amber: { bg: "bg-amber-50", text: "text-amber-700" },
-    emerald: { bg: "bg-emerald-50", text: "text-emerald-700" },
+    emerald: { bg: "bg-[rgb(var(--success))]/10", text: "text-[rgb(var(--success))]" },
     rose: { bg: "bg-rose-50", text: "text-rose-600" },
   } as const;
   const t = map[tone];
   return (
-    <div className={cn("rounded-2xl p-5", t.bg)}>
+    <div className={cn("overflow-hidden rounded-2xl p-5 transition hover:shadow-sm", t.bg)}>
       <div className="text-xs font-medium text-[rgb(var(--muted))]">{label}</div>
-      <div className={cn("mt-2 text-2xl font-semibold tracking-tight", t.text)}>{value}</div>
+      <div className={cn("mt-2 text-2xl font-bold tracking-tight", t.text)}>{value.toLocaleString()}</div>
     </div>
   );
 }

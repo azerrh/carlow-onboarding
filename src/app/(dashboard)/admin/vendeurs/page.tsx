@@ -20,7 +20,6 @@ interface Vendor {
 
 type StatutFilter = "ALL" | "EN_ATTENTE" | "VALIDE" | "REJETE";
 
-// Mapping statut DB ↔ vocabulaire métier (français)
 const STATUS_TO_FILTER: Record<string, StatutFilter> = {
   pending: "EN_ATTENTE",
   submitted: "EN_ATTENTE",
@@ -28,11 +27,11 @@ const STATUS_TO_FILTER: Record<string, StatutFilter> = {
   rejected: "REJETE",
 };
 
-const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
-  pending: { label: "En attente", cls: "bg-amber-100 text-amber-700" },
-  submitted: { label: "En attente", cls: "bg-amber-100 text-amber-700" },
-  active: { label: "Validé", cls: "bg-emerald-100 text-emerald-700" },
-  rejected: { label: "Rejeté", cls: "bg-rose-100 text-rose-700" },
+const STATUS_BADGE: Record<string, { label: string; cls: string; dot: string }> = {
+  pending: { label: "En attente", cls: "bg-amber-100 text-amber-700", dot: "bg-amber-400" },
+  submitted: { label: "En attente", cls: "bg-amber-100 text-amber-700", dot: "bg-amber-400" },
+  active: { label: "Valide", cls: "bg-[rgb(var(--success))]/10 text-[rgb(var(--success))]", dot: "bg-[rgb(var(--success))]" },
+  rejected: { label: "Rejete", cls: "bg-rose-100 text-rose-700", dot: "bg-rose-400" },
 };
 
 export default function AdminVendeursPage() {
@@ -73,7 +72,7 @@ function Inner() {
           setError(data?.error || "Impossible de charger les vendeurs.");
         }
       } catch {
-        setError("Erreur réseau.");
+        setError("Erreur reseau.");
       } finally {
         setLoading(false);
       }
@@ -83,9 +82,7 @@ function Inner() {
   const stats = useMemo(() => {
     return {
       total: vendors.length,
-      enAttente: vendors.filter(
-        (v) => STATUS_TO_FILTER[v.status] === "EN_ATTENTE"
-      ).length,
+      enAttente: vendors.filter((v) => STATUS_TO_FILTER[v.status] === "EN_ATTENTE").length,
       valides: vendors.filter((v) => STATUS_TO_FILTER[v.status] === "VALIDE").length,
       rejetes: vendors.filter((v) => STATUS_TO_FILTER[v.status] === "REJETE").length,
     };
@@ -114,12 +111,12 @@ function Inner() {
       if (!res.ok) throw new Error();
     } catch {
       setVendors(previous);
-      setError("Mise à jour impossible.");
+      setError("Mise a jour impossible.");
     }
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Supprimer ce vendeur ? Action irréversible.")) return;
+    if (!confirm("Supprimer ce vendeur ?")) return;
     const previous = vendors;
     setVendors((vs) => vs.filter((v) => v.id !== id));
     try {
@@ -137,82 +134,103 @@ function Inner() {
     <AdminShell pendingVendorsCount={stats.enAttente}>
       <AdminPageHeader
         breadcrumb={["Dashboard", "Vendeurs"]}
-        title="Gestion des Vendeurs"
+        title="Gestion des vendeurs"
         subtitle={`${stats.total} vendeur${stats.total > 1 ? "s" : ""} inscrit${stats.total > 1 ? "s" : ""}`}
       />
 
       {error && (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
 
       {/* Stat tiles */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Tile label="Total vendeurs" value={stats.total} tone="indigo" />
+      <div className="animate-slide-up grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Tile label="Total vendeurs" value={stats.total} tone="primary" />
         <Tile label="En attente" value={stats.enAttente} tone="amber" />
-        <Tile label="Validés" value={stats.valides} tone="emerald" />
-        <Tile label="Rejetés" value={stats.rejetes} tone="rose" />
+        <Tile label="Valides" value={stats.valides} tone="emerald" />
+        <Tile label="Rejetes" value={stats.rejetes} tone="rose" />
       </div>
 
-      {/* Filters card */}
-      <div className="mt-6 rounded-2xl border border-[rgb(var(--border))] bg-white p-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative flex-1 min-w-[260px]">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[rgb(var(--muted))]">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
-                <circle cx="11" cy="11" r="7" />
-                <path d="M20 20l-3-3" />
-              </svg>
-            </span>
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher par nom ou email…"
-              className="h-10 w-full rounded-xl border border-[rgb(var(--border))] bg-[#f8f9fc] pl-9 pr-3 text-sm focus:border-[#6366f1] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6366f1]/15"
-            />
+      {/* Filters + Table */}
+      <div className="animate-slide-up-1 mt-6 rounded-2xl border border-[rgb(var(--border))] bg-white">
+        <div className="border-b border-[rgb(var(--border))] px-5 py-4">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="grid h-8 w-8 place-items-center rounded-lg bg-[rgb(var(--primary))]/10 text-[rgb(var(--primary))]">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+                  <path d="M3 8l1.5-3h15L21 8" />
+                  <path d="M4 8v11h16V8" />
+                </svg>
+              </div>
+              <h2 className="text-sm font-semibold">Liste des vendeurs</h2>
+            </div>
+            <span className="text-xs text-[rgb(var(--muted))]">{filtered.length} resultat{filtered.length > 1 ? "s" : ""}</span>
           </div>
-          <select
-            value={statut}
-            onChange={(e) => setStatut(e.target.value as StatutFilter)}
-            className="h-10 cursor-pointer rounded-xl border border-[rgb(var(--border))] bg-[#f8f9fc] px-3 text-sm focus:border-[#6366f1] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6366f1]/15"
-          >
-            <option value="ALL">Tous les statuts</option>
-            <option value="EN_ATTENTE">En attente</option>
-            <option value="VALIDE">Validés</option>
-            <option value="REJETE">Rejetés</option>
-          </select>
-          <button
-            onClick={() => {
-              setSearch("");
-              setStatut("ALL");
-            }}
-            className="h-10 rounded-xl bg-[#6366f1] px-4 text-sm font-semibold text-white hover:bg-[#5558e6]"
-          >
-            Filtrer
-          </button>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative flex-1 min-w-[220px]">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[rgb(var(--muted))]">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="M20 20l-3-3" />
+                </svg>
+              </span>
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Rechercher par nom, email, entreprise…"
+                className="h-10 w-full rounded-xl border border-[rgb(var(--border))] bg-white pl-9 pr-3 text-sm transition focus:border-[rgb(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]/20"
+              />
+            </div>
+            <select
+              value={statut}
+              onChange={(e) => setStatut(e.target.value as StatutFilter)}
+              className="h-10 cursor-pointer rounded-xl border border-[rgb(var(--border))] bg-white px-3 text-sm transition focus:border-[rgb(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]/20"
+            >
+              <option value="ALL">Tous les statuts</option>
+              <option value="EN_ATTENTE">En attente</option>
+              <option value="VALIDE">Valides</option>
+              <option value="REJETE">Rejetes</option>
+            </select>
+            <button
+              onClick={() => { setSearch(""); setStatut("ALL"); }}
+              className="h-10 rounded-xl bg-[rgb(var(--primary))] px-4 text-sm font-semibold text-white transition hover:bg-[rgb(var(--primary))]/90"
+            >
+              Reset
+            </button>
+          </div>
         </div>
 
         {/* Table */}
-        <div className="mt-4 overflow-x-auto">
+        <div className="overflow-x-auto">
           {loading ? (
-            <p className="py-8 text-center text-sm text-[rgb(var(--muted))]">Chargement…</p>
+            <div className="py-12 text-center">
+              <p className="text-sm text-[rgb(var(--muted))]">Chargement…</p>
+            </div>
           ) : filtered.length === 0 ? (
-            <p className="py-8 text-center text-sm text-[rgb(var(--muted))]">
-              Aucun vendeur trouvé.
-            </p>
+            <div className="py-12 text-center">
+              <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-black/[0.03] text-[rgb(var(--muted))]">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-5 w-5">
+                  <path d="M3 8l1.5-3h15L21 8" />
+                  <path d="M4 8v11h16V8" />
+                </svg>
+              </div>
+              <p className="mt-3 text-sm font-medium">Aucun vendeur trouve</p>
+              <p className="mt-1 text-xs text-[rgb(var(--muted))]">Essayez de modifier vos filtres.</p>
+            </div>
           ) : (
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="border-b border-[rgb(var(--border))] text-left text-[11px] font-semibold uppercase tracking-wider text-[rgb(var(--muted))]">
-                  <th className="py-3 pr-3">#</th>
-                  <th className="py-3 pr-3">Vendeur</th>
-                  <th className="py-3 pr-3">Email</th>
-                  <th className="py-3 pr-3">Documents</th>
-                  <th className="py-3 pr-3">Statut dossier</th>
-                  <th className="py-3 pr-3">Profil</th>
-                  <th className="py-3 pr-3">Inscrit le</th>
-                  <th className="py-3 pr-3">Actions</th>
+                  <th className="px-5 py-3">#</th>
+                  <th className="px-5 py-3">Vendeur</th>
+                  <th className="px-5 py-3">Entreprise</th>
+                  <th className="px-5 py-3">Etape</th>
+                  <th className="px-5 py-3">Statut</th>
+                  <th className="px-5 py-3">Profil</th>
+                  <th className="px-5 py-3">Inscrit le</th>
+                  <th className="px-5 py-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -221,40 +239,50 @@ function Inner() {
                   return (
                     <tr
                       key={v.id}
-                      className="border-b border-[rgb(var(--border))]/60 last:border-0 hover:bg-black/[0.015]"
+                      className="border-b border-[rgb(var(--border))]/50 last:border-0 transition hover:bg-black/[0.01]"
                     >
-                      <td className="py-3 pr-3 text-xs text-[rgb(var(--muted))]">#{i + 1}</td>
-                      <td className="py-3 pr-3">
+                      <td className="px-5 py-3 text-xs text-[rgb(var(--muted))]">#{i + 1}</td>
+                      <td className="px-5 py-3">
                         <div className="flex items-center gap-2.5">
-                          <span className="grid h-8 w-8 place-items-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
+                          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[rgb(var(--primary))]/10 text-xs font-bold text-[rgb(var(--primary))]">
                             {v.name.charAt(0).toUpperCase()}
                           </span>
-                          <span className="font-semibold uppercase">{v.name}</span>
+                          <div>
+                            <div className="font-semibold">{v.name}</div>
+                            <div className="text-xs text-[rgb(var(--muted))]">{v.email}</div>
+                          </div>
                         </div>
                       </td>
-                      <td className="py-3 pr-3 text-[rgb(var(--fg))]">{v.email}</td>
-                      <td className="py-3 pr-3">
-                        {v.onboardingStep > 1 ? (
-                          <span className="inline-flex items-center justify-center rounded-md bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-700">
-                            {v.onboardingStep}
-                          </span>
+                      <td className="px-5 py-3">
+                        {v.companyName ? (
+                          <div>
+                            <div className="text-sm font-medium">{v.companyName}</div>
+                            {v.siret && <div className="font-mono text-[11px] text-[rgb(var(--muted))]">{v.siret}</div>}
+                          </div>
                         ) : (
                           <span className="text-[rgb(var(--muted))]">—</span>
                         )}
                       </td>
-                      <td className="py-3 pr-3">
-                        <span
-                          className={cn(
-                            "inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold",
-                            badge.cls
-                          )}
-                        >
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="h-1.5 w-16 overflow-hidden rounded-full bg-black/[0.06]">
+                            <div
+                              className="h-full rounded-full bg-[rgb(var(--primary))]"
+                              style={{ width: `${(v.onboardingStep / 6) * 100}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-[rgb(var(--muted))]">{v.onboardingStep}/6</span>
+                        </div>
+                      </td>
+                      <td className="px-5 py-3">
+                        <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold", badge.cls)}>
+                          <span className={cn("h-1.5 w-1.5 rounded-full", badge.dot)} />
                           {badge.label}
                         </span>
                       </td>
-                      <td className="py-3 pr-3">
+                      <td className="px-5 py-3">
                         {v.vatValid || v.companyName ? (
-                          <span className="grid h-6 w-6 place-items-center rounded-full bg-emerald-100 text-emerald-600">
+                          <span className="grid h-6 w-6 place-items-center rounded-full bg-[rgb(var(--success))]/10 text-[rgb(var(--success))]">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" className="h-3.5 w-3.5">
                               <path d="M5 12l5 5 9-10" />
                             </svg>
@@ -267,10 +295,10 @@ function Inner() {
                           </span>
                         )}
                       </td>
-                      <td className="py-3 pr-3 text-[rgb(var(--muted))]">
+                      <td className="px-5 py-3 text-[rgb(var(--muted))]">
                         {new Date(v.createdAt).toLocaleDateString("fr-FR")}
                       </td>
-                      <td className="py-3 pr-3">
+                      <td className="px-5 py-3">
                         <div className="flex items-center gap-1.5">
                           <IconBtn tone="info" title="Voir">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-3.5 w-3.5">
@@ -278,20 +306,12 @@ function Inner() {
                               <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
                             </svg>
                           </IconBtn>
-                          <IconBtn
-                            tone="warning"
-                            title="Valider"
-                            onClick={() => updateStatus(v.id, "active")}
-                          >
+                          <IconBtn tone="warning" title="Valider" onClick={() => updateStatus(v.id, "active")}>
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5">
                               <path d="M5 12l5 5 9-10" />
                             </svg>
                           </IconBtn>
-                          <IconBtn
-                            tone="danger"
-                            title="Supprimer"
-                            onClick={() => handleDelete(v.id)}
-                          >
+                          <IconBtn tone="danger" title="Supprimer" onClick={() => handleDelete(v.id)}>
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-3.5 w-3.5">
                               <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />
                             </svg>
@@ -312,56 +332,30 @@ function Inner() {
 
 /* ---- Sub-components ---- */
 
-function Tile({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number;
-  tone: "indigo" | "amber" | "emerald" | "rose";
-}) {
+function Tile({ label, value, tone }: { label: string; value: number; tone: "primary" | "amber" | "emerald" | "rose" }) {
   const map = {
-    indigo: { bg: "bg-indigo-50", icon: "bg-indigo-200/70 text-indigo-700" },
-    amber: { bg: "bg-amber-50", icon: "bg-amber-200/70 text-amber-700" },
-    emerald: { bg: "bg-emerald-50", icon: "bg-emerald-200/70 text-emerald-700" },
-    rose: { bg: "bg-rose-50", icon: "bg-rose-200/70 text-rose-600" },
+    primary: { bg: "bg-[rgb(var(--primary))]/10", text: "text-[rgb(var(--primary))]" },
+    amber: { bg: "bg-amber-50", text: "text-amber-700" },
+    emerald: { bg: "bg-[rgb(var(--success))]/10", text: "text-[rgb(var(--success))]" },
+    rose: { bg: "bg-rose-50", text: "text-rose-600" },
   } as const;
   const t = map[tone];
   return (
-    <div className={cn("flex items-center gap-4 rounded-2xl p-5", t.bg)}>
-      <span className={cn("grid h-12 w-12 place-items-center rounded-full", t.icon)}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-6 w-6">
-          <path d="M3 8l1.5-3h15L21 8" />
-          <path d="M4 8v11h16V8" />
-        </svg>
-      </span>
-      <div>
-        <div className="text-xs font-medium text-[rgb(var(--muted))]">{label}</div>
-        <div className="text-2xl font-semibold tracking-tight">{value}</div>
-      </div>
+    <div className={cn("overflow-hidden rounded-2xl p-5 transition hover:shadow-sm", t.bg)}>
+      <div className="text-xs font-medium text-[rgb(var(--muted))]">{label}</div>
+      <div className={cn("mt-2 text-2xl font-bold tracking-tight", t.text)}>{value.toLocaleString()}</div>
     </div>
   );
 }
 
-function IconBtn({
-  children,
-  tone,
-  title,
-  onClick,
-}: {
-  children: React.ReactNode;
-  tone: "info" | "warning" | "danger";
-  title: string;
-  onClick?: () => void;
-}) {
+function IconBtn({ children, tone, title, onClick }: { children: React.ReactNode; tone: "info" | "warning" | "danger"; title: string; onClick?: () => void }) {
   return (
     <button
       onClick={onClick}
       title={title}
       className={cn(
         "grid h-7 w-7 place-items-center rounded-md border transition",
-        tone === "info" && "border-cyan-300 bg-cyan-50 text-cyan-600 hover:bg-cyan-100",
+        tone === "info" && "border-[rgb(var(--primary))]/30 bg-[rgb(var(--primary))]/[0.06] text-[rgb(var(--primary))] hover:bg-[rgb(var(--primary))]/[0.12]",
         tone === "warning" && "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100",
         tone === "danger" && "border-rose-300 bg-rose-50 text-rose-600 hover:bg-rose-100"
       )}
