@@ -25,8 +25,10 @@ export async function GET(req: NextRequest) {
         vatValid: true,
         legalForm: true,
         address: true,
+        iban: true,
         incoterms: true,
         createdAt: true,
+        activatedAt: true,
       },
     });
 

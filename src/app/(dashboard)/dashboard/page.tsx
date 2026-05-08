@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Brand } from "@/components/ui/Brand";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { VendorShell, VendorPageHeader } from "@/components/vendor/VendorShell";
 import { cn } from "@/lib/cn";
 
 interface Vendor {
@@ -54,13 +54,6 @@ interface MonthlyRevenue {
 
 interface OrdersByStatus {
   [key: string]: { count: number; label: string };
-}
-
-interface Notification {
-  id: string;
-  content: string;
-  read: boolean;
-  sentAt: string;
 }
 
 const ONBOARDING_STEPS = [
@@ -119,10 +112,8 @@ export default function DashboardPage() {
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
   const [ordersByStatus, setOrdersByStatus] = useState<OrdersByStatus>({});
   const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenue[]>([]);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [showNotifs, setShowNotifs] = useState(false);
   const [orderFilter, setOrderFilter] = useState("all");
 
   const fetchData = useCallback(async () => {
@@ -154,7 +145,6 @@ export default function DashboardPage() {
       }
 
       if (notifsData.success) {
-        setNotifications(notifsData.notifications);
         setUnreadCount(notifsData.unreadCount);
       }
     } catch {
@@ -168,27 +158,13 @@ export default function DashboardPage() {
     fetchData();
   }, [fetchData]);
 
-  async function markAllRead() {
-    const vendorId = localStorage.getItem("vendorId");
-    if (!vendorId) return;
-    try {
-      await fetch("/api/vendor/notifications", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: vendorId }),
-      });
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-      setUnreadCount(0);
-    } catch {
-      // silencieux
-    }
-  }
-
   if (loading) {
     return (
-      <div className="portal-page grid min-h-screen place-items-center">
-        <div className="text-sm text-[rgb(var(--muted))]">Chargement...</div>
-      </div>
+      <VendorShell>
+        <div className="grid h-64 place-items-center text-sm text-[rgb(var(--muted))]">
+          Chargement…
+        </div>
+      </VendorShell>
     );
   }
 
@@ -224,93 +200,15 @@ export default function DashboardPage() {
   const maxMonthlyRevenue = Math.max(...monthlyRevenue.map((m) => m.revenue), 1);
 
   return (
-    <div className="portal-page min-h-screen">
-      {/* Header */}
-      <div className="sticky top-0 z-10 border-b border-[rgb(var(--border))] bg-white/80 backdrop-blur">
-        <div className="mx-auto flex max-w-[1100px] items-center justify-between px-4 py-3">
-          <Brand variant="compact" />
-          <div className="flex items-center gap-3">
-            <span className="hidden text-sm text-[rgb(var(--muted))] sm:inline">
-              {vendor?.name}
-            </span>
-            <Link href="/account">
-              <Button variant="ghost" size="sm">Mon compte</Button>
-            </Link>
-            <div className="relative">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowNotifs(!showNotifs)}
-              >
-                Notifications
-                {unreadCount > 0 && (
-                  <span className="ml-1 inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-[rgb(var(--primary))] px-1 text-[10px] font-bold text-white">
-                    {unreadCount}
-                  </span>
-                )}
-              </Button>
-              {showNotifs && (
-                <div className="absolute right-0 top-full z-20 mt-1 w-80 rounded-xl border border-[rgb(var(--border))] bg-white p-4 shadow-lg">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold">Notifications</h3>
-                    {unreadCount > 0 && (
-                      <button
-                        onClick={markAllRead}
-                        className="text-[11px] text-[rgb(var(--primary))] hover:underline"
-                      >
-                        Tout marquer lu
-                      </button>
-                    )}
-                  </div>
-                  <div className="mt-3 max-h-72 overflow-y-auto space-y-2">
-                    {notifications.length === 0 && (
-                      <p className="text-xs text-[rgb(var(--muted))]">Aucune notification</p>
-                    )}
-                    {notifications.map((n) => (
-                      <div
-                        key={n.id}
-                        className={cn(
-                          "rounded-lg border px-3 py-2.5 text-xs",
-                          n.read
-                            ? "border-[rgb(var(--border))]/50 bg-white/60"
-                            : "border-[rgb(var(--primary))]/30 bg-[rgb(var(--primary))]/[0.04]"
-                        )}
-                      >
-                        <p className="font-medium">{n.content}</p>
-                        <p className="mt-1 text-[10px] text-[rgb(var(--muted))]">
-                          {timeAgo(n.sentAt)}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => {
-                localStorage.removeItem("vendorId");
-                router.push("/login");
-              }}
-            >
-              Deconnexion
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-[1100px] px-4 py-8">
-        {/* Welcome */}
-        <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-          <div>
-            <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
-              Bonjour, {vendor?.name} !
-            </h1>
-            <p className="mt-1 text-sm text-[rgb(var(--muted))]">
-              Voici l&apos;etat de votre activite vendeur Carlow.
-            </p>
-          </div>
+    <VendorShell
+      vendorUser={vendor ? { name: vendor.name, email: vendor.email, companyName: vendor.companyName } : null}
+      unreadNotifsCount={unreadCount}
+    >
+      <VendorPageHeader
+        breadcrumb={["Vendeur", "Tableau de bord"]}
+        title={vendor ? `Bonjour, ${vendor.name} !` : "Bonjour"}
+        subtitle="Voici l'état de votre activité vendeur Carlow."
+        action={
           <div
             className="rounded-full border px-3 py-1 text-xs font-semibold"
             style={{
@@ -321,7 +219,11 @@ export default function DashboardPage() {
           >
             ● {statusLabel}
           </div>
-        </div>
+        }
+      />
+
+      <div>
+        {/* (les états vendor/recentOrders/topProducts viennent du hook ci-dessus) */}
 
         {/* Stats cards */}
         {isOnboarded && stats && (
@@ -655,15 +557,17 @@ export default function DashboardPage() {
 
         {/* Quick actions for onboarded vendors */}
         {isOnboarded && (
-          <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-4">
-            <QuickAction href="/dashboard/catalogues" icon="📁" label="Catalogues" />
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            <QuickAction href="/dashboard/commandes" icon="🛒" label="Commandes" />
+            <QuickAction href="/dashboard/ventes" icon="📈" label="Statistiques" />
             <QuickAction href="/dashboard/produits" icon="📦" label="Produits" />
-            <QuickAction href="/step-3-documents" icon="📄" label="Mes documents" />
-            <QuickAction href="/account" icon="👤" label="Mon profil" />
+            <QuickAction href="/dashboard/catalogues" icon="📁" label="Catalogues" />
+            <QuickAction href="/dashboard/entreprise" icon="🏢" label="Mon entreprise" />
+            <QuickAction href="/dashboard/notifications" icon="🔔" label="Notifications" />
           </div>
         )}
       </div>
-    </div>
+    </VendorShell>
   );
 }
 
