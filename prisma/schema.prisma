@@ -131,6 +131,9 @@ model Order {
   buyer     Buyer       @relation(fields: [buyerId], references: [id], onDelete: Cascade)
   status    String      @default("EN_COURS") // EN_COURS | LIVREE | ANNULEE
   totalCents Int        @default(0)
+  // Identifiant Stripe Checkout — sert à l'idempotence du webhook
+  // ET à retrouver la commande depuis la page /checkout/success.
+  stripeSessionId String? @unique
   orderedAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
   lines     OrderLine[]

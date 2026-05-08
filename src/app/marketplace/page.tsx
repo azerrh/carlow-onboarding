@@ -80,6 +80,7 @@ function MarketplaceInner() {
   }, [products, search, categoryFilter]);
 
   function handleAddToCart(product: Product) {
+    if (product.stock <= 0) return;
     addItem({
       productId: product.id,
       name: product.name,
@@ -88,6 +89,7 @@ function MarketplaceInner() {
       vendorId: product.vendor.id,
       vendorName: product.vendor.name,
       imageUrl: product.imageUrl ?? undefined,
+      maxStock: product.stock, // garde-fou UI contre la sur-commande
     });
     setShowToast(`${product.name} ajoute au panier`);
     setTimeout(() => setShowToast(""), 2500);

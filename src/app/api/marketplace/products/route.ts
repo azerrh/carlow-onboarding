@@ -1,18 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+/**
+ * Liste publique des produits exposés sur la marketplace.
+ *
+ * ⚠️ Sécurité : cette route est ouverte sans authentification, donc on ne peut
+ * PAS faire confiance aux query params pour relâcher les filtres. On force
+ * systématiquement :
+ *   - product.active = true
+ *   - catalog.active = true
+ *   - vendor.status = "active"
+ * Les query params permettent uniquement de RESTREINDRE davantage la liste
+ * (filtre par catégorie, recherche full-text, filtre par vendeur).
+ */
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category");
     const search = searchParams.get("search");
     const vendorId = searchParams.get("vendorId");
-    const activeOnly = searchParams.get("active") !== "false";
 
-    const where: Record<string, unknown> = {};
-    if (activeOnly) where.active = true;
+    // Filtres FORCÉS — non négociables côté client.
+    const where: Record<string, unknown> = {
+      active: true,
+      catalog: {
+        active: true,
+        vendor: { status: "active" },
+        ...(vendorId ? { vendorId } : {}),
+      },
+    };
     if (category) where.category = category;
-    if (vendorId) where.catalog = { vendorId };
 
     const products = await prisma.product.findMany({
       where,
@@ -30,16 +47,19 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const filtered = products.filter((p) => {
-      if (!search) return true;
-      const q = search.toLowerCase();
-      return (
-        p.name.toLowerCase().includes(q) ||
-        (p.description ?? "").toLowerCase().includes(q) ||
-        (p.reference ?? "").toLowerCase().includes(q) ||
-        (p.category ?? "").toLowerCase().includes(q)
-      );
-    });
+    // Recherche full-text en mémoire (à remplacer par un index Postgres
+    // si la table dépasse quelques milliers de produits).
+    const filtered = search
+      ? products.filter((p) => {
+          const q = search.toLowerCase();
+          return (
+            p.name.toLowerCase().includes(q) ||
+            (p.description ?? "").toLowerCase().includes(q) ||
+            (p.reference ?? "").toLowerCase().includes(q) ||
+            (p.category ?? "").toLowerCase().includes(q)
+          );
+        })
+      : products;
 
     const categories = Array.from(
       new Set(
@@ -73,7 +93,10 @@ export async function GET(req: NextRequest) {
       categories,
     });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+    console.error("[marketplace/products] error:", error);
+    return NextResponse.json(
+      { error: "Erreur serveur" },
+      { status: 500 }
+    );
   }
 }
