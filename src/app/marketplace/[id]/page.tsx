@@ -6,6 +6,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import { Brand } from "@/components/ui/Brand";
 import { Button } from "@/components/ui/Button";
 import { useCart, useCartSummary } from "@/hooks/useCart";
+import { ProductReviews } from "@/components/marketplace/ProductReviews";
 import { cn } from "@/lib/cn";
 
 interface Product {
@@ -318,6 +319,9 @@ function ProductDetailInner() {
             </div>
           </div>
         </div>
+
+        {/* Avis & notes */}
+        <ProductReviews productId={product.id} />
 
         {/* Related products */}
         {related.length > 0 && (

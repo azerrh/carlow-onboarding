@@ -43,6 +43,8 @@ model Buyer {
   createdAt     DateTime       @default(now())
   orders        Order[]
   notifications Notification[]
+  favorites     Favorite[]
+  reviews       Review[]
 }
 
 /* ============================================================
@@ -104,6 +106,8 @@ model Product {
   updatedAt   DateTime    @updatedAt
   photos      Photo[]
   orderLines  OrderLine[]
+  favorites   Favorite[]
+  reviews     Review[]
 
   @@index([catalogId])
   @@index([category])
@@ -159,6 +163,41 @@ model OrderLine {
 /* ============================================================
    NOTIFICATIONS
    ============================================================ */
+
+/* ============================================================
+   FAVORITES (wishlist) / REVIEWS
+   ============================================================ */
+
+model Favorite {
+  id        String   @id @default(cuid())
+  buyerId   String
+  buyer     Buyer    @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  // Un acheteur ne peut favoriter un produit qu'une seule fois.
+  @@unique([buyerId, productId])
+  @@index([buyerId])
+  @@index([productId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  buyerId   String
+  buyer     Buyer    @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  // Note de 1 à 5. La validation est faite côté serveur dans l'API.
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Un acheteur écrit au plus un avis par produit (il peut le modifier).
+  @@unique([buyerId, productId])
+  @@index([productId])
+}
 
 model Notification {
   id        String   @id @default(cuid())

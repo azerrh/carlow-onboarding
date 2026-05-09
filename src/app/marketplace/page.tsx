@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { cn } from "@/lib/cn";
 import { useCart, useCartSummary, CartItem } from "@/hooks/useCart";
+import { useFavorites } from "@/hooks/useFavorites";
 import { ProductCardSkeleton } from "@/components/ui/Skeleton";
 
 interface Product {
@@ -36,9 +37,17 @@ function MarketplaceInner() {
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [cartOpen, setCartOpen] = useState(false);
   const [showToast, setShowToast] = useState("");
+  // Filtres avancés
+  const [vendorFilter, setVendorFilter] = useState("ALL");
+  const [priceMin, setPriceMin] = useState<string>("");
+  const [priceMax, setPriceMax] = useState<string>("");
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [sortBy, setSortBy] = useState<"recent" | "priceAsc" | "priceDesc" | "name">("recent");
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const { totalItems, totalPrice } = useCartSummary();
   const addItem = useCart((s) => s.addItem);
+  const { isFavorite, toggle: toggleFavorite } = useFavorites();
 
   useEffect(() => {
     if (canceled) {
@@ -68,17 +77,60 @@ function MarketplaceInner() {
     fetchData();
   }, [fetchData]);
 
+  // Liste unique des vendeurs présents dans la marketplace (pour le select).
+  const vendors = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const p of products) {
+      if (!map.has(p.vendor.id)) map.set(p.vendor.id, p.vendor.name);
+    }
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [products]);
+
   const filtered = useMemo(() => {
-    return products.filter((p) => {
+    const min = priceMin === "" ? -Infinity : Number(priceMin);
+    const max = priceMax === "" ? Infinity : Number(priceMax);
+
+    const result = products.filter((p) => {
+      const q = search.toLowerCase();
       const matchSearch =
-        !search ||
-        p.name.toLowerCase().includes(search.toLowerCase()) ||
-        (p.description ?? "").toLowerCase().includes(search.toLowerCase()) ||
-        (p.category ?? "").toLowerCase().includes(search.toLowerCase());
+        !q ||
+        p.name.toLowerCase().includes(q) ||
+        (p.description ?? "").toLowerCase().includes(q) ||
+        (p.category ?? "").toLowerCase().includes(q) ||
+        (p.reference ?? "").toLowerCase().includes(q) ||
+        p.vendor.name.toLowerCase().includes(q);
       const matchCategory = categoryFilter === "ALL" || p.category === categoryFilter;
-      return matchSearch && matchCategory;
+      const matchVendor = vendorFilter === "ALL" || p.vendor.id === vendorFilter;
+      const matchPrice = p.price >= min && p.price <= max;
+      const matchStock = !inStockOnly || p.stock > 0;
+      return matchSearch && matchCategory && matchVendor && matchPrice && matchStock;
     });
-  }, [products, search, categoryFilter]);
+
+    // Tri (copie pour ne pas muter l'array d'origine).
+    const sorted = [...result];
+    if (sortBy === "priceAsc") sorted.sort((a, b) => a.price - b.price);
+    else if (sortBy === "priceDesc") sorted.sort((a, b) => b.price - a.price);
+    else if (sortBy === "name") sorted.sort((a, b) => a.name.localeCompare(b.name, "fr"));
+    // "recent" garde l'ordre serveur (déjà trié par createdAt desc).
+    return sorted;
+  }, [products, search, categoryFilter, vendorFilter, priceMin, priceMax, inStockOnly, sortBy]);
+
+  const activeFilterCount =
+    (categoryFilter !== "ALL" ? 1 : 0) +
+    (vendorFilter !== "ALL" ? 1 : 0) +
+    (priceMin !== "" ? 1 : 0) +
+    (priceMax !== "" ? 1 : 0) +
+    (inStockOnly ? 1 : 0);
+
+  function resetFilters() {
+    setSearch("");
+    setCategoryFilter("ALL");
+    setVendorFilter("ALL");
+    setPriceMin("");
+    setPriceMax("");
+    setInStockOnly(false);
+    setSortBy("recent");
+  }
 
   function handleAddToCart(product: Product) {
     if (product.stock <= 0) return;
@@ -93,6 +145,22 @@ function MarketplaceInner() {
       maxStock: product.stock, // garde-fou UI contre la sur-commande
     });
     setShowToast(`${product.name} ajoute au panier`);
+    setTimeout(() => setShowToast(""), 2500);
+  }
+
+  async function handleToggleFavorite(product: Product) {
+    const result = await toggleFavorite(product.id);
+    if (result.needLogin) {
+      setShowToast(
+        result.favorited
+          ? "Favori ajouté localement. Connectez-vous pour le sauvegarder."
+          : "Favori retiré."
+      );
+    } else {
+      setShowToast(
+        result.favorited ? `${product.name} ajouté aux favoris ❤️` : "Favori retiré"
+      );
+    }
     setTimeout(() => setShowToast(""), 2500);
   }
 
@@ -168,31 +236,148 @@ function MarketplaceInner() {
 
       {/* Filters */}
       <div className="mx-auto max-w-6xl px-4 pb-6">
-        <div className="flex flex-wrap gap-3">
-          <div className="relative flex-1 min-w-[240px]">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[rgb(var(--muted))]">
+        <div className="rounded-2xl border border-[rgb(var(--border))]/60 bg-white p-3 sm:p-4">
+          {/* Ligne 1 : recherche + tri + bouton avancé */}
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div className="relative min-w-[200px] flex-1">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[rgb(var(--muted))]">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="M20 20l-3-3" />
+                </svg>
+              </span>
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Produit, vendeur, référence…"
+                className="h-10 w-full rounded-xl border border-[rgb(var(--border))] bg-white pl-9 pr-3 text-sm focus:border-[rgb(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]/15"
+              />
+            </div>
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="h-10 cursor-pointer rounded-xl border border-[rgb(var(--border))] bg-white px-3 text-sm"
+              aria-label="Filtrer par catégorie"
+            >
+              <option value="ALL">Toutes catégories</option>
+              {categories.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+              className="h-10 cursor-pointer rounded-xl border border-[rgb(var(--border))] bg-white px-3 text-sm"
+              aria-label="Trier"
+            >
+              <option value="recent">Plus récents</option>
+              <option value="priceAsc">Prix croissant</option>
+              <option value="priceDesc">Prix décroissant</option>
+              <option value="name">Nom (A-Z)</option>
+            </select>
+            <button
+              onClick={() => setShowAdvanced((v) => !v)}
+              className={cn(
+                "relative inline-flex h-10 items-center gap-1.5 rounded-xl border px-3 text-sm font-medium transition",
+                showAdvanced || activeFilterCount > 0
+                  ? "border-[rgb(var(--primary))]/50 bg-[rgb(var(--primary))]/[0.08] text-[rgb(var(--primary))]"
+                  : "border-[rgb(var(--border))] bg-white text-[rgb(var(--fg))] hover:bg-black/[0.02]"
+              )}
+            >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
-                <circle cx="11" cy="11" r="7" />
-                <path d="M20 20l-3-3" />
+                <path d="M3 5h18l-7 9v5l-4 2v-7L3 5z" />
               </svg>
-            </span>
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher un produit…"
-              className="h-10 w-full rounded-xl border border-[rgb(var(--border))] bg-white pl-9 pr-3 text-sm focus:border-[rgb(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]/15"
-            />
+              <span className="hidden sm:inline">Filtres</span>
+              {activeFilterCount > 0 && (
+                <span className="grid h-5 min-w-[1.25rem] place-items-center rounded-full bg-[rgb(var(--primary))] px-1 text-[10px] font-bold text-white">
+                  {activeFilterCount}
+                </span>
+              )}
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                className={cn("h-3 w-3 transition-transform", showAdvanced && "rotate-180")}
+              >
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
           </div>
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="h-10 cursor-pointer rounded-xl border border-[rgb(var(--border))] bg-white px-3 text-sm"
-          >
-            <option value="ALL">Toutes categories</option>
-            {categories.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
+
+          {/* Ligne 2 : filtres avancés (collapsible) */}
+          {showAdvanced && (
+            <div className="mt-3 grid gap-3 border-t border-[rgb(var(--border))]/60 pt-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div>
+                <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--muted))]">
+                  Prix min (€)
+                </label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  value={priceMin}
+                  onChange={(e) => setPriceMin(e.target.value)}
+                  placeholder="0"
+                  className="h-10 w-full rounded-xl border border-[rgb(var(--border))] bg-white px-3 text-sm focus:border-[rgb(var(--primary))]/60 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]/15"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--muted))]">
+                  Prix max (€)
+                </label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  value={priceMax}
+                  onChange={(e) => setPriceMax(e.target.value)}
+                  placeholder="∞"
+                  className="h-10 w-full rounded-xl border border-[rgb(var(--border))] bg-white px-3 text-sm focus:border-[rgb(var(--primary))]/60 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]/15"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--muted))]">
+                  Vendeur
+                </label>
+                <select
+                  value={vendorFilter}
+                  onChange={(e) => setVendorFilter(e.target.value)}
+                  className="h-10 w-full cursor-pointer rounded-xl border border-[rgb(var(--border))] bg-white px-3 text-sm"
+                >
+                  <option value="ALL">Tous les vendeurs</option>
+                  {vendors.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-end">
+                <label className="flex h-10 w-full cursor-pointer items-center gap-2.5 rounded-xl border border-[rgb(var(--border))] bg-white px-3 text-sm font-medium hover:bg-black/[0.02]">
+                  <input
+                    type="checkbox"
+                    checked={inStockOnly}
+                    onChange={(e) => setInStockOnly(e.target.checked)}
+                    className="h-4 w-4 rounded border-[rgb(var(--border))] text-[rgb(var(--primary))] focus:ring-[rgb(var(--primary))]/30"
+                  />
+                  <span>En stock uniquement</span>
+                </label>
+              </div>
+
+              {activeFilterCount > 0 && (
+                <button
+                  onClick={resetFilters}
+                  className="col-span-full inline-flex items-center justify-center gap-2 rounded-xl border border-[rgb(var(--border))] bg-white px-3 py-2 text-xs font-medium text-[rgb(var(--muted))] hover:border-red-200 hover:bg-red-50 hover:text-red-600 sm:w-fit"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-3.5 w-3.5">
+                    <path d="M6 6l12 12M18 6L6 18" />
+                  </svg>
+                  Réinitialiser les filtres ({activeFilterCount})
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -230,32 +415,62 @@ function MarketplaceInner() {
                 key={p.id}
                 className="group flex flex-col overflow-hidden transition hover:border-[rgb(var(--primary))]/30 hover:shadow-sm"
               >
-                {/* Image */}
-                <Link href={`/marketplace/${p.id}`} className="relative aspect-[4/3] bg-[#f8f9fc] block">
-                  {p.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={p.imageUrl}
-                      alt={p.name}
-                      className="h-full w-full object-cover transition group-hover:scale-[1.02]"
-                    />
-                  ) : (
-                    <div className="grid h-full place-items-center text-[rgb(var(--muted))]">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" className="h-12 w-12">
-                        <rect x="3" y="5" width="18" height="14" rx="2" />
-                        <circle cx="8.5" cy="10.5" r="1.5" />
-                        <path d="M21 16l-5-5-9 9" />
-                      </svg>
-                    </div>
-                  )}
-                  {p.stock === 0 && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                      <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold">
-                        Rupture de stock
-                      </span>
-                    </div>
-                  )}
-                </Link>
+                {/* Image + bouton favori */}
+                <div className="relative">
+                  <Link href={`/marketplace/${p.id}`} className="relative aspect-[4/3] bg-[#f8f9fc] block">
+                    {p.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={p.imageUrl}
+                        alt={p.name}
+                        className="h-full w-full object-cover transition group-hover:scale-[1.02]"
+                      />
+                    ) : (
+                      <div className="grid h-full place-items-center text-[rgb(var(--muted))]">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" className="h-12 w-12">
+                          <rect x="3" y="5" width="18" height="14" rx="2" />
+                          <circle cx="8.5" cy="10.5" r="1.5" />
+                          <path d="M21 16l-5-5-9 9" />
+                        </svg>
+                      </div>
+                    )}
+                    {p.stock === 0 && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold">
+                          Rupture de stock
+                        </span>
+                      </div>
+                    )}
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleToggleFavorite(p);
+                    }}
+                    aria-label={
+                      isFavorite(p.id) ? "Retirer des favoris" : "Ajouter aux favoris"
+                    }
+                    aria-pressed={isFavorite(p.id)}
+                    className={cn(
+                      "absolute right-2 top-2 grid h-9 w-9 place-items-center rounded-full border bg-white/95 shadow-sm backdrop-blur transition hover:scale-110",
+                      isFavorite(p.id)
+                        ? "border-red-200 text-red-500"
+                        : "border-[rgb(var(--border))] text-[rgb(var(--muted))] hover:text-red-500"
+                    )}
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill={isFavorite(p.id) ? "currentColor" : "none"}
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      className="h-4 w-4"
+                    >
+                      <path d="M12 21s-7-4.5-9.5-9C1 9 2 5 6 5c2 0 3 1 4 2.5C11 6 12 5 14 5c4 0 5 4 3.5 7-2.5 4.5-9.5 9-9.5 9z" />
+                    </svg>
+                  </button>
+                </div>
 
                 <div className="flex flex-1 flex-col p-4">
                   <div className="flex-1">
