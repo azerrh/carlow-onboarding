@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { cn } from "@/lib/cn";
 import { useCart, useCartSummary, CartItem } from "@/hooks/useCart";
+import { ProductCardSkeleton } from "@/components/ui/Skeleton";
 
 interface Product {
   id: string;
@@ -111,17 +112,36 @@ function MarketplaceInner() {
               </Link>
             </nav>
           </div>
-          <div className="flex items-center gap-3">
-            <Link href="/buyer/login">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link href="/buyer/login" className="hidden sm:inline-flex">
               <Button variant="ghost" size="sm">Connexion acheteur</Button>
+            </Link>
+            <Link href="/buyer/login" className="sm:hidden">
+              <button
+                aria-label="Connexion acheteur"
+                className="grid h-9 w-9 place-items-center rounded-xl border border-[rgb(var(--border))] bg-white text-[rgb(var(--muted))] hover:bg-black/[0.02]"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+                  <circle cx="12" cy="8" r="3.5" />
+                  <path d="M5 20a7 7 0 0 1 14 0" />
+                </svg>
+              </button>
             </Link>
             <button
               onClick={() => setCartOpen(true)}
-              className="relative rounded-xl border border-[rgb(var(--border))] bg-white px-3 py-2 text-sm font-medium hover:bg-black/[0.02]"
+              aria-label="Ouvrir le panier"
+              className="relative grid h-9 place-items-center rounded-xl border border-[rgb(var(--border))] bg-white px-2.5 text-sm font-medium hover:bg-black/[0.02] sm:px-3 sm:py-2"
             >
-              Panier
+              <span className="flex items-center gap-1.5">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+                  <circle cx="9" cy="20" r="1.5" />
+                  <circle cx="17" cy="20" r="1.5" />
+                  <path d="M3 4h2l2.5 11h11l2-8H6" />
+                </svg>
+                <span className="hidden sm:inline">Panier</span>
+              </span>
               {totalItems > 0 && (
-                <span className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-[rgb(var(--primary))] text-[10px] font-bold text-white">
+                <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-[1.25rem] place-items-center rounded-full bg-[rgb(var(--primary))] px-1 text-[10px] font-bold text-white">
                   {totalItems}
                 </span>
               )}
@@ -131,18 +151,18 @@ function MarketplaceInner() {
       </header>
 
       {/* Hero */}
-      <section className="relative mx-auto max-w-6xl px-4 pt-10 pb-6">
-        <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-[rgb(var(--primary))] via-[rgb(var(--primary))]/90 to-[#c46020] p-8 text-white sm:p-12">
-          <div className="max-w-lg">
+      <section className="relative mx-auto max-w-6xl px-4 pb-6 pt-6 sm:pt-10">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[rgb(var(--primary))] via-[rgb(var(--primary))]/90 to-[#c46020] p-6 text-white sm:p-12">
+          <div className="relative z-10 max-w-lg">
             <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
               Marketplace EnR
             </h1>
-            <p className="mt-2 text-sm text-white/80 sm:text-base">
+            <p className="mt-2 text-sm text-white/85 sm:text-base">
               Equipements d&apos;energies renouvelables neufs et reconditionnes. Panneaux solaires, onduleurs, batteries et plus.
             </p>
           </div>
-          <div className="pointer-events-none absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10 sm:h-48 sm:w-48" />
-          <div className="pointer-events-none absolute -bottom-12 -right-12 h-40 w-40 rounded-full bg-white/5 sm:h-56 sm:w-56" />
+          <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/10 sm:h-48 sm:w-48" />
+          <div className="pointer-events-none absolute -bottom-12 -right-12 h-32 w-32 rounded-full bg-white/5 sm:h-56 sm:w-56" />
         </div>
       </section>
 
@@ -178,7 +198,14 @@ function MarketplaceInner() {
 
       {/* Products grid */}
       {loading ? (
-        <p className="py-8 text-center text-sm text-[rgb(var(--muted))]">Chargement…</p>
+        <div className="mx-auto max-w-6xl px-4 pb-16">
+          <div className="mb-4 h-3 w-24 animate-pulse rounded bg-black/[0.06]" />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <ProductCardSkeleton key={i} />
+            ))}
+          </div>
+        </div>
       ) : error ? (
         <div className="mx-auto max-w-6xl px-4">
           <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -295,8 +322,14 @@ export default function MarketplacePage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-white grid place-items-center">
-          <p className="text-sm text-[rgb(var(--muted))]">Chargement...</p>
+        <div className="min-h-screen bg-white">
+          <div className="mx-auto max-w-6xl px-4 pb-16 pt-20">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
+            </div>
+          </div>
         </div>
       }
     >

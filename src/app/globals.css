@@ -34,6 +34,20 @@
   100% { transform: scale(0.95); opacity: 1; }
 }
 
+@keyframes skeleton-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.animate-float-slow {
+  animation: float-slow 4s ease-in-out infinite;
+}
+
 .animate-fade-in {
   animation: fade-in 0.4s ease-out both;
 }
