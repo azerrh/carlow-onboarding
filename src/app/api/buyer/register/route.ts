@@ -5,12 +5,22 @@ import {
   isValidEmail,
   validatePasswordStrength,
 } from "@/lib/auth";
+import { createToken } from "@/lib/tokens";
+import { sendVerifyEmailEmail } from "@/lib/email";
+import { applyRateLimit } from "@/lib/rateLimit";
 
 /**
  * Inscription acheteur (compte client de la marketplace).
  * Symétrique à /api/auth/register mais cible le modèle Buyer.
  */
 export async function POST(req: NextRequest) {
+  const blocked = applyRateLimit(req, {
+    bucket: "auth:register-buyer",
+    limit: 5,
+    windowSec: 900,
+  });
+  if (blocked) return blocked;
+
   try {
     const { name, email, password, phone, address } = await req.json();
 
@@ -54,6 +64,21 @@ export async function POST(req: NextRequest) {
       },
       select: { id: true, name: true, email: true },
     });
+
+    // Envoi du lien de vérification (best-effort, n'échoue jamais le register).
+    try {
+      const token = await createToken("VERIFY_EMAIL", "BUYER", buyer.id);
+      const origin =
+        req.headers.get("origin") ?? "https://carlowonboarding.vercel.app";
+      const verifyUrl = `${origin}/verify-email?token=${token}`;
+      await sendVerifyEmailEmail({
+        name: buyer.name,
+        email: buyer.email,
+        verifyUrl,
+      });
+    } catch (verifyErr) {
+      console.error("[register buyer] verify-email fail:", verifyErr);
+    }
 
     return NextResponse.json({ success: true, buyerId: buyer.id });
   } catch (error) {

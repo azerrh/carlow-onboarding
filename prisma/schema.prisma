@@ -14,6 +14,7 @@ model Vendor {
   id              String          @id @default(cuid())
   name            String
   email           String          @unique
+  emailVerifiedAt DateTime?
   password        String
   status          String          @default("pending")
   companyName     String?
@@ -42,6 +43,7 @@ model Buyer {
   id            String         @id @default(cuid())
   name          String
   email         String         @unique
+  emailVerifiedAt DateTime?
   password      String
   phone         String?
   address       String?
@@ -159,6 +161,29 @@ model Order {
 /* ============================================================
    WEB PUSH SUBSCRIPTIONS
    ============================================================ */
+
+/* ============================================================
+   TOKENS (verification email + reset password)
+   ============================================================ */
+
+model AuthToken {
+  id        String   @id @default(cuid())
+  // Type de token : "VERIFY_EMAIL" (confirme l'inscription) ou
+  // "RESET_PASSWORD" (autorise un changement de mot de passe).
+  type      String
+  // Audience : "BUYER" ou "VENDOR" (l'admin n'a pas de compte BDD).
+  userType  String
+  userId    String
+  // Token aléatoire opaque (32 bytes hex). Stocké en clair pour la
+  // simplicité du flow ; pour passer en prod stricte, stocker le hash.
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userType, userId, type])
+  @@index([expiresAt])
+}
 
 model PushSubscription {
   id        String   @id @default(cuid())

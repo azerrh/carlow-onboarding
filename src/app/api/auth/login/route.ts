@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/auth";
+import { applyRateLimit } from "@/lib/rateLimit";
 
 export async function POST(req: NextRequest) {
+  // 10 tentatives par minute par IP — assez pour un usage normal mais
+  // bloque les attaques brute-force basiques.
+  const blocked = applyRateLimit(req, {
+    bucket: "auth:login-vendor",
+    limit: 10,
+    windowSec: 60,
+  });
+  if (blocked) return blocked;
+
   try {
     const { email, password } = await req.json();
 

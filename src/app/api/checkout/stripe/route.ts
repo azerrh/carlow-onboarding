@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
+import { applyRateLimit } from "@/lib/rateLimit";
 
 /**
  * Initialisation Stripe : on FAIL-FAST si la clé est absente plutôt que
@@ -22,6 +23,16 @@ interface ClientItem {
 }
 
 export async function POST(req: NextRequest) {
+  // 20 sessions de checkout max par 10 min par IP. Pas trop strict pour
+  // ne pas bloquer un utilisateur légitime qui hésite, mais suffisant
+  // pour stopper un scripted abuse de l'API Stripe.
+  const blocked = applyRateLimit(req, {
+    bucket: "checkout:stripe",
+    limit: 20,
+    windowSec: 600,
+  });
+  if (blocked) return blocked;
+
   try {
     const body = await req.json();
     const {

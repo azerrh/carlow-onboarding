@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { applyRateLimit } from "@/lib/rateLimit";
 
 export async function POST(req: NextRequest) {
+  // Admin login : plus strict (5 tentatives / 5 min) car c'est la porte
+  // d'entrée du back-office.
+  const blocked = applyRateLimit(req, {
+    bucket: "auth:login-admin",
+    limit: 5,
+    windowSec: 300,
+  });
+  if (blocked) return blocked;
+
   try {
     const { password } = await req.json();
 

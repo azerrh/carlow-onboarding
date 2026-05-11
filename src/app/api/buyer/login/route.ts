@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/auth";
+import { applyRateLimit } from "@/lib/rateLimit";
 
 /**
  * Connexion acheteur. Renvoie un buyerId que le client stocke en
  * localStorage (`buyerId`) — symétrique au flux vendor.
  */
 export async function POST(req: NextRequest) {
+  const blocked = applyRateLimit(req, {
+    bucket: "auth:login-buyer",
+    limit: 10,
+    windowSec: 60,
+  });
+  if (blocked) return blocked;
+
   try {
     const { email, password } = await req.json();
 

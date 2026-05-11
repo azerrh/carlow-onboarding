@@ -290,6 +290,62 @@ export async function sendVendorNewOrderEmail({
   });
 }
 
+/* ============================================================
+   AUTH (verify email + reset password)
+   ============================================================ */
+
+export async function sendVerifyEmailEmail({
+  name,
+  email,
+  verifyUrl,
+}: {
+  name: string;
+  email: string;
+  verifyUrl: string;
+}) {
+  return send({
+    to: email,
+    subject: "Carlow — Confirmez votre adresse email",
+    context: "verify-email",
+    html: emailLayout({
+      title: `Bonjour ${name} !`,
+      body: `
+        <p>Merci de vous être inscrit sur Carlow. Pour finaliser votre inscription, confirmez votre adresse email en cliquant sur le bouton ci-dessous.</p>
+        <p style="font-size:13px;color:#666">Ce lien expire dans 7 jours. Si vous n'avez pas créé de compte, ignorez simplement cet email.</p>
+      `,
+      cta: { label: "Confirmer mon email", href: verifyUrl },
+    }),
+  });
+}
+
+export async function sendResetPasswordEmail({
+  name,
+  email,
+  resetUrl,
+}: {
+  name: string;
+  email: string;
+  resetUrl: string;
+}) {
+  return send({
+    to: email,
+    subject: "Carlow — Réinitialisation de votre mot de passe",
+    context: "reset-password",
+    html: emailLayout({
+      title: `Réinitialisation demandée`,
+      body: `
+        <p>Bonjour ${name},</p>
+        <p>Une demande de réinitialisation de mot de passe a été effectuée pour votre compte Carlow. Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe.</p>
+        <div style="background:#fef5ec;border-radius:10px;padding:14px;margin:18px 0;border-left:4px solid #E87A30">
+          <p style="margin:0;font-size:13px;color:#1a1a1a"><strong>⏱ Ce lien expire dans 1 heure.</strong></p>
+          <p style="margin:6px 0 0;font-size:12px;color:#666">Si vous n'avez pas demandé cette réinitialisation, ignorez simplement cet email — votre mot de passe restera inchangé.</p>
+        </div>
+      `,
+      cta: { label: "Choisir un nouveau mot de passe", href: resetUrl },
+    }),
+  });
+}
+
 /** Email envoyé à l'acheteur quand le statut de sa commande change. */
 export async function sendOrderStatusChangedEmail({
   buyerName,
