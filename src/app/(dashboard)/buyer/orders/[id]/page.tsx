@@ -6,6 +6,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Brand } from "@/components/ui/Brand";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { OrderChat } from "@/components/chat/OrderChat";
 
 interface OrderLine {
   id: string;
@@ -238,6 +239,17 @@ function DetailInner() {
             </div>
           </div>
         </Card>
+
+        {/* Messagerie avec le vendeur */}
+        {typeof window !== "undefined" && localStorage.getItem("buyerId") && (
+          <div className="mt-6">
+            <OrderChat
+              orderId={order.id}
+              as="buyer"
+              userId={localStorage.getItem("buyerId") ?? ""}
+            />
+          </div>
+        )}
 
         {/* Actions */}
         <div className="mt-6 flex flex-wrap items-center justify-end gap-3">

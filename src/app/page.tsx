@@ -7,6 +7,7 @@ import { Brand } from "@/components/ui/Brand";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ProductCardSkeleton } from "@/components/ui/Skeleton";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { cn } from "@/lib/cn";
 
 interface MarketplaceProduct {
@@ -111,6 +112,7 @@ export default function HomePage() {
                 Connexion
               </Button>
             </Link>
+            <ThemeToggle size="sm" />
             <Link href="/register">
               <Button size="sm">Devenir vendeur</Button>
             </Link>

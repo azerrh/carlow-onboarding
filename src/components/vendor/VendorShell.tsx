@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { cn } from "@/lib/cn";
 
 /**
@@ -419,6 +420,9 @@ export function VendorShell({
           </Link>
 
           <div className="flex-1 lg:hidden" />
+
+          {/* Toggle thème */}
+          <ThemeToggle size="sm" />
 
           {/* Lien rapide notifs (header) */}
           <Link

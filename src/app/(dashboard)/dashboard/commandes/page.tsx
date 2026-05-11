@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { VendorShell, VendorPageHeader } from "@/components/vendor/VendorShell";
+import { OrderChat } from "@/components/chat/OrderChat";
 import { cn } from "@/lib/cn";
 
 interface OrderLine {
@@ -375,6 +376,18 @@ export default function VendorOrdersPage() {
                         Copier ID commande
                       </Button>
                     </div>
+
+                    {/* Messagerie avec l'acheteur */}
+                    {typeof window !== "undefined" &&
+                      localStorage.getItem("vendorId") && (
+                        <div className="mt-4">
+                          <OrderChat
+                            orderId={order.id}
+                            as="vendor"
+                            userId={localStorage.getItem("vendorId") ?? ""}
+                          />
+                        </div>
+                      )}
                   </div>
                 )}
               </Card>

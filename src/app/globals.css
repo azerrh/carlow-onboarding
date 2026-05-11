@@ -18,6 +18,50 @@
   --radius: 14px;
 }
 
+/*
+ * Mode sombre — activé via `data-theme="dark"` posé sur <html>.
+ * On garde la couleur primaire identique (l'orange Carlow ressort bien
+ * sur fond sombre) mais on inverse les fonds et le texte.
+ *
+ * Note : on n'utilise PAS `@media (prefers-color-scheme: dark)` ici car
+ * le choix utilisateur (toggle manuel) doit prévaloir sur la préférence
+ * système. Le ThemeProvider gère la détection initiale ET le toggle.
+ */
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: 18 18 22;            /* #121216 fond principal */
+  --fg: 240 240 240;         /* #f0f0f0 texte principal */
+  --muted: 160 160 170;      /* #a0a0aa texte secondaire */
+  --border: 50 50 60;        /* #32323c bordures */
+
+  --card: 28 28 34;          /* #1c1c22 cartes */
+  --primary: 240 140 70;     /* orange légèrement plus clair pour le contraste */
+  --primary-contrast: 18 18 22;
+  --success: 64 200 130;
+  --danger: 240 80 80;
+  --link: 240 140 70;
+}
+
+/* Override Tailwind bg-white pour qu'il suive le thème (cards, headers). */
+html[data-theme="dark"] .bg-white,
+html[data-theme="dark"] [class*="bg-white/"] {
+  background-color: rgb(28 28 34) !important;
+}
+
+/* Override des bg-black/[opacity] qui doivent devenir blancs en dark. */
+html[data-theme="dark"] [class*="bg-black/[0.0"],
+html[data-theme="dark"] [class*="bg-black/[0.04]"],
+html[data-theme="dark"] [class*="bg-black/[0.06]"] {
+  background-color: rgb(255 255 255 / 0.04) !important;
+}
+
+/* Transition douce du thème (uniquement sur le body pour ne pas
+   ralentir les hovers de boutons). */
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
@@ -108,6 +152,13 @@ a {
   background:
     radial-gradient(1200px 700px at 20% 10%, rgba(var(--primary) / 0.14), transparent 55%),
     radial-gradient(900px 540px at 80% 0%, rgba(var(--success) / 0.10), transparent 60%),
+    rgb(var(--bg));
+}
+
+html[data-theme="dark"] .portal-page {
+  background:
+    radial-gradient(1200px 700px at 20% 10%, rgba(var(--primary) / 0.18), transparent 55%),
+    radial-gradient(900px 540px at 80% 0%, rgba(var(--success) / 0.12), transparent 60%),
     rgb(var(--bg));
 }
 

@@ -146,9 +146,58 @@ model Order {
   orderedAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
   lines     OrderLine[]
+  messages  Message[]
 
   @@index([buyerId])
   @@index([status])
+}
+
+/* ============================================================
+   MESSAGERIE COMMANDES (chat buyer/vendor par commande)
+   ============================================================ */
+
+/* ============================================================
+   WEB PUSH SUBSCRIPTIONS
+   ============================================================ */
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  // Souscription liée à un Vendor OU un Buyer (jamais les deux).
+  // Pas de relation forte pour simplifier (les souscriptions peuvent
+  // survivre à un changement de compte, et on n'a pas besoin d'une
+  // contrainte ON DELETE CASCADE ici).
+  vendorId  String?
+  buyerId   String?
+  // PushSubscription JSON serialisée (endpoint, keys.p256dh, keys.auth).
+  // On stocke l'endpoint en clé unique pour éviter les doublons quand
+  // un même browser ré-souscrit.
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?  // utile pour debug "quel device a souscrit"
+  createdAt DateTime @default(now())
+
+  @@index([vendorId])
+  @@index([buyerId])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  // Auteur : exactement un des deux (buyer OU vendor). On ne fait pas
+  // de relation Prisma forte vers Buyer/Vendor pour rester flexible
+  // (un message reste valide même si le compte est supprimé — le contenu
+  // est conservé pour traçabilité de la conversation).
+  authorType String   // "BUYER" | "VENDOR"
+  authorId   String
+  authorName String   // snapshot du nom au moment de l'envoi (audit)
+  content    String   // max 5000 chars, validé côté API
+  readAt     DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([orderId, createdAt])
+  @@index([orderId, authorType])
 }
 
 model OrderLine {

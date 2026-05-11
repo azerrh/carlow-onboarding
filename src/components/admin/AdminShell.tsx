@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { cn } from "@/lib/cn";
 
 type NavBadge = { label: string; tone: "warning" | "primary" | "danger" };
@@ -443,6 +444,8 @@ export function AdminShell({
           </Link>
 
           <div className="flex-1 lg:hidden" />
+
+          <ThemeToggle size="sm" />
 
           <div className="relative">
             <button

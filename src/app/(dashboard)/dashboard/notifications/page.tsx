@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { VendorShell, VendorPageHeader } from "@/components/vendor/VendorShell";
+import { PushToggle } from "@/components/ui/PushToggle";
 import { cn } from "@/lib/cn";
 
 interface Notification {
@@ -70,10 +71,17 @@ function categorize(content: string): { icon: string; tone: string } {
 
 export default function VendorNotificationsPage() {
   const router = useRouter();
+  const [vendorId, setVendorId] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [vendor, setVendor] = useState<VendorMe | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterValue>("all");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setVendorId(localStorage.getItem("vendorId"));
+    }
+  }, []);
   const [marking, setMarking] = useState(false);
 
   const fetchData = useCallback(async () => {
@@ -186,6 +194,13 @@ export default function VendorNotificationsPage() {
           )
         }
       />
+
+      {/* Toggle Web Push */}
+      {vendorId && (
+        <div className="mb-6">
+          <PushToggle user={{ vendorId }} />
+        </div>
+      )}
 
       {/* Compteur + filtres */}
       <Card className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">

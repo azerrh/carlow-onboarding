@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminAuthenticated } from "@/lib/adminAuth";
 import { sendOrderStatusChangedEmail } from "@/lib/email";
+import { sendPushToUser } from "@/lib/push";
 
 export async function GET(req: NextRequest) {
   if (!isAdminAuthenticated(req)) {
@@ -91,6 +92,15 @@ export async function PUT(req: NextRequest) {
               content: `Votre commande #${id.slice(0, 8)} est désormais ${label}.`,
             },
           });
+          await sendPushToUser(
+            { buyerId: buyer.id },
+            {
+              title: `Commande ${label}`,
+              body: `Votre commande #${id.slice(0, 8)} est ${label}.`,
+              url: `/buyer/orders/${id}`,
+              tag: `status-${id}`,
+            }
+          );
         }
       } catch (notifErr) {
         console.error("[admin/orders] échec notification statut:", notifErr);

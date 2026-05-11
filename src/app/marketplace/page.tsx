@@ -11,6 +11,7 @@ import { useCart, useCartSummary, CartItem } from "@/hooks/useCart";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useCompare, COMPARE_MAX } from "@/hooks/useCompare";
 import { ProductCardSkeleton } from "@/components/ui/Skeleton";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 interface Product {
   id: string;
@@ -199,6 +200,7 @@ function MarketplaceInner() {
             </nav>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
+            <ThemeToggle size="sm" />
             <Link href="/buyer/login" className="hidden sm:inline-flex">
               <Button variant="ghost" size="sm">Connexion acheteur</Button>
             </Link>
