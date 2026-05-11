@@ -70,7 +70,19 @@ export async function POST(req: NextRequest) {
     const dbProducts = await prisma.product.findMany({
       where: { id: { in: productIds } },
       include: {
-        catalog: { select: { active: true, vendor: { select: { status: true } } } },
+        catalog: {
+          select: {
+            active: true,
+            vendor: {
+              select: {
+                id: true,
+                status: true,
+                stripeAccountId: true,
+                stripeChargesEnabled: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -150,11 +162,52 @@ export async function POST(req: NextRequest) {
     const origin = req.headers.get("origin") || "http://localhost:3000";
     const stripe = getStripe();
 
+    /* ----- Stripe Connect : destination charges si panier mono-vendeur ----- */
+    // Stripe Connect ne supporte qu'UNE destination par session de checkout.
+    // Si le panier contient des produits de plusieurs vendeurs, on retombe
+    // sur le mode legacy (tout encaissé par la plateforme, à splitter
+    // manuellement plus tard). Sinon, on route directement vers le vendeur
+    // avec une commission marketplace de 5%.
+    const PLATFORM_FEE_PERCENT = 5;
+    const uniqueVendorIds = new Set(
+      orderItems
+        .map((oi) => productById.get(oi.productId)?.catalog.vendor.id)
+        .filter((v): v is string => !!v)
+    );
+
+    let connectOptions: {
+      payment_intent_data?: {
+        application_fee_amount: number;
+        transfer_data: { destination: string };
+      };
+    } = {};
+
+    if (uniqueVendorIds.size === 1) {
+      const onlyVendor = productById.get(orderItems[0].productId)?.catalog.vendor;
+      if (
+        onlyVendor?.stripeAccountId &&
+        onlyVendor.stripeChargesEnabled
+      ) {
+        const totalCents = orderItems.reduce(
+          (s, oi) => s + oi.unitPriceCents * oi.quantity,
+          0
+        );
+        const feeCents = Math.round(totalCents * (PLATFORM_FEE_PERCENT / 100));
+        connectOptions = {
+          payment_intent_data: {
+            application_fee_amount: feeCents,
+            transfer_data: { destination: onlyVendor.stripeAccountId },
+          },
+        };
+      }
+    }
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: stripeLineItems,
       mode: "payment",
       customer_email: buyerEmail,
+      ...connectOptions,
       metadata: {
         // ⚠️ Toutes les valeurs metadata Stripe doivent être des strings ≤ 500 chars.
         // L'email est aussi envoyé via customer_email mais on le double-stocke ici

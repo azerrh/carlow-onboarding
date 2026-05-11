@@ -239,17 +239,30 @@ function DetailInner() {
           </div>
         </Card>
 
-        {/* Action */}
-        {order.status === "EN_COURS" && (
-          <div className="mt-6 flex justify-end">
+        {/* Actions */}
+        <div className="mt-6 flex flex-wrap items-center justify-end gap-3">
+          <a
+            href={`/api/buyer/orders/${order.id}/invoice?buyerId=${typeof window !== "undefined" ? localStorage.getItem("buyerId") ?? "" : ""}`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 rounded-lg border border-[rgb(var(--border))] bg-white px-4 py-2 text-sm font-medium hover:border-[rgb(var(--primary))]/40 hover:bg-[rgb(var(--primary))]/[0.04]"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+              <path d="M6 3h9l4 4v14H6z" />
+              <path d="M14 3v4h4" />
+              <path d="M9 13h7M9 17h7" />
+            </svg>
+            Télécharger la facture PDF
+          </a>
+          {order.status === "EN_COURS" && (
             <button
               onClick={handleCancel}
               className="rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100"
             >
               Annuler la commande
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {toast && (

@@ -243,7 +243,13 @@ function ProductDetailInner() {
                 <path d="M3 8l1.5-3h15L21 8" />
                 <path d="M4 8v11h16V8" />
               </svg>
-              Vendeur : <span className="font-medium text-[rgb(var(--fg))]">{vendorName}</span>
+              Vendeur :{" "}
+              <Link
+                href={`/marketplace/vendeur/${product.vendor.id}`}
+                className="font-medium text-[rgb(var(--fg))] underline-offset-2 hover:text-[rgb(var(--primary))] hover:underline"
+              >
+                {vendorName} →
+              </Link>
             </div>
 
             {/* Price */}

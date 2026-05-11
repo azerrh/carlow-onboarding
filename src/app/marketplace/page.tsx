@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/Card";
 import { cn } from "@/lib/cn";
 import { useCart, useCartSummary, CartItem } from "@/hooks/useCart";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useCompare, COMPARE_MAX } from "@/hooks/useCompare";
 import { ProductCardSkeleton } from "@/components/ui/Skeleton";
 
 interface Product {
@@ -48,6 +49,9 @@ function MarketplaceInner() {
   const { totalItems, totalPrice } = useCartSummary();
   const addItem = useCart((s) => s.addItem);
   const { isFavorite, toggle: toggleFavorite } = useFavorites();
+  const compareIds = useCompare((s) => s.productIds);
+  const toggleCompare = useCompare((s) => s.toggle);
+  const clearCompare = useCompare((s) => s.clear);
 
   useEffect(() => {
     if (canceled) {
@@ -145,6 +149,20 @@ function MarketplaceInner() {
       maxStock: product.stock, // garde-fou UI contre la sur-commande
     });
     setShowToast(`${product.name} ajoute au panier`);
+    setTimeout(() => setShowToast(""), 2500);
+  }
+
+  function handleToggleCompare(product: Product) {
+    const res = toggleCompare(product.id);
+    if (res.full) {
+      setShowToast(
+        `Limite atteinte : ${COMPARE_MAX} produits maximum dans le comparateur.`
+      );
+    } else if (res.added) {
+      setShowToast(`${product.name} ajouté à la comparaison`);
+    } else {
+      setShowToast("Retiré du comparateur");
+    }
     setTimeout(() => setShowToast(""), 2500);
   }
 
@@ -442,34 +460,67 @@ function MarketplaceInner() {
                       </div>
                     )}
                   </Link>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleToggleFavorite(p);
-                    }}
-                    aria-label={
-                      isFavorite(p.id) ? "Retirer des favoris" : "Ajouter aux favoris"
-                    }
-                    aria-pressed={isFavorite(p.id)}
-                    className={cn(
-                      "absolute right-2 top-2 grid h-9 w-9 place-items-center rounded-full border bg-white/95 shadow-sm backdrop-blur transition hover:scale-110",
-                      isFavorite(p.id)
-                        ? "border-red-200 text-red-500"
-                        : "border-[rgb(var(--border))] text-[rgb(var(--muted))] hover:text-red-500"
-                    )}
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill={isFavorite(p.id) ? "currentColor" : "none"}
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      className="h-4 w-4"
+                  <div className="absolute right-2 top-2 flex flex-col gap-1.5">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleToggleFavorite(p);
+                      }}
+                      aria-label={
+                        isFavorite(p.id) ? "Retirer des favoris" : "Ajouter aux favoris"
+                      }
+                      aria-pressed={isFavorite(p.id)}
+                      className={cn(
+                        "grid h-9 w-9 place-items-center rounded-full border bg-white/95 shadow-sm backdrop-blur transition hover:scale-110",
+                        isFavorite(p.id)
+                          ? "border-red-200 text-red-500"
+                          : "border-[rgb(var(--border))] text-[rgb(var(--muted))] hover:text-red-500"
+                      )}
                     >
-                      <path d="M12 21s-7-4.5-9.5-9C1 9 2 5 6 5c2 0 3 1 4 2.5C11 6 12 5 14 5c4 0 5 4 3.5 7-2.5 4.5-9.5 9-9.5 9z" />
-                    </svg>
-                  </button>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill={isFavorite(p.id) ? "currentColor" : "none"}
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        className="h-4 w-4"
+                      >
+                        <path d="M12 21s-7-4.5-9.5-9C1 9 2 5 6 5c2 0 3 1 4 2.5C11 6 12 5 14 5c4 0 5 4 3.5 7-2.5 4.5-9.5 9-9.5 9z" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleToggleCompare(p);
+                      }}
+                      aria-label={
+                        compareIds.includes(p.id)
+                          ? "Retirer du comparateur"
+                          : "Ajouter au comparateur"
+                      }
+                      aria-pressed={compareIds.includes(p.id)}
+                      title="Comparer"
+                      className={cn(
+                        "grid h-9 w-9 place-items-center rounded-full border bg-white/95 shadow-sm backdrop-blur transition hover:scale-110",
+                        compareIds.includes(p.id)
+                          ? "border-[rgb(var(--primary))]/50 text-[rgb(var(--primary))]"
+                          : "border-[rgb(var(--border))] text-[rgb(var(--muted))] hover:text-[rgb(var(--primary))]"
+                      )}
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        className="h-4 w-4"
+                      >
+                        <path d="M8 5v14M16 5v14M3 9h10M21 15H11" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
 
                 <div className="flex flex-1 flex-col p-4">
@@ -523,9 +574,51 @@ function MarketplaceInner() {
       {/* Cart drawer */}
       {cartOpen && <CartDrawer onClose={() => setCartOpen(false)} />}
 
+      {/* Barre flottante comparateur */}
+      {compareIds.length > 0 && (
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[rgb(var(--border))] bg-white/95 px-4 py-3 shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.12)] backdrop-blur sm:bottom-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:rounded-2xl sm:border sm:px-5 sm:py-3">
+          <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-[rgb(var(--primary))]/10 text-[rgb(var(--primary))]">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4">
+                  <path d="M8 5v14M16 5v14M3 9h10M21 15H11" />
+                </svg>
+              </span>
+              <div>
+                <p className="text-sm font-semibold">
+                  {compareIds.length} produit{compareIds.length > 1 ? "s" : ""} sélectionné
+                  {compareIds.length > 1 ? "s" : ""}
+                </p>
+                <p className="text-[11px] text-[rgb(var(--muted))]">
+                  Maximum {COMPARE_MAX}. Ajoutez jusqu&apos;à {COMPARE_MAX - compareIds.length} de plus.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => clearCompare()}
+                className="rounded-lg px-3 py-1.5 text-xs font-medium text-[rgb(var(--muted))] hover:bg-black/[0.04]"
+              >
+                Vider
+              </button>
+              <Link href="/marketplace/comparer">
+                <Button size="sm" disabled={compareIds.length < 2}>
+                  Comparer →
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Toast */}
       {showToast && (
-        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-xl border border-[rgb(var(--success))]/30 bg-white px-4 py-3 text-sm font-medium shadow-lg">
+        <div
+          className={cn(
+            "fixed left-1/2 z-50 -translate-x-1/2 rounded-xl border border-[rgb(var(--success))]/30 bg-white px-4 py-3 text-sm font-medium shadow-lg",
+            compareIds.length > 0 ? "bottom-24 sm:bottom-20" : "bottom-6"
+          )}
+        >
           {showToast}
         </div>
       )}

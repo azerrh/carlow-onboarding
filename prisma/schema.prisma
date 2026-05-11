@@ -27,6 +27,11 @@ model Vendor {
   onboardingStep  Int             @default(1)
   createdAt       DateTime        @default(now())
   activatedAt     DateTime?
+  // ID du compte Stripe Connect du vendeur (acct_xxx).
+  // Quand renseigné + chargesEnabled=true, les paiements peuvent être
+  // routés directement vers le vendeur via destination charges.
+  stripeAccountId      String?    @unique
+  stripeChargesEnabled Boolean    @default(false)
   documents       Document[]
   certifications  Certification[]
   catalogs        Catalog[]

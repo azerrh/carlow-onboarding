@@ -279,6 +279,9 @@ export default function VendorCompanyPage() {
             </div>
           </Card>
 
+          {/* Stripe Connect */}
+          <StripeConnectPanel vendorId={vendor.id} />
+
           {/* Bloc bancaire */}
           <Card className="p-6">
             <h2 className="text-base font-semibold">Coordonnées bancaires</h2>
@@ -353,6 +356,163 @@ export default function VendorCompanyPage() {
         </form>
       )}
     </VendorShell>
+  );
+}
+
+/* ---------- Stripe Connect panel ---------- */
+
+interface ConnectStatus {
+  linked: boolean;
+  chargesEnabled: boolean;
+  detailsSubmitted: boolean;
+  accountId?: string;
+}
+
+function StripeConnectPanel({ vendorId }: { vendorId: string }) {
+  const [status, setStatus] = useState<ConnectStatus | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(
+          `/api/vendor/stripe-connect?vendorId=${encodeURIComponent(vendorId)}`
+        );
+        const data = await res.json();
+        if (cancelled) return;
+        if (res.ok && data.success) {
+          setStatus({
+            linked: !!data.linked,
+            chargesEnabled: !!data.chargesEnabled,
+            detailsSubmitted: !!data.detailsSubmitted,
+            accountId: data.accountId,
+          });
+        } else {
+          setError(data?.error ?? "Impossible de récupérer le statut Stripe.");
+        }
+      } catch {
+        if (!cancelled) setError("Erreur réseau.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [vendorId]);
+
+  async function startOnboarding() {
+    setBusy(true);
+    setError("");
+    try {
+      const res = await fetch("/api/vendor/stripe-connect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vendorId }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setError(data?.error ?? "Erreur lors de la création du lien Stripe.");
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      setError("Erreur réseau, réessayez.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card className="p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-base font-semibold">Paiements Stripe Connect</h2>
+          <p className="mt-1 text-xs text-[rgb(var(--muted))]">
+            Liez votre compte Stripe pour recevoir directement les paiements
+            de vos ventes. Commission marketplace : <strong>5%</strong>.
+          </p>
+        </div>
+        {status && (
+          <span
+            className={cn(
+              "rounded-full border px-3 py-1 text-[11px] font-semibold",
+              status.chargesEnabled
+                ? "border-[rgb(var(--success))]/30 bg-[rgb(var(--success))]/10 text-[rgb(var(--success))]"
+                : status.linked
+                  ? "border-amber-200 bg-amber-50 text-amber-700"
+                  : "border-[rgb(var(--border))] bg-black/[0.03] text-[rgb(var(--muted))]"
+            )}
+          >
+            ●{" "}
+            {status.chargesEnabled
+              ? "Paiements actifs"
+              : status.linked
+                ? "À finaliser"
+                : "Non connecté"}
+          </span>
+        )}
+      </div>
+
+      {loading ? (
+        <p className="mt-4 text-sm text-[rgb(var(--muted))]">Chargement du statut…</p>
+      ) : status ? (
+        <div className="mt-5 space-y-3">
+          {status.linked && status.accountId && (
+            <div className="rounded-xl border border-[rgb(var(--border))]/60 bg-black/[0.02] px-3 py-2 text-xs">
+              <span className="text-[rgb(var(--muted))]">ID compte Stripe : </span>
+              <span className="font-mono">{status.accountId}</span>
+            </div>
+          )}
+
+          {!status.linked && (
+            <p className="text-sm text-[rgb(var(--muted))]">
+              Vous n&apos;avez pas encore connecté de compte Stripe. Les paiements
+              sont actuellement encaissés par la plateforme Carlow.
+            </p>
+          )}
+          {status.linked && !status.chargesEnabled && (
+            <p className="text-sm text-amber-700">
+              Votre compte Stripe est créé mais l&apos;onboarding n&apos;est
+              pas terminé. Cliquez ci-dessous pour finaliser.
+            </p>
+          )}
+          {status.chargesEnabled && (
+            <p className="text-sm text-[rgb(var(--success))]">
+              ✓ Vos paiements sont routés directement vers votre compte Stripe.
+            </p>
+          )}
+
+          {error && (
+            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+              {error}
+            </p>
+          )}
+
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              onClick={startOnboarding}
+              disabled={busy}
+            >
+              {busy
+                ? "Redirection…"
+                : status.chargesEnabled
+                  ? "Mettre à jour mes infos Stripe"
+                  : status.linked
+                    ? "Finaliser l'onboarding Stripe →"
+                    : "Connecter Stripe →"}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <p className="mt-4 text-sm text-[rgb(var(--muted))]">{error}</p>
+      )}
+    </Card>
   );
 }
 

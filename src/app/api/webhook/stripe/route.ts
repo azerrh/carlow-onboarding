@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
+import {
+  sendOrderConfirmationEmail,
+  sendVendorNewOrderEmail,
+} from "@/lib/email";
 
 /**
  * Webhook Stripe — idempotent et sécurisé.
@@ -209,6 +213,107 @@ export async function POST(req: NextRequest) {
 
     return created;
   });
+
+  // 5) Emails transactionnels — best-effort, sans bloquer la réponse webhook
+  //    si Resend rate (les emails ne doivent pas faire échouer le webhook).
+  try {
+    const enriched = await prisma.order.findUnique({
+      where: { id: order.id },
+      include: {
+        buyer: { select: { name: true, email: true } },
+        lines: {
+          include: {
+            product: {
+              select: {
+                name: true,
+                catalog: {
+                  select: {
+                    vendor: { select: { name: true, email: true, companyName: true } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (enriched && enriched.buyer) {
+      // a) Email à l'acheteur (confirmation globale)
+      await sendOrderConfirmationEmail({
+        buyerName: enriched.buyer.name,
+        buyerEmail: enriched.buyer.email,
+        orderId: enriched.id,
+        totalCents: enriched.totalCents,
+        lines: enriched.lines.map((l) => ({
+          productName: l.product.name,
+          quantity: l.quantity,
+          unitPriceCents: l.unitPriceCents,
+        })),
+      });
+
+      // b) Un email par vendeur concerné, ne contenant QUE ses lignes
+      const linesByVendor = new Map<
+        string,
+        {
+          vendorName: string;
+          vendorEmail: string;
+          lines: typeof enriched.lines;
+          subtotalCents: number;
+        }
+      >();
+      for (const l of enriched.lines) {
+        const vendor = l.product.catalog.vendor;
+        if (!vendor?.email) continue;
+        const key = vendor.email;
+        const display = vendor.companyName ?? vendor.name;
+        const existing = linesByVendor.get(key);
+        if (existing) {
+          existing.lines.push(l);
+          existing.subtotalCents += l.unitPriceCents * l.quantity;
+        } else {
+          linesByVendor.set(key, {
+            vendorName: display,
+            vendorEmail: vendor.email,
+            lines: [l],
+            subtotalCents: l.unitPriceCents * l.quantity,
+          });
+        }
+      }
+
+      for (const v of linesByVendor.values()) {
+        await sendVendorNewOrderEmail({
+          vendorName: v.vendorName,
+          vendorEmail: v.vendorEmail,
+          orderId: enriched.id,
+          buyerName: enriched.buyer.name,
+          subtotalCents: v.subtotalCents,
+          lines: v.lines.map((l) => ({
+            productName: l.product.name,
+            quantity: l.quantity,
+            unitPriceCents: l.unitPriceCents,
+          })),
+        });
+
+        // Notification in-app pour le vendeur (en plus de l'email).
+        const vendorRecord = await prisma.vendor.findUnique({
+          where: { email: v.vendorEmail },
+          select: { id: true },
+        });
+        if (vendorRecord) {
+          await prisma.notification.create({
+            data: {
+              vendorId: vendorRecord.id,
+              content: `Nouvelle commande #${enriched.id.slice(0, 8)} — ${(v.subtotalCents / 100).toFixed(2)} €`,
+            },
+          });
+        }
+      }
+    }
+  } catch (mailErr) {
+    console.error("[webhook/stripe] erreur emails post-commande:", mailErr);
+    // On NE return PAS en erreur — la commande est créée, c'est ce qui compte.
+  }
 
   return NextResponse.json({ success: true, orderId: order.id });
 }
