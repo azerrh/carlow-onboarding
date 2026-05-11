@@ -526,26 +526,99 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t border-[rgb(var(--border))] bg-white/60">
-        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <Brand variant="compact" />
-          <p className="text-xs text-[rgb(var(--muted))]">
-            © 2026 Carlow · Marketplace B2B EnR · Tous droits réservés
-          </p>
-          <div className="flex gap-4 text-xs text-[rgb(var(--muted))]">
-            <Link href="/marketplace" className="hover:text-[rgb(var(--fg))]">
-              Marketplace
-            </Link>
-            <Link href="/login" className="hover:text-[rgb(var(--fg))]">
-              Connexion
-            </Link>
-            <a
-              href="https://carlow.fr"
-              target="_blank"
-              rel="noreferrer"
-              className="hover:text-[rgb(var(--fg))]"
-            >
-              carlow.fr
-            </a>
+        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <Brand variant="compact" />
+              <p className="mt-3 text-xs text-[rgb(var(--muted))]">
+                Marketplace B2B des équipements d&apos;énergies
+                renouvelables.
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[rgb(var(--muted))]">
+                Plateforme
+              </p>
+              <ul className="mt-3 space-y-1.5 text-xs">
+                <li>
+                  <Link href="/marketplace" className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]">
+                    Marketplace
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/register" className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]">
+                    Devenir vendeur
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/login" className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]">
+                    Connexion vendeur
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/buyer/login" className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]">
+                    Connexion acheteur
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[rgb(var(--muted))]">
+                Informations légales
+              </p>
+              <ul className="mt-3 space-y-1.5 text-xs">
+                <li>
+                  <Link href="/legal/mentions-legales" className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]">
+                    Mentions légales
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/legal/cgv" className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]">
+                    CGV
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/legal/cgu" className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]">
+                    CGU
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/legal/confidentialite" className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]">
+                    Confidentialité
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/legal/cookies" className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]">
+                    Cookies
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[rgb(var(--muted))]">
+                Contact
+              </p>
+              <ul className="mt-3 space-y-1.5 text-xs">
+                <li>
+                  <a href="mailto:contact@carlow.fr" className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]">
+                    contact@carlow.fr
+                  </a>
+                </li>
+                <li>
+                  <a href="https://carlow.fr" target="_blank" rel="noreferrer" className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]">
+                    carlow.fr
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="mt-8 flex flex-col gap-3 border-t border-[rgb(var(--border))]/40 pt-5 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-[11px] text-[rgb(var(--muted))]">
+              © 2026 Carlow / Solelh Energie · Tous droits réservés
+            </p>
+            <p className="text-[11px] text-[rgb(var(--muted))]">
+              Construit avec Next.js · Hébergé en UE
+            </p>
           </div>
         </div>
       </footer>

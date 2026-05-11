@@ -288,6 +288,9 @@ export default function BuyerAccountPage() {
           </dl>
         </Card>
 
+        {/* Confidentialité & RGPD */}
+        <RgpdSection buyerId={buyer.id} onDeleted={handleLogout} />
+
         {/* Liens utiles */}
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <Link
@@ -303,9 +306,184 @@ export default function BuyerAccountPage() {
           >
             Se déconnecter
           </button>
+          <span className="text-[rgb(var(--muted))]/50">·</span>
+          <Link
+            href="/legal/confidentialite"
+            className="text-xs text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]"
+          >
+            Politique de confidentialité
+          </Link>
         </div>
       </main>
     </div>
+  );
+}
+
+/* ---------- RGPD Section ---------- */
+
+function RgpdSection({
+  buyerId,
+  onDeleted,
+}: {
+  buyerId: string;
+  onDeleted: () => void;
+}) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteText, setDeleteText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleDelete() {
+    if (deleteText !== "SUPPRIMER") {
+      setError("Tapez exactement SUPPRIMER en majuscules pour confirmer.");
+      return;
+    }
+    setDeleting(true);
+    setError("");
+    try {
+      const res = await fetch(
+        `/api/buyer/me?id=${encodeURIComponent(buyerId)}&confirm=DELETE`,
+        { method: "DELETE" }
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        setError(data?.error ?? "Erreur lors de la suppression.");
+        return;
+      }
+      // Suppression OK → on déconnecte (vide localStorage + redirige).
+      onDeleted();
+    } catch {
+      setError("Erreur réseau, réessayez.");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <Card className="mt-8 p-6">
+      <h2 className="text-base font-semibold">Confidentialité & RGPD</h2>
+      <p className="mt-1 text-xs text-[rgb(var(--muted))]">
+        Conformément au RGPD, vous pouvez à tout moment télécharger
+        l&apos;ensemble de vos données ou demander la suppression de votre
+        compte.
+      </p>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        {/* Export RGPD */}
+        <a
+          href={`/api/buyer/me/export?buyerId=${encodeURIComponent(buyerId)}`}
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-start gap-3 rounded-xl border border-[rgb(var(--border))] bg-white p-4 transition hover:border-[rgb(var(--primary))]/30 hover:bg-[rgb(var(--primary))]/[0.04]"
+        >
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[rgb(var(--primary))]/10 text-lg">
+            📥
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold">Télécharger mes données</p>
+            <p className="mt-0.5 text-[11px] text-[rgb(var(--muted))]">
+              Export JSON complet (profil, commandes, favoris, avis).
+            </p>
+          </div>
+        </a>
+
+        {/* Suppression compte */}
+        <button
+          type="button"
+          onClick={() => setConfirmDelete(true)}
+          className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50/50 p-4 text-left transition hover:bg-red-50"
+        >
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-red-100 text-lg">
+            🗑️
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-red-700">
+              Supprimer mon compte
+            </p>
+            <p className="mt-0.5 text-[11px] text-red-600/80">
+              Suppression définitive de toutes mes données.
+            </p>
+          </div>
+        </button>
+      </div>
+
+      {/* Modal de confirmation suppression */}
+      {confirmDelete && (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4"
+          onClick={() => !deleting && setConfirmDelete(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-2xl border border-[rgb(var(--border))] bg-[rgb(var(--card))] p-6 shadow-xl"
+          >
+            <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-red-50 text-3xl">
+              ⚠️
+            </div>
+            <h3 className="mt-4 text-center text-lg font-bold">
+              Supprimer définitivement votre compte ?
+            </h3>
+            <p className="mt-2 text-center text-sm text-[rgb(var(--muted))]">
+              Cette action est <strong>irréversible</strong>. Toutes vos
+              données seront effacées : profil, commandes, favoris, avis,
+              notifications.
+            </p>
+            <p className="mt-3 text-center text-xs text-amber-700">
+              Astuce : pensez à télécharger vos données avant si vous
+              souhaitez les conserver.
+            </p>
+
+            <div className="mt-5">
+              <label className="block text-xs font-semibold">
+                Pour confirmer, tapez{" "}
+                <span className="font-mono text-red-700">SUPPRIMER</span>
+              </label>
+              <Input
+                value={deleteText}
+                onChange={(e) => {
+                  setDeleteText(e.target.value);
+                  setError("");
+                }}
+                placeholder="SUPPRIMER"
+                className="mt-1.5 font-mono"
+                disabled={deleting}
+              />
+              {error && (
+                <p className="mt-2 text-xs text-red-600">{error}</p>
+              )}
+            </div>
+
+            <div className="mt-5 flex gap-2">
+              <Button
+                variant="secondary"
+                className="flex-1"
+                onClick={() => {
+                  setConfirmDelete(false);
+                  setDeleteText("");
+                  setError("");
+                }}
+                disabled={deleting}
+              >
+                Annuler
+              </Button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting || deleteText !== "SUPPRIMER"}
+                className={cn(
+                  "flex-1 rounded-xl px-4 py-2 text-sm font-semibold transition",
+                  deleteText === "SUPPRIMER" && !deleting
+                    ? "bg-red-600 text-white hover:bg-red-700"
+                    : "bg-red-300 text-white cursor-not-allowed"
+                )}
+              >
+                {deleting ? "Suppression…" : "Supprimer définitivement"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </Card>
   );
 }
 
