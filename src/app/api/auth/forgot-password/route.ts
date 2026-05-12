@@ -56,6 +56,16 @@ export async function POST(req: NextRequest) {
       const origin =
         req.headers.get("origin") ?? "https://carlowonboarding.vercel.app";
       const resetUrl = `${origin}/reset-password/${token}?type=${audience}`;
+
+      // ⚠️ FALLBACK : on logge TOUJOURS le reset URL dans la console serveur
+      // (visible dans les logs Vercel). Utile en démo / debug quand Resend
+      // n'arrive pas à délivrer (limitation free tier, domaine non vérifié,
+      // email en spam). L'admin peut aussi consulter /admin/tokens pour le
+      // retrouver via l'UI.
+      console.log(
+        `[forgot-password] ✉ Reset URL pour ${user.email} (${audience}) : ${resetUrl}`
+      );
+
       await sendResetPasswordEmail({
         name: user.name,
         email: user.email,
