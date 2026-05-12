@@ -13,7 +13,19 @@ import { Resend } from "resend";
  * (`noreply@carlow.fr`), il faudra vérifier le domaine sur Resend.
  */
 
-const FROM = "Carlow <onboarding@resend.dev>";
+/**
+ * Adresse d'expédition.
+ *
+ * - Par défaut : `onboarding@resend.dev` (domaine fourni par Resend en plan
+ *   gratuit — limité à l'email du compte propriétaire).
+ * - Une fois le domaine `carlow.fr` vérifié sur resend.com/domains, passer
+ *   `RESEND_FROM_EMAIL=Carlow <noreply@carlow.fr>` dans `.env` et redéployer
+ *   → tous les emails partiront depuis carlow.fr et arriveront chez tous
+ *   les destinataires (plus de limite).
+ *
+ * Le format Resend accepte "Nom <email@domaine>" ou juste "email@domaine".
+ */
+const FROM = process.env.RESEND_FROM_EMAIL ?? "Carlow <onboarding@resend.dev>";
 const SITE_URL = "https://carlowonboarding.vercel.app";
 
 /** Lazy init : on évite de crash au build si la clé est absente. */
