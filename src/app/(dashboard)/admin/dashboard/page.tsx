@@ -4,19 +4,92 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AdminShell, AdminPageHeader } from "@/components/admin/AdminShell";
+import {
+  LineChart,
+  BarsChart,
+  DonutChart,
+  KpiCard,
+  type DonutSlice,
+} from "@/components/admin/Charts";
 import { cn } from "@/lib/cn";
+
+/**
+ * Dashboard admin Carlow.
+ *
+ * Vue d'ensemble pilotage plateforme :
+ *  - 4 KPIs vedettes avec tendance 30j vs 30j précédents (CA, commandes,
+ *    vendeurs, acheteurs)
+ *  - Courbe CA mensuel 12 mois
+ *  - Bars commandes mensuelles 12 mois
+ *  - Donut répartition catégories produits
+ *  - Donut statuts commandes
+ *  - Top 5 vendeurs (CA) + Top 5 produits (quantité)
+ *  - Actions rapides : vendeurs en attente, dernières commandes
+ *  - Compteurs secondaires (stock docs, certifications, etc.)
+ *
+ * Performance : un seul appel API qui retourne TOUTES les agrégations
+ * d'un coup → 1 round-trip réseau. Au-delà de quelques milliers de
+ * lignes, envisager du caching + revalidation.
+ */
 
 interface Stats {
   totalUsers: number;
   totalVendors: number;
+  activeVendors: number;
   pendingVendors: number;
   submittedVendors: number;
+  rejectedVendors: number;
+  totalBuyers: number;
+  newBuyers30: number;
   totalProducts: number;
   activeProducts: number;
-  totalOrders: number;
-  ordersInProgress: number;
   totalDocuments: number;
+  totalOrders: number;
+  orders30: number;
+  ordersPrev30: number;
+  ordersInProgress: number;
+  ordersLivree: number;
+  ordersAnnulee: number;
   unreadNotifs: number;
+  totalRevenueCents: number;
+  revenue30Cents: number;
+  revenuePrev30Cents: number;
+  revenueThisMonthCents: number;
+  avgOrderCents: number;
+  commissionRevenueCents: number;
+  commissionRatePct: number;
+  revenueGrowthPct: number;
+  ordersGrowthPct: number;
+}
+
+interface Timeseries {
+  labels: string[];
+  orders: number[];
+  revenueCents: number[];
+  vendorSignups: number[];
+  buyerSignups: number[];
+}
+
+interface TopVendor {
+  id: string;
+  name: string;
+  revenueCents: number;
+  quantity: number;
+}
+
+interface TopProduct {
+  id: string;
+  name: string;
+  category: string | null;
+  vendor: string;
+  quantity: number;
+  revenueCents: number;
+}
+
+interface CategoryStat {
+  category: string;
+  count: number;
+  percent: number;
 }
 
 interface VendorRow {
@@ -32,12 +105,50 @@ interface OrderRow {
   id: string;
   client: string;
   date: string;
-  status: "EN_COURS" | "LIVREE" | "ANNULEE" | string;
+  status: string;
+  totalCents: number;
+}
+
+const STATUS_COLORS: Record<string, { color: string; label: string }> = {
+  EN_COURS: { color: "#F59E0B", label: "En cours" },
+  LIVREE: { color: "#22A06B", label: "Livrée" },
+  ANNULEE: { color: "#DC2626", label: "Annulée" },
+};
+
+const CATEGORY_PALETTE = [
+  "#E87A30",
+  "#22A06B",
+  "#0EA5E9",
+  "#A855F7",
+  "#F59E0B",
+  "#EC4899",
+  "#14B8A6",
+  "#64748B",
+];
+
+function fmtPrice(cents: number): string {
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 0,
+  }).format(cents / 100);
+}
+
+function fmtDate(d: string): string {
+  return new Date(d).toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "short",
+  });
 }
 
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
+  const [timeseries, setTimeseries] = useState<Timeseries | null>(null);
+  const [topVendors, setTopVendors] = useState<TopVendor[]>([]);
+  const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
+  const [productsByCategory, setProductsByCategory] = useState<CategoryStat[]>([]);
+  const [ordersByStatus, setOrdersByStatus] = useState<Record<string, number>>({});
   const [vendors, setVendors] = useState<VendorRow[]>([]);
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,13 +165,18 @@ export default function AdminDashboardPage() {
         const data = await res.json();
         if (res.ok && data.success) {
           setStats(data.stats);
+          setTimeseries(data.timeseries);
+          setTopVendors(data.topVendors ?? []);
+          setTopProducts(data.topProducts ?? []);
+          setProductsByCategory(data.productsByCategory ?? []);
+          setOrdersByStatus(data.ordersByStatus ?? {});
           setVendors(data.latestVendors ?? []);
           setOrders(data.latestOrders ?? []);
         } else {
           setError(data?.error || "Impossible de charger le dashboard.");
         }
       } catch {
-        setError("Erreur reseau.");
+        setError("Erreur réseau.");
       } finally {
         setLoading(false);
       }
@@ -85,6 +201,20 @@ export default function AdminDashboardPage() {
     });
   }
 
+  const categorySlices: DonutSlice[] = productsByCategory.map((c, i) => ({
+    label: c.category,
+    value: c.count,
+    color: CATEGORY_PALETTE[i % CATEGORY_PALETTE.length]!,
+  }));
+
+  const orderStatusSlices: DonutSlice[] = Object.entries(ordersByStatus).map(
+    ([key, count]) => ({
+      label: STATUS_COLORS[key]?.label ?? key,
+      value: count,
+      color: STATUS_COLORS[key]?.color ?? "#64748B",
+    })
+  );
+
   return (
     <AdminShell
       pendingVendorsCount={stats?.pendingVendors ?? 0}
@@ -94,8 +224,8 @@ export default function AdminDashboardPage() {
     >
       <AdminPageHeader
         breadcrumb={["Dashboard"]}
-        title="Tableau de bord"
-        subtitle="Vue d'ensemble de la plateforme Carlow"
+        title="Vue d'ensemble"
+        subtitle="Statistiques globales de la plateforme Carlow"
       />
 
       {error && (
@@ -104,308 +234,369 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-28 animate-pulse rounded-2xl bg-[rgb(var(--border))]/40" />
-          ))}
+      {loading || !stats || !timeseries ? (
+        <div className="grid h-64 place-items-center text-sm text-[rgb(var(--muted))]">
+          Chargement des statistiques…
         </div>
       ) : (
         <>
-          {/* Stat Cards */}
-          <div className="animate-slide-up-1 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard
-              label="Utilisateurs"
-              value={stats?.totalUsers ?? 0}
-              badge="Tous roles"
-              icon={
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-5 w-5">
-                  <circle cx="9" cy="8" r="3.5" />
-                  <path d="M2.5 20a6.5 6.5 0 0 1 13 0" />
-                  <circle cx="17" cy="9" r="2.5" />
-                  <path d="M21.5 19c0-2.2-1.7-4-3.8-4.4" />
-                </svg>
-              }
-              tone="primary"
+          {/* 4 KPIs vedettes avec trend */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <KpiCard
+              label="CA total (30j)"
+              value={fmtPrice(stats.revenue30Cents)}
+              icon="💰"
+              trend={stats.revenueGrowthPct}
+              trendLabel="vs 30j précédents"
+              highlight
             />
-            <StatCard
-              label="Vendeurs"
-              value={stats?.totalVendors ?? 0}
-              badge={`${stats?.pendingVendors ?? 0} en attente`}
-              icon={
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-5 w-5">
-                  <path d="M3 8l1.5-3h15L21 8" />
-                  <path d="M4 8v11h16V8" />
-                </svg>
-              }
-              tone="amber"
+            <KpiCard
+              label="Commandes (30j)"
+              value={String(stats.orders30)}
+              icon="🛒"
+              trend={stats.ordersGrowthPct}
+              trendLabel="vs 30j précédents"
             />
-            <StatCard
-              label="Produits"
-              value={stats?.totalProducts ?? 0}
-              badge="En catalogue"
-              icon={
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-5 w-5">
-                  <path d="M5 8h14l-1 12H6L5 8z" />
-                  <path d="M9 8V6a3 3 0 0 1 6 0v2" />
-                </svg>
-              }
-              tone="emerald"
+            <KpiCard
+              label="Vendeurs actifs"
+              value={String(stats.activeVendors)}
+              icon="🏭"
+              trendLabel={`sur ${stats.totalVendors} inscrits`}
             />
-            <StatCard
-              label="Commandes"
-              value={stats?.totalOrders ?? 0}
-              badge={`${stats?.ordersInProgress ?? 0} en cours`}
-              icon={
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-5 w-5">
-                  <circle cx="9" cy="20" r="1.5" />
-                  <circle cx="17" cy="20" r="1.5" />
-                  <path d="M3 4h2l2.5 11h11l2-8H6" />
-                </svg>
+            <KpiCard
+              label="Acheteurs"
+              value={String(stats.totalBuyers)}
+              icon="👤"
+              trend={
+                stats.totalBuyers > 0
+                  ? Math.round((stats.newBuyers30 / stats.totalBuyers) * 100)
+                  : 0
               }
-              tone="rose"
+              trendLabel={`+${stats.newBuyers30} en 30j`}
             />
           </div>
 
-          {/* Activity bar chart (simulated with CSS) */}
-          {stats && (
-            <div className="animate-slide-up-2 mt-6 rounded-2xl border border-[rgb(var(--border))] bg-white p-6">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h2 className="text-base font-semibold">Activite recente</h2>
-                  <p className="text-xs text-[rgb(var(--muted))]">Apercu des 7 derniers jours</p>
-                </div>
-                <div className="flex items-center gap-4 text-xs">
-                  <span className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-[rgb(var(--primary))]" />
-                    Commandes
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-[rgb(var(--success))]" />
-                    Vendeurs
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-end gap-2 sm:gap-3">
-                {[65, 45, 80, 55, 90, 70, 60].map((h, i) => (
-                  <div key={i} className="flex flex-1 flex-col items-center gap-2">
-                    <div className="flex w-full flex-1 items-end gap-0.5" style={{ height: "120px" }}>
-                      <div
-                        className="w-full rounded-t-md bg-[rgb(var(--primary))]/80 transition-all hover:bg-[rgb(var(--primary))]"
-                        style={{ height: `${h}%` }}
-                      />
-                      <div
-                        className="w-full rounded-t-md bg-[rgb(var(--success))]/50 transition-all hover:bg-[rgb(var(--success))]"
-                        style={{ height: `${h * 0.4}%` }}
-                      />
-                    </div>
-                    <span className="text-[10px] text-[rgb(var(--muted))]">
-                      {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"][i]}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Récap revenus */}
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <RevenueTile
+              label="CA total"
+              value={fmtPrice(stats.totalRevenueCents)}
+              sublabel="Cumulé depuis l'origine"
+            />
+            <RevenueTile
+              label="CA ce mois"
+              value={fmtPrice(stats.revenueThisMonthCents)}
+              sublabel={`Mois en cours`}
+            />
+            <RevenueTile
+              label="Panier moyen"
+              value={fmtPrice(stats.avgOrderCents)}
+              sublabel="Par commande"
+            />
+            <RevenueTile
+              label="Commission marketplace"
+              value={fmtPrice(stats.commissionRevenueCents)}
+              sublabel={`Estimation ${stats.commissionRatePct}% du CA`}
+              accent
+            />
+          </div>
 
-          {/* Two-pane: latest orders + pending vendors */}
-          <div className="animate-slide-up-3 mt-6 grid gap-6 lg:grid-cols-12">
-            {/* Orders */}
-            <div className="rounded-2xl border border-[rgb(var(--border))] bg-white lg:col-span-7">
-              <div className="border-b border-[rgb(var(--border))] px-5 py-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="grid h-8 w-8 place-items-center rounded-lg bg-[rgb(var(--primary))]/10 text-[rgb(var(--primary))]">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
-                        <circle cx="9" cy="20" r="1.5" />
-                        <circle cx="17" cy="20" r="1.5" />
-                        <path d="M3 4h2l2.5 11h11l2-8H6" />
-                      </svg>
-                    </div>
-                    <h2 className="text-sm font-semibold">Dernieres commandes</h2>
-                  </div>
-                  <Link
-                    href="/admin/commandes"
-                    className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[rgb(var(--primary))] transition hover:bg-[rgb(var(--primary))]/[0.06]"
-                  >
-                    Voir tout →
-                  </Link>
-                </div>
-              </div>
+          {/* Charts row 1 : CA mensuel + Commandes mensuelles */}
+          <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
+            <ChartCard
+              title="Chiffre d'affaires mensuel"
+              subtitle="Sur les 12 derniers mois"
+            >
+              <LineChart
+                labels={timeseries.labels}
+                series={timeseries.revenueCents}
+                format={(v) => fmtPrice(v)}
+                color="#E87A30"
+              />
+            </ChartCard>
 
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-sm">
-                  <thead>
-                    <tr className="border-b border-[rgb(var(--border))] text-left text-[11px] font-semibold uppercase tracking-wider text-[rgb(var(--muted))]">
-                      <th className="px-5 py-3">#</th>
-                      <th className="px-5 py-3">Client</th>
-                      <th className="px-5 py-3">Date</th>
-                      <th className="px-5 py-3">Statut</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {orders.length === 0 ? (
-                      <tr>
-                        <td colSpan={4} className="py-10 text-center text-sm text-[rgb(var(--muted))]">
-                          <div className="flex flex-col items-center gap-2">
-                            <div className="grid h-12 w-12 place-items-center rounded-full bg-black/[0.03] text-[rgb(var(--muted))]">
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-5 w-5">
-                                <circle cx="9" cy="20" r="1.5" />
-                                <circle cx="17" cy="20" r="1.5" />
-                                <path d="M3 4h2l2.5 11h11l2-8H6" />
-                              </svg>
-                            </div>
-                            <span>Aucune commande pour le moment.</span>
-                          </div>
-                        </td>
-                      </tr>
-                    ) : (
-                      orders.map((o) => (
-                        <tr key={o.id} className="border-b border-[rgb(var(--border))]/50 last:border-0 transition hover:bg-black/[0.01]">
-                          <td className="px-5 py-3 font-mono text-xs font-semibold">#{o.id.slice(0, 8)}</td>
-                          <td className="px-5 py-3">{o.client}</td>
-                          <td className="px-5 py-3 text-[rgb(var(--muted))]">
-                            {new Date(o.date).toLocaleDateString("fr-FR")}
-                          </td>
-                          <td className="px-5 py-3">
-                            <OrderStatus status={o.status} />
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <ChartCard
+              title="Commandes mensuelles"
+              subtitle="Volume de commandes par mois"
+            >
+              <BarsChart
+                labels={timeseries.labels}
+                series={timeseries.orders}
+                color="#22A06B"
+              />
+            </ChartCard>
+          </div>
 
-            {/* Pending vendors */}
-            <div className="rounded-2xl border border-[rgb(var(--border))] bg-white lg:col-span-5">
-              <div className="border-b border-[rgb(var(--border))] px-5 py-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="grid h-8 w-8 place-items-center rounded-lg bg-amber-100 text-amber-600">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
-                        <circle cx="12" cy="8" r="3.5" />
-                        <path d="M5 20a7 7 0 0 1 14 0" />
-                      </svg>
-                    </div>
-                    <h2 className="text-sm font-semibold">Vendeurs en attente</h2>
-                  </div>
-                  <Link
-                    href="/admin/vendeurs?statut=EN_ATTENTE"
-                    className="rounded-lg px-3 py-1.5 text-xs font-semibold text-amber-700 transition hover:bg-amber-50"
-                  >
-                    Voir tout →
-                  </Link>
-                </div>
-              </div>
-
-              {vendors.length === 0 ? (
-                <div className="py-10 text-center">
-                  <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[rgb(var(--success))]/10 text-[rgb(var(--success))]">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
-                      <path d="M5 12l5 5 9-10" />
-                    </svg>
-                  </div>
-                  <p className="mt-3 text-sm font-medium">Tout est en ordre</p>
-                  <p className="mt-1 text-xs text-[rgb(var(--muted))]">
-                    Aucun vendeur en attente de validation.
-                  </p>
-                </div>
+          {/* Charts row 2 : Donuts catégories + statuts */}
+          <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
+            <ChartCard
+              title="Catégories de produits"
+              subtitle={`Répartition sur ${stats.activeProducts} produits actifs`}
+            >
+              {categorySlices.length > 0 ? (
+                <DonutChart
+                  slices={categorySlices}
+                  centerLabel="Catégories"
+                  centerValue={String(categorySlices.length)}
+                />
               ) : (
-                <ul className="divide-y divide-[rgb(var(--border))]">
-                  {vendors.map((v) => (
-                    <li key={v.id} className="flex items-center justify-between gap-3 px-5 py-3.5">
-                      <div className="flex min-w-0 items-center gap-3">
-                        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[rgb(var(--primary))]/10 font-semibold text-[rgb(var(--primary))]">
-                          {v.name.charAt(0).toUpperCase()}
+                <EmptyState icon="📦" label="Aucun produit actif" />
+              )}
+            </ChartCard>
+
+            <ChartCard
+              title="Statuts des commandes"
+              subtitle={`Sur ${stats.totalOrders} commandes`}
+            >
+              {orderStatusSlices.length > 0 ? (
+                <DonutChart
+                  slices={orderStatusSlices}
+                  centerLabel="Commandes"
+                  centerValue={String(stats.totalOrders)}
+                />
+              ) : (
+                <EmptyState icon="🛒" label="Aucune commande" />
+              )}
+            </ChartCard>
+          </div>
+
+          {/* Charts row 3 : Signups acheteurs/vendeurs */}
+          <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
+            <ChartCard
+              title="Inscriptions vendeurs"
+              subtitle="Nouveaux vendeurs sur 12 mois"
+            >
+              <BarsChart
+                labels={timeseries.labels}
+                series={timeseries.vendorSignups}
+                color="#A855F7"
+              />
+            </ChartCard>
+
+            <ChartCard
+              title="Inscriptions acheteurs"
+              subtitle="Nouveaux acheteurs sur 12 mois"
+            >
+              <BarsChart
+                labels={timeseries.labels}
+                series={timeseries.buyerSignups}
+                color="#0EA5E9"
+              />
+            </ChartCard>
+          </div>
+
+          {/* Top vendeurs + Top produits */}
+          <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
+            <ChartCard title="Top 5 vendeurs" subtitle="Par chiffre d'affaires">
+              {topVendors.length === 0 ? (
+                <EmptyState icon="🏭" label="Aucune donnée de vente" />
+              ) : (
+                <ol className="space-y-2">
+                  {topVendors.map((v, i) => {
+                    const max = Math.max(
+                      ...topVendors.map((t) => t.revenueCents),
+                      1
+                    );
+                    const w = (v.revenueCents / max) * 100;
+                    return (
+                      <li
+                        key={v.id}
+                        className="rounded-xl border border-[rgb(var(--border))]/60 bg-[rgb(var(--bg))]/40 px-3 py-2.5"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={cn(
+                              "grid h-7 w-7 shrink-0 place-items-center rounded-lg text-xs font-bold",
+                              i === 0
+                                ? "bg-amber-100 text-amber-700"
+                                : i === 1
+                                  ? "bg-gray-100 text-gray-700"
+                                  : i === 2
+                                    ? "bg-orange-100 text-orange-700"
+                                    : "bg-black/[0.04] text-[rgb(var(--muted))]"
+                            )}
+                          >
+                            {i + 1}
+                          </span>
+                          <p className="min-w-0 flex-1 truncate text-sm font-semibold">
+                            {v.name}
+                          </p>
+                          <span className="shrink-0 text-sm font-bold tracking-tight">
+                            {fmtPrice(v.revenueCents)}
+                          </span>
                         </div>
-                        <div className="min-w-0">
-                          <div className="truncate text-sm font-semibold">{v.name}</div>
-                          <div className="truncate text-xs text-[rgb(var(--muted))]">{v.email}</div>
-                          {v.companyName && (
-                            <div className="truncate text-[11px] text-[rgb(var(--muted))]">{v.companyName}</div>
-                          )}
+                        <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-black/[0.04]">
+                          <div
+                            className="h-full rounded-full bg-[rgb(var(--primary))]/80"
+                            style={{ width: `${w}%` }}
+                          />
                         </div>
+                        <p className="mt-1 text-[10px] text-[rgb(var(--muted))]">
+                          {v.quantity} article{v.quantity > 1 ? "s" : ""} vendu
+                          {v.quantity > 1 ? "s" : ""}
+                        </p>
+                      </li>
+                    );
+                  })}
+                </ol>
+              )}
+            </ChartCard>
+
+            <ChartCard title="Top 5 produits" subtitle="Par quantité vendue">
+              {topProducts.length === 0 ? (
+                <EmptyState icon="📦" label="Aucun produit vendu" />
+              ) : (
+                <ol className="space-y-2">
+                  {topProducts.map((p, i) => (
+                    <li
+                      key={p.id}
+                      className="flex items-center gap-3 rounded-xl border border-[rgb(var(--border))]/60 bg-[rgb(var(--bg))]/40 px-3 py-2.5"
+                    >
+                      <span
+                        className={cn(
+                          "grid h-7 w-7 shrink-0 place-items-center rounded-lg text-xs font-bold",
+                          i === 0
+                            ? "bg-amber-100 text-amber-700"
+                            : i === 1
+                              ? "bg-gray-100 text-gray-700"
+                              : i === 2
+                                ? "bg-orange-100 text-orange-700"
+                                : "bg-black/[0.04] text-[rgb(var(--muted))]"
+                        )}
+                      >
+                        {i + 1}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold">{p.name}</p>
+                        <p className="truncate text-[11px] text-[rgb(var(--muted))]">
+                          {p.vendor}
+                          {p.category ? ` · ${p.category}` : ""}
+                        </p>
                       </div>
-                      <div className="flex shrink-0 items-center gap-1.5">
+                      <div className="text-right">
+                        <p className="text-sm font-bold">
+                          {p.quantity} vendu{p.quantity > 1 ? "s" : ""}
+                        </p>
+                        <p className="text-[10px] text-[rgb(var(--muted))]">
+                          {fmtPrice(p.revenueCents)}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </ChartCard>
+          </div>
+
+          {/* Actions vendeurs en attente + commandes récentes */}
+          <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
+            <ChartCard
+              title="Vendeurs en attente"
+              subtitle={`${stats.pendingVendors} dossier${stats.pendingVendors > 1 ? "s" : ""} à valider`}
+              action={
+                <Link
+                  href="/admin/vendeurs"
+                  className="text-xs font-semibold text-[rgb(var(--primary))] hover:underline"
+                >
+                  Tout voir →
+                </Link>
+              }
+            >
+              {vendors.length === 0 ? (
+                <EmptyState icon="✓" label="Aucun dossier en attente" />
+              ) : (
+                <ul className="space-y-2">
+                  {vendors.map((v) => (
+                    <li
+                      key={v.id}
+                      className="flex flex-col gap-2 rounded-xl border border-[rgb(var(--border))]/60 bg-[rgb(var(--bg))]/40 p-3 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold">
+                          {v.companyName ?? v.name}
+                        </p>
+                        <p className="truncate text-[11px] text-[rgb(var(--muted))]">
+                          {v.email} · {fmtDate(v.createdAt)}
+                        </p>
+                      </div>
+                      <div className="flex gap-1.5">
                         <button
                           onClick={() => validateVendor(v.id)}
-                          className="grid h-8 w-8 place-items-center rounded-lg bg-[rgb(var(--success))] text-white transition hover:bg-[rgb(var(--success))]/90"
-                          title="Valider"
+                          className="rounded-lg bg-[rgb(var(--success))]/10 px-2.5 py-1 text-[11px] font-semibold text-[rgb(var(--success))] hover:bg-[rgb(var(--success))]/20"
                         >
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="h-4 w-4">
-                            <path d="M5 12l5 5 9-10" />
-                          </svg>
+                          Valider
                         </button>
                         <button
                           onClick={() => rejectVendor(v.id)}
-                          className="grid h-8 w-8 place-items-center rounded-lg bg-red-500 text-white transition hover:bg-red-600"
-                          title="Rejeter"
+                          className="rounded-lg bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700 hover:bg-red-100"
                         >
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="h-4 w-4">
-                            <path d="M6 6l12 12M18 6L6 18" />
-                          </svg>
+                          Rejeter
                         </button>
                       </div>
                     </li>
                   ))}
                 </ul>
               )}
-            </div>
+            </ChartCard>
+
+            <ChartCard
+              title="Commandes récentes"
+              subtitle="5 dernières commandes"
+              action={
+                <Link
+                  href="/admin/commandes"
+                  className="text-xs font-semibold text-[rgb(var(--primary))] hover:underline"
+                >
+                  Tout voir →
+                </Link>
+              }
+            >
+              {orders.length === 0 ? (
+                <EmptyState icon="🛒" label="Aucune commande" />
+              ) : (
+                <ul className="space-y-2">
+                  {orders.map((o) => {
+                    const style =
+                      STATUS_COLORS[o.status] ?? STATUS_COLORS.EN_COURS!;
+                    return (
+                      <li
+                        key={o.id}
+                        className="flex items-center gap-3 rounded-xl border border-[rgb(var(--border))]/60 bg-[rgb(var(--bg))]/40 px-3 py-2.5"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold">
+                            {o.client}
+                          </p>
+                          <p className="truncate text-[11px] text-[rgb(var(--muted))]">
+                            #{o.id.slice(0, 8)} · {fmtDate(o.date)}
+                          </p>
+                        </div>
+                        <span className="shrink-0 text-sm font-bold tracking-tight">
+                          {fmtPrice(o.totalCents)}
+                        </span>
+                        <span
+                          className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                          style={{
+                            background: `${style.color}1a`,
+                            color: style.color,
+                          }}
+                        >
+                          {style.label}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </ChartCard>
           </div>
 
-          {/* Quick Links */}
-          <div className="animate-slide-up-4 mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <QuickLinkCard
-              href="/admin/vendeurs"
-              icon={
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-5 w-5">
-                  <path d="M3 8l1.5-3h15L21 8" />
-                  <path d="M4 8v11h16V8" />
-                </svg>
-              }
-              title="Gerer vendeurs"
-              desc="Valider et gerer les comptes"
-              color="primary"
-            />
-            <QuickLinkCard
-              href="/admin/produits"
-              icon={
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-5 w-5">
-                  <path d="M5 8h14l-1 12H6L5 8z" />
-                  <path d="M9 8V6a3 3 0 0 1 6 0v2" />
-                </svg>
-              }
-              title="Catalogue produits"
-              desc="Gerer les catalogues"
-              color="emerald"
-            />
-            <QuickLinkCard
-              href="/admin/commandes"
-              icon={
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-5 w-5">
-                  <circle cx="9" cy="20" r="1.5" />
-                  <circle cx="17" cy="20" r="1.5" />
-                  <path d="M3 4h2l2.5 11h11l2-8H6" />
-                </svg>
-              }
-              title="Suivi commandes"
-              desc="Gerer les livraisons"
-              color="amber"
-            />
-            <QuickLinkCard
-              href="/admin/notifications"
-              icon={
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-5 w-5">
-                  <path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2H4.5L6 16z" />
-                  <path d="M10 19a2 2 0 0 0 4 0" />
-                </svg>
-              }
-              title="Notifications"
-              desc="Envoyer des alertes"
-              color="rose"
-            />
+          {/* Mini KPIs secondaires */}
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <SmallKpi label="Produits totaux" value={stats.totalProducts} icon="📦" />
+            <SmallKpi label="Documents" value={stats.totalDocuments} icon="📄" />
+            <SmallKpi label="Notifs non lues" value={stats.unreadNotifs} icon="🔔" />
+            <SmallKpi label="Vendeurs rejetés" value={stats.rejectedVendors} icon="✗" />
           </div>
         </>
       )}
@@ -413,104 +604,101 @@ export default function AdminDashboardPage() {
   );
 }
 
-/* ---- Sub-components ---- */
+/* ---------- Sub-components ---------- */
 
-function StatCard({
-  label,
-  value,
-  badge,
-  icon,
-  tone,
+function ChartCard({
+  title,
+  subtitle,
+  action,
+  children,
 }: {
-  label: string;
-  value: number;
-  badge: string;
-  icon: React.ReactNode;
-  tone: "primary" | "amber" | "emerald" | "rose";
+  title: string;
+  subtitle?: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
 }) {
-  const map = {
-    primary: { bg: "bg-[rgb(var(--primary))]/10", text: "text-[rgb(var(--primary))]", bar: "bg-[rgb(var(--primary))]" },
-    amber: { bg: "bg-amber-100", text: "text-amber-600", bar: "bg-amber-400" },
-    emerald: { bg: "bg-[rgb(var(--success))]/10", text: "text-[rgb(var(--success))]", bar: "bg-[rgb(var(--success))]" },
-    rose: { bg: "bg-rose-100", text: "text-rose-600", bar: "bg-rose-400" },
-  } as const;
-  const t = map[tone];
-
   return (
-    <div className="group overflow-hidden rounded-2xl border border-[rgb(var(--border))] bg-white transition hover:shadow-md">
-      <div className="p-5">
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="text-sm text-[rgb(var(--muted))]">{label}</div>
-            <div className="mt-2 text-3xl font-bold tracking-tight">{value.toLocaleString()}</div>
-          </div>
-          <span className={cn("grid h-10 w-10 place-items-center rounded-xl", t.bg, t.text)}>
-            {icon}
-          </span>
+    <div className="rounded-2xl border border-[rgb(var(--border))]/60 bg-[rgb(var(--card))] p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-bold">{title}</h3>
+          {subtitle && (
+            <p className="mt-0.5 text-[11px] text-[rgb(var(--muted))]">
+              {subtitle}
+            </p>
+          )}
         </div>
-        <div className="mt-3">
-          <span className={cn("inline-block rounded-md px-2 py-0.5 text-[11px] font-semibold", t.bg, t.text)}>
-            {badge}
-          </span>
-        </div>
+        {action}
       </div>
-      <div className={cn("h-0.5 w-full", t.bar)} />
+      <div className="mt-4">{children}</div>
     </div>
   );
 }
 
-function OrderStatus({ status }: { status: string }) {
-  const meta: Record<string, { label: string; cls: string }> = {
-    EN_COURS: { label: "En cours", cls: "bg-amber-100 text-amber-700" },
-    LIVREE: { label: "Livree", cls: "bg-[rgb(var(--success))]/10 text-[rgb(var(--success))]" },
-    ANNULEE: { label: "Annulee", cls: "bg-rose-100 text-rose-700" },
-  };
-  const m = meta[status] ?? { label: status, cls: "bg-black/[0.06] text-[rgb(var(--muted))]" };
+function RevenueTile({
+  label,
+  value,
+  sublabel,
+  accent,
+}: {
+  label: string;
+  value: string;
+  sublabel?: string;
+  accent?: boolean;
+}) {
   return (
-    <span className={cn("inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold", m.cls)}>
-      {m.label}
-    </span>
+    <div
+      className={cn(
+        "rounded-xl border bg-[rgb(var(--card))] p-4",
+        accent
+          ? "border-[rgb(var(--primary))]/30 bg-gradient-to-br from-[rgb(var(--primary))]/[0.04] to-transparent"
+          : "border-[rgb(var(--border))]/60"
+      )}
+    >
+      <p className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--muted))]">
+        {label}
+      </p>
+      <p className="mt-1.5 truncate text-base font-bold tracking-tight">
+        {value}
+      </p>
+      {sublabel && (
+        <p className="mt-0.5 truncate text-[10px] text-[rgb(var(--muted))]">
+          {sublabel}
+        </p>
+      )}
+    </div>
   );
 }
 
-function QuickLinkCard({
-  href,
+function SmallKpi({
+  label,
+  value,
   icon,
-  title,
-  desc,
-  color,
 }: {
-  href: string;
-  icon: React.ReactNode;
-  title: string;
-  desc: string;
-  color: "primary" | "emerald" | "amber" | "rose";
+  label: string;
+  value: number;
+  icon: string;
 }) {
-  const colors = {
-    primary: "border-[rgb(var(--primary))]/20 hover:border-[rgb(var(--primary))]/40 hover:bg-[rgb(var(--primary))]/[0.03]",
-    emerald: "border-[rgb(var(--success))]/20 hover:border-[rgb(var(--success))]/40 hover:bg-[rgb(var(--success))]/[0.03]",
-    amber: "border-amber-200 hover:border-amber-300 hover:bg-amber-50",
-    rose: "border-rose-200 hover:border-rose-300 hover:bg-rose-50",
-  };
-  const iconColors = {
-    primary: "bg-[rgb(var(--primary))]/10 text-[rgb(var(--primary))]",
-    emerald: "bg-[rgb(var(--success))]/10 text-[rgb(var(--success))]",
-    amber: "bg-amber-100 text-amber-600",
-    rose: "bg-rose-100 text-rose-600",
-  };
-
   return (
-    <Link
-      href={href}
-      className={cn("flex items-center gap-3 rounded-xl border bg-white p-4 transition", colors[color])}
-    >
-      <div className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-xl", iconColors[color])}>
-        {icon}
+    <div className="rounded-xl border border-[rgb(var(--border))]/60 bg-[rgb(var(--card))] px-4 py-3">
+      <div className="flex items-center gap-2.5">
+        <span className="text-base">{icon}</span>
+        <div className="min-w-0 flex-1">
+          <p className="text-base font-bold leading-none">{value}</p>
+          <p className="mt-0.5 truncate text-[10px] text-[rgb(var(--muted))]">
+            {label}
+          </p>
+        </div>
       </div>
-      <div>
-        <div className="text-sm font-semibold">{title}</div>
-        <div className="text-xs text-[rgb(var(--muted))]">{desc}</div>
-      </div>
-    </Link>
+    </div>
+  );
+}
+
+function EmptyState({ icon, label }: { icon: string; label: string }) {
+  return (
+    <div className="grid place-items-center rounded-xl border border-dashed border-[rgb(var(--border))] bg-[rgb(var(--bg))]/30 px-4 py-8 text-center">
+      <span className="text-2xl">{icon}</span>
+      <p className="mt-2 text-xs text-[rgb(var(--muted))]">{label}</p>
+    </div>
   );
 }
