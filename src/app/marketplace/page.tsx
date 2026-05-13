@@ -12,6 +12,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useCompare, COMPARE_MAX } from "@/hooks/useCompare";
 import { ProductCardSkeleton } from "@/components/ui/Skeleton";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { SearchAutocomplete } from "@/components/marketplace/SearchAutocomplete";
 
 interface Product {
   id: string;
@@ -259,20 +260,15 @@ function MarketplaceInner() {
         <div className="rounded-2xl border border-[rgb(var(--border))]/60 bg-white p-3 sm:p-4">
           {/* Ligne 1 : recherche + tri + bouton avancé */}
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <div className="relative min-w-[200px] flex-1">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[rgb(var(--muted))]">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
-                  <circle cx="11" cy="11" r="7" />
-                  <path d="M20 20l-3-3" />
-                </svg>
-              </span>
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Produit, vendeur, référence…"
-                className="h-10 w-full rounded-xl border border-[rgb(var(--border))] bg-white pl-9 pr-3 text-sm focus:border-[rgb(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]/15"
-              />
-            </div>
+            <SearchAutocomplete
+              value={search}
+              onChange={setSearch}
+              onCategorySelected={(cat) => {
+                setCategoryFilter(cat);
+                setSearch("");
+              }}
+              placeholder="Produit, vendeur, référence…"
+            />
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}

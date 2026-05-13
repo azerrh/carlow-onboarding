@@ -95,8 +95,49 @@ export default function HomePage() {
     };
   }, []);
 
+  /**
+   * JSON-LD Schema.org Organization + WebSite — donne à Google les
+   * infos clés sur Carlow pour les rich results (sitelinks search box,
+   * profil entreprise dans le panneau de droite Google).
+   */
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        name: "Carlow",
+        legalName: "Solelh Energie",
+        url: "https://carlowonboarding.vercel.app",
+        logo: "https://carlowonboarding.vercel.app/opengraph-image",
+        description:
+          "Marketplace B2B européenne dédiée aux équipements d'énergies renouvelables : photovoltaïque, onduleurs, batteries, IRVE, pompes à chaleur.",
+        email: "contact@carlow.fr",
+        sameAs: ["https://carlow.fr", "https://www.carlow.fr"],
+      },
+      {
+        "@type": "WebSite",
+        url: "https://carlowonboarding.vercel.app",
+        name: "Carlow",
+        potentialAction: {
+          "@type": "SearchAction",
+          target: {
+            "@type": "EntryPoint",
+            urlTemplate:
+              "https://carlowonboarding.vercel.app/marketplace?search={search_term_string}",
+          },
+          "query-input": "required name=search_term_string",
+        },
+      },
+    ],
+  };
+
   return (
     <div className="portal-page min-h-screen">
+      {/* JSON-LD Schema.org */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Header */}
       <header className="sticky top-0 z-20 border-b border-[rgb(var(--border))]/60 bg-white/75 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">

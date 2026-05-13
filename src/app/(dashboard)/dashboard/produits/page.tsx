@@ -179,12 +179,19 @@ function ProductsInner({ preselectedCatalog }: { preselectedCatalog: string | nu
               {stats.total} produit{stats.total > 1 ? "s" : ""} au total
             </p>
           </div>
-          <Button
-            onClick={() => setShowCreate(true)}
-            disabled={catalogs.length === 0}
-          >
-            + Nouveau produit
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/dashboard/produits/import">
+              <Button variant="secondary" disabled={catalogs.length === 0}>
+                📥 Import CSV
+              </Button>
+            </Link>
+            <Button
+              onClick={() => setShowCreate(true)}
+              disabled={catalogs.length === 0}
+            >
+              + Nouveau produit
+            </Button>
+          </div>
         </div>
 
         {catalogs.length === 0 && (

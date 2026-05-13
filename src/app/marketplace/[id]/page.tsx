@@ -7,6 +7,8 @@ import { Brand } from "@/components/ui/Brand";
 import { Button } from "@/components/ui/Button";
 import { useCart, useCartSummary } from "@/hooks/useCart";
 import { ProductReviews } from "@/components/marketplace/ProductReviews";
+import { RecentlyViewed } from "@/components/marketplace/RecentlyViewed";
+import { trackView } from "@/hooks/useRecentlyViewed";
 import { cn } from "@/lib/cn";
 
 interface Product {
@@ -57,6 +59,9 @@ function ProductDetailInner() {
 
   useEffect(() => {
     if (!productId) return;
+    // Tracking "récemment vus" — silent en localStorage, alimente la
+    // section "Vous avez consulté" sur les autres fiches produit.
+    trackView(productId);
     setLoading(true);
     fetch(`/api/marketplace/products/${productId}`)
       .then((res) => res.json())
@@ -145,8 +150,47 @@ function ProductDetailInner() {
   const inStock = product.stock > 0;
   const lowStock = inStock && product.stock < 10;
 
+  /**
+   * JSON-LD Schema.org Product — aide Google à afficher des rich results
+   * (prix, dispo, vendeur) dans les SERP. Injecté en tant que script
+   * inline car la page est en Client Component.
+   *
+   * @see https://developers.google.com/search/docs/appearance/structured-data/product
+   */
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description ?? `${product.name} — vendu par ${vendorName}`,
+    image: primaryImage ? [primaryImage] : undefined,
+    sku: product.reference ?? product.id,
+    category: product.category ?? undefined,
+    brand: {
+      "@type": "Brand",
+      name: vendorName,
+    },
+    offers: {
+      "@type": "Offer",
+      url: `https://carlowonboarding.vercel.app/marketplace/${product.id}`,
+      priceCurrency: "EUR",
+      price: product.price.toFixed(2),
+      availability: inStock
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+      seller: {
+        "@type": "Organization",
+        name: vendorName,
+      },
+    },
+  };
+
   return (
     <div className="min-h-screen bg-white">
+      {/* JSON-LD Schema.org pour Google rich results */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Header */}
       <header className="sticky top-0 z-20 border-b border-[rgb(var(--border))] bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
@@ -328,6 +372,9 @@ function ProductDetailInner() {
 
         {/* Avis & notes */}
         <ProductReviews productId={product.id} />
+
+        {/* Produits récemment consultés */}
+        <RecentlyViewed exclude={product.id} />
 
         {/* Related products */}
         {related.length > 0 && (
