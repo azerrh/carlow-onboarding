@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { useCart, useCartSummary } from "@/hooks/useCart";
 import { ProductReviews } from "@/components/marketplace/ProductReviews";
 import { RecentlyViewed } from "@/components/marketplace/RecentlyViewed";
+import { TranslateButton } from "@/components/marketplace/TranslateButton";
 import { trackView } from "@/hooks/useRecentlyViewed";
 import { cn } from "@/lib/cn";
 
@@ -304,7 +305,13 @@ function ProductDetailInner() {
             {/* Description */}
             {product.description && (
               <div className="mt-6">
-                <h3 className="text-sm font-semibold">Description</h3>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="text-sm font-semibold">Description</h3>
+                  <TranslateButton
+                    productId={product.id}
+                    originalText={product.description}
+                  />
+                </div>
                 <p className="mt-2 text-sm leading-relaxed text-[rgb(var(--muted))] whitespace-pre-wrap">
                   {product.description}
                 </p>

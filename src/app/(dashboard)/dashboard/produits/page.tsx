@@ -487,6 +487,109 @@ function ProductModal({
   });
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState("");
+  // États pour les boutons IA
+  const [aiBusy, setAiBusy] = useState<"describe" | "vision" | null>(null);
+  const [aiError, setAiError] = useState("");
+  const [aiInfo, setAiInfo] = useState("");
+
+  /**
+   * ✨ Génère une description produit via Claude à partir du nom + catégorie.
+   * Si l'utilisateur a déjà du texte, on lui demande confirmation avant
+   * d'écraser (UX safe).
+   */
+  async function generateDescription() {
+    if (!form.name.trim()) {
+      setAiError("Saisissez d'abord le nom du produit.");
+      return;
+    }
+    if (
+      form.description.trim().length > 0 &&
+      !confirm("Une description existe déjà. La remplacer par la version IA ?")
+    ) {
+      return;
+    }
+    setAiBusy("describe");
+    setAiError("");
+    setAiInfo("");
+    try {
+      const res = await fetch("/api/ai/generate-description", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          category: form.category || null,
+          hints: form.dimensions || null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setAiError(data?.error ?? "Génération impossible.");
+        return;
+      }
+      setForm((f) => ({ ...f, description: data.description }));
+      setAiInfo("✓ Description générée — relisez-la avant d'enregistrer.");
+    } catch {
+      setAiError("Erreur réseau.");
+    } finally {
+      setAiBusy(null);
+    }
+  }
+
+  /**
+   * ✨ Analyse une photo via Claude vision → suggère nom + catégorie + tags.
+   * On ne remplit que les champs vides pour ne pas écraser le travail
+   * du vendeur sans son accord.
+   */
+  async function handleAnalyzeImage(file: File) {
+    if (file.size > 5 * 1024 * 1024) {
+      setAiError("Image trop volumineuse (max 5 MB).");
+      return;
+    }
+    setAiBusy("vision");
+    setAiError("");
+    setAiInfo("");
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => resolve(String(r.result));
+        r.onerror = () => reject(new Error("read fail"));
+        r.readAsDataURL(file);
+      });
+      const res = await fetch("/api/ai/analyze-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageBase64: dataUrl,
+          imageMediaType: file.type,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setAiError(data?.error ?? "Analyse impossible.");
+        return;
+      }
+      // Remplit uniquement les champs vides (non-destructif)
+      setForm((f) => ({
+        ...f,
+        name: f.name.trim() ? f.name : data.name ?? "",
+        category: f.category.trim() ? f.category : data.category ?? "",
+        description: f.description.trim() ? f.description : data.description ?? "",
+      }));
+      const conf =
+        data.confidence === "high"
+          ? "✓"
+          : data.confidence === "medium"
+            ? "≈"
+            : "?";
+      setAiInfo(
+        `${conf} Analyse terminée (confiance : ${data.confidence}). Tags détectés : ${(data.tags ?? []).join(", ")}`
+      );
+    } catch {
+      setAiError("Erreur lors de l'analyse de l'image.");
+    } finally {
+      setAiBusy(null);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -651,12 +754,69 @@ function ProductModal({
             />
           </label>
 
+          {/* Bloc IA */}
+          <div className="sm:col-span-2 rounded-xl border border-dashed border-[rgb(var(--primary))]/30 bg-[rgb(var(--primary))]/[0.03] p-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-[rgb(var(--primary))]">
+                ✨ Assistant IA
+              </span>
+              <span className="text-[10px] text-[rgb(var(--muted))]">
+                propulsé par Claude
+              </span>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={generateDescription}
+                disabled={aiBusy !== null}
+                className={cn(
+                  "inline-flex h-9 items-center gap-1.5 rounded-lg border border-[rgb(var(--primary))]/30 bg-white px-3 text-xs font-semibold text-[rgb(var(--primary))] hover:bg-[rgb(var(--primary))]/[0.06] disabled:opacity-50",
+                  aiBusy === "describe" && "animate-pulse"
+                )}
+              >
+                {aiBusy === "describe" ? "✨ Génération…" : "✨ Générer la description"}
+              </button>
+
+              <label
+                className={cn(
+                  "inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-[rgb(var(--primary))]/30 bg-white px-3 text-xs font-semibold text-[rgb(var(--primary))] hover:bg-[rgb(var(--primary))]/[0.06]",
+                  aiBusy === "vision" && "animate-pulse cursor-wait"
+                )}
+              >
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="hidden"
+                  disabled={aiBusy !== null}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleAnalyzeImage(f);
+                    e.target.value = ""; // permet re-upload même fichier
+                  }}
+                />
+                {aiBusy === "vision" ? "🖼️ Analyse…" : "🖼️ Analyser une photo"}
+              </label>
+            </div>
+            {aiInfo && (
+              <p className="mt-2 text-[11px] text-[rgb(var(--success))]">
+                {aiInfo}
+              </p>
+            )}
+            {aiError && (
+              <p className="mt-2 text-[11px] text-red-600">{aiError}</p>
+            )}
+            <p className="mt-2 text-[10px] text-[rgb(var(--muted))]">
+              L&apos;IA s&apos;appuie sur le nom et la catégorie pour générer.
+              Relisez systématiquement le résultat avant d&apos;enregistrer.
+            </p>
+          </div>
+
           <label className="sm:col-span-2">
             <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-[rgb(var(--muted))]">
               Description
             </span>
             <textarea
-              rows={3}
+              rows={4}
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               className="w-full rounded-xl border border-[rgb(var(--border))] bg-white p-3 text-sm"

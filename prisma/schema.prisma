@@ -109,6 +109,11 @@ model Product {
   category    String?
   stock       Int         @default(0)
   active      Boolean     @default(true)
+  // Traductions de la description, generees par Claude.
+  // Format : { "en": "...", "de": "...", "es": "..." }
+  // La langue source est toujours le francais (champ `description`).
+  // Stockee en JSON pour rester flexible (ajout de langues sans migration).
+  translations Json?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   photos      Photo[]
