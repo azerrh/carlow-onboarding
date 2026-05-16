@@ -54,6 +54,7 @@ function ProductDetailInner() {
   const [quantity, setQuantity] = useState(1);
   const [toast, setToast] = useState("");
   const [cartOpen, setCartOpen] = useState(false);
+  const [quoteOpen, setQuoteOpen] = useState(false);
 
   const addItem = useCart((s) => s.addItem);
   const { totalItems } = useCartSummary();
@@ -341,6 +342,21 @@ function ProductDetailInner() {
 
             {/* Add to cart */}
             <div className="mt-8 border-t border-[rgb(var(--border))] pt-6">
+              {/* Demande de devis B2B */}
+              <div className="mb-4 rounded-xl border border-dashed border-[rgb(var(--primary))]/30 bg-[rgb(var(--primary))]/[0.03] px-4 py-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold text-[rgb(var(--fg))]">Achat en volume ou prix négocié ?</p>
+                    <p className="text-[11px] text-[rgb(var(--muted))]">Demandez un devis personnalisé au vendeur.</p>
+                  </div>
+                  <button
+                    onClick={() => setQuoteOpen(true)}
+                    className="shrink-0 inline-flex h-9 items-center gap-1.5 rounded-xl border border-[rgb(var(--primary))]/40 bg-white px-4 text-xs font-semibold text-[rgb(var(--primary))] hover:bg-[rgb(var(--primary))]/[0.06] transition"
+                  >
+                    📋 Demander un devis
+                  </button>
+                </div>
+              </div>
               <div className="flex items-center gap-3">
                 {/* Quantity selector */}
                 <div className="flex items-center rounded-xl border border-[rgb(var(--border))]">
@@ -426,6 +442,16 @@ function ProductDetailInner() {
       {/* Cart drawer */}
       {cartOpen && <CartDrawer onClose={() => setCartOpen(false)} />}
 
+      {/* Devis modal */}
+      {quoteOpen && (
+        <QuoteModal
+          productId={product.id}
+          productName={product.name}
+          productPrice={product.price}
+          onClose={() => setQuoteOpen(false)}
+        />
+      )}
+
       {/* Toast */}
       {toast && (
         <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-xl border border-[rgb(var(--success))]/30 bg-white px-4 py-3 text-sm font-medium shadow-lg">
@@ -447,6 +473,151 @@ export default function ProductDetailPage() {
     >
       <ProductDetailInner />
     </Suspense>
+  );
+}
+
+/* ---- Quote Modal ---- */
+
+function QuoteModal({
+  productId,
+  productName,
+  productPrice,
+  onClose,
+}: {
+  productId: string;
+  productName: string;
+  productPrice: number;
+  onClose: () => void;
+}) {
+  const [form, setForm] = useState({
+    buyerName: "",
+    buyerEmail: "",
+    buyerPhone: "",
+    buyerCompany: "",
+    quantity: "1",
+    message: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
+  const [err, setErr] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setErr("");
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/quotes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId,
+          buyerName: form.buyerName,
+          buyerEmail: form.buyerEmail,
+          buyerPhone: form.buyerPhone || null,
+          buyerCompany: form.buyerCompany || null,
+          quantity: Number(form.quantity),
+          message: form.message || null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setErr(data?.error ?? "Erreur lors de l'envoi.");
+        return;
+      }
+      setDone(true);
+    } catch {
+      setErr("Erreur réseau.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={onClose}>
+      <div
+        className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {done ? (
+          <div className="py-8 text-center">
+            <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[rgb(var(--success))]/10 text-3xl">✅</div>
+            <h2 className="mt-4 text-lg font-semibold">Demande envoyée !</h2>
+            <p className="mt-2 text-sm text-[rgb(var(--muted))]">
+              Vous recevrez un email de confirmation et une réponse du vendeur sous 48h.
+            </p>
+            <button
+              onClick={onClose}
+              className="mt-6 h-10 rounded-xl bg-[rgb(var(--primary))] px-6 text-sm font-semibold text-white hover:brightness-95"
+            >
+              Fermer
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="mb-5">
+              <h2 className="text-lg font-semibold">Demander un devis</h2>
+              <p className="mt-1 text-sm text-[rgb(var(--muted))]">
+                Pour <span className="font-medium text-[rgb(var(--fg))]">{productName}</span> — Prix catalogue :{" "}
+                <span className="font-semibold">{productPrice.toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}</span> / unité
+              </p>
+            </div>
+
+            {err && (
+              <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</div>
+            )}
+
+            <form onSubmit={handleSubmit} className="grid gap-3 sm:grid-cols-2">
+              <label className="block">
+                <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-[rgb(var(--muted))]">Nom complet *</span>
+                <input required value={form.buyerName} onChange={(e) => setForm((f) => ({ ...f, buyerName: e.target.value }))}
+                  className="h-10 w-full rounded-xl border border-[rgb(var(--border))] px-3 text-sm focus:border-[rgb(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]/15" />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-[rgb(var(--muted))]">Email *</span>
+                <input required type="email" value={form.buyerEmail} onChange={(e) => setForm((f) => ({ ...f, buyerEmail: e.target.value }))}
+                  className="h-10 w-full rounded-xl border border-[rgb(var(--border))] px-3 text-sm focus:border-[rgb(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]/15" />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-[rgb(var(--muted))]">Société</span>
+                <input value={form.buyerCompany} onChange={(e) => setForm((f) => ({ ...f, buyerCompany: e.target.value }))}
+                  placeholder="Votre entreprise"
+                  className="h-10 w-full rounded-xl border border-[rgb(var(--border))] px-3 text-sm focus:border-[rgb(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]/15" />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-[rgb(var(--muted))]">Téléphone</span>
+                <input type="tel" value={form.buyerPhone} onChange={(e) => setForm((f) => ({ ...f, buyerPhone: e.target.value }))}
+                  placeholder="+33 6 00 00 00 00"
+                  className="h-10 w-full rounded-xl border border-[rgb(var(--border))] px-3 text-sm focus:border-[rgb(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]/15" />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-[rgb(var(--muted))]">Quantité souhaitée *</span>
+                <input required type="number" min="1" max="100000" value={form.quantity}
+                  onChange={(e) => setForm((f) => ({ ...f, quantity: e.target.value }))}
+                  className="h-10 w-full rounded-xl border border-[rgb(var(--border))] px-3 text-sm focus:border-[rgb(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]/15" />
+              </label>
+              <div className="sm:col-span-2">
+                <label className="block">
+                  <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-[rgb(var(--muted))]">Message (délai, conditions…)</span>
+                  <textarea rows={3} value={form.message} onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
+                    placeholder="Ex : livraison souhaitée avant fin du mois, conditions de paiement 30j…"
+                    className="w-full rounded-xl border border-[rgb(var(--border))] p-3 text-sm focus:border-[rgb(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]/15" />
+                </label>
+              </div>
+              <div className="sm:col-span-2 flex justify-end gap-2 pt-1">
+                <button type="button" onClick={onClose}
+                  className="h-10 rounded-xl border border-[rgb(var(--border))] px-4 text-sm font-semibold hover:bg-black/[0.02]">
+                  Annuler
+                </button>
+                <button type="submit" disabled={submitting}
+                  className="h-10 rounded-xl bg-[rgb(var(--primary))] px-5 text-sm font-semibold text-white hover:brightness-95 disabled:opacity-60">
+                  {submitting ? "Envoi…" : "📋 Envoyer la demande"}
+                </button>
+              </div>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 

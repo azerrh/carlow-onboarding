@@ -401,3 +401,107 @@ export async function sendOrderStatusChangedEmail({
     }),
   });
 }
+
+/* ============================================================
+   DEVIS B2B
+   ============================================================ */
+
+/** Email vendeur : une nouvelle demande de devis vient d'arriver. */
+export async function sendQuoteReceivedVendor(input: {
+  vendorEmail: string;
+  vendorName: string;
+  quoteId: string;
+  productName: string;
+  buyerName: string;
+  buyerEmail: string;
+  buyerCompany: string | null;
+  quantity: number;
+  message: string | null;
+}) {
+  const { vendorEmail, vendorName, quoteId, productName, buyerName, buyerEmail, buyerCompany, quantity, message } = input;
+  return send({
+    to: vendorEmail,
+    subject: `📋 Carlow — Nouvelle demande de devis pour "${productName}"`,
+    context: "quote-received-vendor",
+    html: emailLayout({
+      title: "Nouvelle demande de devis",
+      body: `
+        <p>Bonjour ${vendorName},</p>
+        <p>Vous avez reçu une nouvelle demande de devis sur <strong>${productName}</strong>.</p>
+        <div style="background:#fafaf9;border:1px solid #e5e3df;border-radius:10px;padding:18px;margin:20px 0">
+          <p style="margin:0 0 8px;font-size:13px"><strong>Acheteur :</strong> ${buyerName}${buyerCompany ? ` — ${buyerCompany}` : ""}</p>
+          <p style="margin:0 0 8px;font-size:13px"><strong>Email :</strong> ${buyerEmail}</p>
+          <p style="margin:0 0 8px;font-size:13px"><strong>Quantité demandée :</strong> ${quantity} unité${quantity > 1 ? "s" : ""}</p>
+          ${message ? `<p style="margin:0;font-size:13px"><strong>Message :</strong> ${message}</p>` : ""}
+        </div>
+        <p>Connectez-vous à votre tableau de bord pour répondre à ce devis.</p>
+      `,
+      cta: { label: "Répondre au devis →", href: `${SITE_URL}/dashboard/devis` },
+    }),
+  });
+}
+
+/** Email acheteur : confirmation de réception de sa demande de devis. */
+export async function sendQuoteConfirmationBuyer(input: {
+  buyerEmail: string;
+  buyerName: string;
+  productName: string;
+  vendorName: string;
+  quantity: number;
+  accessToken: string;
+}) {
+  const { buyerEmail, buyerName, productName, vendorName, quantity, accessToken } = input;
+  return send({
+    to: buyerEmail,
+    subject: `✅ Carlow — Votre demande de devis a été envoyée`,
+    context: "quote-confirmation-buyer",
+    html: emailLayout({
+      title: "Demande de devis envoyée",
+      body: `
+        <p>Bonjour ${buyerName},</p>
+        <p>Votre demande de devis pour <strong>${quantity} × ${productName}</strong> a bien été transmise au vendeur <strong>${vendorName}</strong>.</p>
+        <p>Vous recevrez un email dès que le vendeur aura répondu. En attendant, vous pouvez suivre l'état de votre devis ci-dessous.</p>
+      `,
+      cta: { label: "Suivre mon devis →", href: `${SITE_URL}/devis/${accessToken}` },
+    }),
+  });
+}
+
+/** Email acheteur : le vendeur a répondu avec un prix. */
+export async function sendQuoteRespondedBuyer(input: {
+  buyerEmail: string;
+  buyerName: string;
+  productName: string;
+  vendorName: string;
+  quantity: number;
+  vendorPriceCents: number;
+  validUntil: Date;
+  accessToken: string;
+  pdfUrl?: string;
+}) {
+  const { buyerEmail, buyerName, productName, vendorName, quantity, vendorPriceCents, validUntil, accessToken, pdfUrl } = input;
+  const totalEur = ((vendorPriceCents * quantity) / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
+  const unitEur = (vendorPriceCents / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
+  const validStr = validUntil.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
+  return send({
+    to: buyerEmail,
+    subject: `💼 Carlow — ${vendorName} a répondu à votre demande de devis`,
+    context: "quote-responded-buyer",
+    html: emailLayout({
+      title: "Votre devis est prêt",
+      body: `
+        <p>Bonjour ${buyerName},</p>
+        <p><strong>${vendorName}</strong> a répondu à votre demande de devis pour <strong>${quantity} × ${productName}</strong>.</p>
+        <div style="background:#fafaf9;border:2px solid #E87A30;border-radius:10px;padding:18px;margin:20px 0;text-align:center">
+          <p style="margin:0 0 4px;font-size:13px;color:#888">Prix unitaire négocié</p>
+          <p style="margin:0;font-size:28px;font-weight:700;color:#E87A30">${unitEur}</p>
+          <p style="margin:4px 0 0;font-size:13px;color:#888">Total pour ${quantity} unité${quantity > 1 ? "s" : ""} : <strong>${totalEur} HT</strong></p>
+        </div>
+        <p style="font-size:13px;color:#888">⏰ Ce devis est valable jusqu'au <strong>${validStr}</strong>.</p>
+        ${pdfUrl ? `<p style="font-size:13px"><a href="${pdfUrl}" style="color:#E87A30">📄 Télécharger le PDF du devis</a></p>` : ""}
+        <p>Acceptez ou déclinez ce devis directement depuis votre espace :</p>
+      `,
+      cta: { label: "Voir & accepter mon devis →", href: `${SITE_URL}/devis/${accessToken}` },
+    }),
+  });
+}

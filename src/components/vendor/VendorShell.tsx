@@ -186,6 +186,11 @@ export function VendorShell({
               : undefined,
         },
         {
+          label: "Devis",
+          href: "/dashboard/devis",
+          icon: ICON.doc,
+        },
+        {
           label: "Catalogue",
           icon: ICON.bag,
           matchPaths: ["/dashboard/catalogues", "/dashboard/produits"],

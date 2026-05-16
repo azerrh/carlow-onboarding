@@ -37,6 +37,7 @@ model Vendor {
   certifications  Certification[]
   catalogs        Catalog[]
   notifications   Notification[]
+  quotes          Quote[]
 }
 
 model Buyer {
@@ -52,6 +53,7 @@ model Buyer {
   notifications Notification[]
   favorites     Favorite[]
   reviews       Review[]
+  quotes        Quote[]
 }
 
 /* ============================================================
@@ -120,6 +122,7 @@ model Product {
   orderLines  OrderLine[]
   favorites   Favorite[]
   reviews     Review[]
+  quotes      Quote[]
 
   @@index([catalogId])
   @@index([category])
@@ -281,6 +284,58 @@ model Review {
   // Un acheteur écrit au plus un avis par produit (il peut le modifier).
   @@unique([buyerId, productId])
   @@index([productId])
+}
+
+/* ============================================================
+   DEVIS B2B
+   ============================================================ */
+
+model Quote {
+  id          String   @id @default(cuid())
+
+  // Produit concerné
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // Vendeur destinataire (déduit depuis le produit, stocké pour requêtes rapides)
+  vendorId    String
+  vendor      Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  // Acheteur — peut être un compte Buyer enregistré OU un visiteur anonyme.
+  // Dans les deux cas on conserve l'email pour les notifications.
+  buyerId     String?
+  buyer       Buyer?   @relation(fields: [buyerId], references: [id], onDelete: SetNull)
+  buyerEmail  String
+  buyerName   String
+  buyerPhone  String?
+  buyerCompany String?
+
+  // Demande de l'acheteur
+  quantity    Int      @default(1)
+  message     String?  // contexte, délai souhaité, conditions particulières
+
+  // Réponse du vendeur
+  // PENDING → vendeur n'a pas encore répondu
+  // RESPONDED → vendeur a répondu (priceCents + vendorMessage renseignés)
+  // ACCEPTED → acheteur a accepté le devis
+  // REJECTED → vendeur a refusé OU acheteur a décliné
+  // EXPIRED → validUntil dépassé sans réponse de l'acheteur
+  status       String  @default("PENDING")
+  vendorPriceCents  Int?    // prix unitaire négocié en centimes
+  vendorMessage     String? // message/conditions du vendeur
+  validUntil        DateTime? // date limite d'acceptation du devis
+  pdfUrl            String?   // URL Supabase Storage du PDF généré
+
+  // Token unique envoyé à l'acheteur pour accéder à son devis sans compte
+  accessToken String?  @unique
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([vendorId, status])
+  @@index([buyerEmail])
+  @@index([productId])
+  @@index([accessToken])
 }
 
 model Notification {
