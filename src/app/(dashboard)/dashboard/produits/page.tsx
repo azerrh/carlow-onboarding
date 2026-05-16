@@ -631,7 +631,7 @@ function ProductModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-xl"
+        className="w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-semibold">
@@ -759,9 +759,6 @@ function ProductModal({
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-[rgb(var(--primary))]">
                 ✨ Assistant IA
-              </span>
-              <span className="text-[10px] text-[rgb(var(--muted))]">
-                propulsé par Claude
               </span>
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
