@@ -85,24 +85,27 @@ export default function VendorOrdersPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [openOrderId, setOpenOrderId] = useState<string | null>(null);
+  const [vendorId, setVendorId] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   const fetchData = useCallback(async () => {
-    const vendorId =
+    const vid =
       typeof window !== "undefined" ? localStorage.getItem("vendorId") : null;
-    if (!vendorId) {
+    if (!vid) {
       router.push("/login");
       return;
     }
+    setVendorId(vid);
 
     try {
-      const params = new URLSearchParams({ id: vendorId });
+      const params = new URLSearchParams({ id: vid });
       if (statusFilter !== "all") params.set("status", statusFilter);
       if (search.trim()) params.set("search", search.trim());
 
       const [ordersRes, meRes, notifsRes] = await Promise.all([
         fetch(`/api/vendor/orders?${params.toString()}`),
-        fetch(`/api/vendor/me?vendorId=${vendorId}`),
-        fetch(`/api/vendor/notifications?id=${vendorId}`),
+        fetch(`/api/vendor/me?vendorId=${vid}`),
+        fetch(`/api/vendor/notifications?id=${vid}`),
       ]);
 
       const ordersData = await ordersRes.json();
@@ -143,6 +146,25 @@ export default function VendorOrdersPage() {
     () => orders.filter((o) => o.status === "EN_COURS").length,
     [orders]
   );
+
+  async function handleExportCsv() {
+    if (!vendorId) return;
+    setExporting(true);
+    try {
+      const params = new URLSearchParams({ id: vendorId });
+      if (statusFilter !== "all") params.set("status", statusFilter.toUpperCase());
+      const url = `/api/vendor/orders/export?${params.toString()}`;
+      // On déclenche le téléchargement via un lien temporaire
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } finally {
+      setTimeout(() => setExporting(false), 1500);
+    }
+  }
 
   return (
     <VendorShell
@@ -201,12 +223,25 @@ export default function VendorOrdersPage() {
             ))}
           </div>
 
-          <div className="w-full lg:w-72">
-            <Input
-              placeholder="Rechercher acheteur ou produit…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+          <div className="flex flex-1 items-center gap-3">
+            <div className="flex-1 lg:max-w-72">
+              <Input
+                placeholder="Rechercher acheteur ou produit…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <button
+              onClick={handleExportCsv}
+              disabled={exporting || orders.length === 0}
+              title="Exporter en CSV pour Excel / comptabilité"
+              className={cn(
+                "inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border border-[rgb(var(--border))] bg-white px-4 text-xs font-semibold text-[rgb(var(--fg))] transition hover:border-[rgb(var(--primary))]/30 hover:bg-[rgb(var(--primary))]/[0.04] hover:text-[rgb(var(--primary))] disabled:opacity-40",
+                exporting && "cursor-wait"
+              )}
+            >
+              {exporting ? "⏳ Export…" : "📥 Exporter CSV"}
+            </button>
           </div>
         </div>
       </Card>

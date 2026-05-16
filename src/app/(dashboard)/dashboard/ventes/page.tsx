@@ -6,6 +6,21 @@ import { Card } from "@/components/ui/Card";
 import { VendorShell, VendorPageHeader } from "@/components/vendor/VendorShell";
 import { cn } from "@/lib/cn";
 
+/* ---------------------------------------------------------------
+   Types rapport IA
+   --------------------------------------------------------------- */
+interface AiRecommendation {
+  titre: string;
+  detail: string;
+}
+interface AiReport {
+  synthese: string;
+  points_forts: string[];
+  points_attention: string[];
+  recommandations: AiRecommendation[];
+  score: number;
+}
+
 interface DashboardStats {
   catalogCount: number;
   productCount: number;
@@ -56,19 +71,25 @@ export default function VendorSalesStatsPage() {
   const [vendor, setVendor] = useState<VendorMe | null>(null);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [aiReport, setAiReport] = useState<AiReport | null>(null);
+  const [aiReportBusy, setAiReportBusy] = useState(false);
+  const [aiReportError, setAiReportError] = useState("");
+  const [aiReportDate, setAiReportDate] = useState<string | null>(null);
+  const [vendorId, setVendorId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
-    const vendorId =
+    const vid =
       typeof window !== "undefined" ? localStorage.getItem("vendorId") : null;
-    if (!vendorId) {
+    if (!vid) {
       router.push("/login");
       return;
     }
+    setVendorId(vid);
 
     try {
       const [statsRes, meRes] = await Promise.all([
-        fetch(`/api/vendor/dashboard-stats?id=${vendorId}`),
-        fetch(`/api/vendor/me?vendorId=${vendorId}`),
+        fetch(`/api/vendor/dashboard-stats?id=${vid}`),
+        fetch(`/api/vendor/me?vendorId=${vid}`),
       ]);
       const statsData = await statsRes.json();
       const meData = await meRes.json();
@@ -114,6 +135,30 @@ export default function VendorSalesStatsPage() {
     const pct = Math.round(((recent - previous) / previous) * 100);
     return { pct, positive: pct >= 0 };
   }, [monthlyRevenue]);
+
+  async function generateAiReport() {
+    if (!vendorId) return;
+    setAiReportBusy(true);
+    setAiReportError("");
+    try {
+      const res = await fetch("/api/ai/sales-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vendorId }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setAiReportError(data?.error ?? "Génération impossible. Réessayez dans quelques minutes.");
+        return;
+      }
+      setAiReport(data.report as AiReport);
+      setAiReportDate(data.generatedAt);
+    } catch {
+      setAiReportError("Erreur réseau.");
+    } finally {
+      setAiReportBusy(false);
+    }
+  }
 
   return (
     <VendorShell vendorUser={vendor} unreadNotifsCount={unreadNotifs}>
@@ -225,6 +270,151 @@ export default function VendorSalesStatsPage() {
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </Card>
+
+          {/* Rapport IA */}
+          <Card className="mt-6 p-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 className="text-base font-semibold">✨ Rapport IA</h2>
+                <p className="mt-0.5 text-xs text-[rgb(var(--muted))]">
+                  Claude analyse vos ventes et génère des recommandations personnalisées.
+                </p>
+              </div>
+              <button
+                onClick={generateAiReport}
+                disabled={aiReportBusy}
+                className={cn(
+                  "inline-flex h-9 shrink-0 items-center gap-2 rounded-xl border border-[rgb(var(--primary))]/30 bg-[rgb(var(--primary))]/[0.06] px-4 text-xs font-semibold text-[rgb(var(--primary))] transition hover:bg-[rgb(var(--primary))]/[0.12] disabled:opacity-50",
+                  aiReportBusy && "animate-pulse cursor-wait"
+                )}
+              >
+                {aiReportBusy ? "✨ Analyse en cours…" : aiReport ? "🔄 Regénérer" : "✨ Générer mon analyse"}
+              </button>
+            </div>
+
+            {aiReportError && (
+              <p className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                {aiReportError}
+              </p>
+            )}
+
+            {!aiReport && !aiReportBusy && !aiReportError && (
+              <div className="mt-6 rounded-xl border border-dashed border-[rgb(var(--primary))]/20 bg-[rgb(var(--primary))]/[0.02] px-6 py-8 text-center">
+                <div className="text-3xl">🤖</div>
+                <p className="mt-2 text-sm font-medium text-[rgb(var(--fg))]">
+                  Votre rapport IA vous attend
+                </p>
+                <p className="mt-1 text-xs text-[rgb(var(--muted))]">
+                  Cliquez sur &quot;Générer mon analyse&quot; pour obtenir des insights sur vos ventes.
+                </p>
+              </div>
+            )}
+
+            {aiReport && (
+              <div className="mt-5 space-y-5">
+                {/* Score */}
+                <div className="flex items-center gap-4">
+                  <div
+                    className={cn(
+                      "relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-xl font-bold text-white",
+                      aiReport.score >= 70
+                        ? "bg-[rgb(var(--success))]"
+                        : aiReport.score >= 40
+                          ? "bg-amber-500"
+                          : "bg-red-500"
+                    )}
+                  >
+                    {aiReport.score}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between text-xs text-[rgb(var(--muted))]">
+                      <span>Score de santé commerciale</span>
+                      <span>{aiReport.score}/100</span>
+                    </div>
+                    <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-black/[0.06]">
+                      <div
+                        className={cn(
+                          "h-full rounded-full transition-all duration-700",
+                          aiReport.score >= 70
+                            ? "bg-[rgb(var(--success))]"
+                            : aiReport.score >= 40
+                              ? "bg-amber-500"
+                              : "bg-red-500"
+                        )}
+                        style={{ width: `${aiReport.score}%` }}
+                      />
+                    </div>
+                    <p className="mt-2 text-sm leading-relaxed text-[rgb(var(--fg))]">
+                      {aiReport.synthese}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Points forts + attention */}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {aiReport.points_forts.length > 0 && (
+                    <div className="rounded-xl border border-[rgb(var(--success))]/20 bg-[rgb(var(--success))]/[0.04] p-4">
+                      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-[rgb(var(--success))]">
+                        ✓ Points forts
+                      </h3>
+                      <ul className="space-y-1">
+                        {aiReport.points_forts.map((pf, i) => (
+                          <li key={i} className="flex items-start gap-2 text-xs text-[rgb(var(--fg))]">
+                            <span className="mt-0.5 shrink-0 text-[rgb(var(--success))]">•</span>
+                            {pf}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {aiReport.points_attention.length > 0 && (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-amber-700">
+                        ⚠ Points d&apos;attention
+                      </h3>
+                      <ul className="space-y-1">
+                        {aiReport.points_attention.map((pa, i) => (
+                          <li key={i} className="flex items-start gap-2 text-xs text-amber-800">
+                            <span className="mt-0.5 shrink-0">•</span>
+                            {pa}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                {/* Recommandations */}
+                <div>
+                  <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[rgb(var(--muted))]">
+                    Recommandations
+                  </h3>
+                  <div className="space-y-3">
+                    {aiReport.recommandations.map((r, i) => (
+                      <div
+                        key={i}
+                        className="flex items-start gap-3 rounded-xl border border-[rgb(var(--border))] bg-white px-4 py-3"
+                      >
+                        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-[rgb(var(--primary))]/10 text-xs font-bold text-[rgb(var(--primary))]">
+                          {i + 1}
+                        </span>
+                        <div>
+                          <p className="text-sm font-semibold">{r.titre}</p>
+                          <p className="mt-0.5 text-xs text-[rgb(var(--muted))]">{r.detail}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {aiReportDate && (
+                  <p className="text-right text-[10px] text-[rgb(var(--muted))]">
+                    Généré le {new Date(aiReportDate).toLocaleString("fr-FR")}
+                  </p>
+                )}
               </div>
             )}
           </Card>
