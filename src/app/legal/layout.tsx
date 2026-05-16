@@ -68,8 +68,7 @@ export default function LegalLayout({
             {children}
             <hr className="my-8 border-[rgb(var(--border))]" />
             <p className="text-[11px] text-[rgb(var(--muted))]">
-              Dernière mise à jour : mai 2026 — Carlow / Solelh Energie ·
-              carlow.fr
+              Dernière mise à jour : mai 2026 — Carlow · carlow.fr
             </p>
           </article>
         </div>

@@ -54,7 +54,6 @@ const STEPS = [
 const TRUST_LOGOS = [
   { label: "Stripe", subtitle: "Paiements sécurisés" },
   { label: "VIES", subtitle: "TVA EU validée" },
-  { label: "Solelh Energie", subtitle: "Sponsor industriel" },
   { label: "Resend", subtitle: "Emails transactionnels" },
 ];
 
@@ -106,7 +105,7 @@ export default function HomePage() {
       {
         "@type": "Organization",
         name: "Carlow",
-        legalName: "Solelh Energie",
+        legalName: "Carlow",
         url: "https://carlowonboarding.vercel.app",
         logo: "https://carlowonboarding.vercel.app/opengraph-image",
         description:
@@ -653,12 +652,9 @@ export default function HomePage() {
               </ul>
             </div>
           </div>
-          <div className="mt-8 flex flex-col gap-3 border-t border-[rgb(var(--border))]/40 pt-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-8 border-t border-[rgb(var(--border))]/40 pt-5">
             <p className="text-[11px] text-[rgb(var(--muted))]">
-              © 2026 Carlow / Solelh Energie · Tous droits réservés
-            </p>
-            <p className="text-[11px] text-[rgb(var(--muted))]">
-              Construit avec Next.js · Hébergé en UE
+              © 2026 Carlow · Tous droits réservés
             </p>
           </div>
         </div>
