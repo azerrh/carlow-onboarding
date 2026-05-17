@@ -316,7 +316,7 @@ export default function BuyerDashboardPage() {
         </Card>
 
         {/* Quick actions */}
-        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Link
             href="/buyer/orders"
             className="flex items-center gap-3 rounded-xl border border-[rgb(var(--border))]/60 bg-white/60 px-4 py-3 text-sm font-medium transition hover:border-[rgb(var(--success))]/30 hover:bg-[rgb(var(--success))]/[0.04]"
@@ -325,18 +325,34 @@ export default function BuyerDashboardPage() {
             Mes commandes
           </Link>
           <Link
+            href="/buyer/devis"
+            className="flex items-center gap-3 rounded-xl border border-[rgb(var(--border))]/60 bg-white/60 px-4 py-3 text-sm font-medium transition hover:border-[rgb(var(--primary))]/30 hover:bg-[rgb(var(--primary))]/[0.04]"
+          >
+            <span className="text-base">📋</span>
+            Mes devis
+          </Link>
+          <Link
+            href="/buyer/favoris"
+            className="flex items-center gap-3 rounded-xl border border-[rgb(var(--border))]/60 bg-white/60 px-4 py-3 text-sm font-medium transition hover:border-red-200 hover:bg-red-50"
+          >
+            <span className="text-base">❤️</span>
+            Mes favoris
+          </Link>
+          <Link
             href="/buyer/account"
             className="flex items-center gap-3 rounded-xl border border-[rgb(var(--border))]/60 bg-white/60 px-4 py-3 text-sm font-medium transition hover:border-[rgb(var(--success))]/30 hover:bg-[rgb(var(--success))]/[0.04]"
           >
             <span className="text-base">👤</span>
             Mon profil
           </Link>
+        </div>
+        <div className="mt-3">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 rounded-xl border border-[rgb(var(--border))]/60 bg-white/60 px-4 py-3 text-sm font-medium transition hover:border-red-300 hover:bg-red-50"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-[rgb(var(--border))]/60 bg-white/60 px-4 py-2.5 text-xs font-medium text-[rgb(var(--muted))] transition hover:border-red-300 hover:bg-red-50 hover:text-red-600 sm:w-auto"
           >
-            <span className="text-base">🚪</span>
-            Deconnexion
+            <span>🚪</span>
+            Déconnexion
           </button>
         </div>
       </div>
