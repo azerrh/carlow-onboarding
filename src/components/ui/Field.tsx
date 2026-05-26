@@ -17,7 +17,7 @@ export function Field({
   return (
     <div className={cn("space-y-1.5", className)}>
       <div className="flex items-baseline justify-between gap-3">
-        <label className="text-xs font-medium text-[rgb(var(--muted))]">
+        <label className="text-xs font-semibold text-[rgb(var(--fg))]/70">
           {label}
         </label>
         {hint && (
@@ -28,4 +28,3 @@ export function Field({
     </div>
   );
 }
-

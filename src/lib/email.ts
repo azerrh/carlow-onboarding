@@ -371,9 +371,11 @@ export async function sendOrderStatusChangedEmail({
   newStatus: "EN_COURS" | "LIVREE" | "ANNULEE" | string;
 }) {
   const statusLabels: Record<string, { label: string; emoji: string; color: string }> = {
-    EN_COURS: { label: "En cours de préparation", emoji: "📦", color: "#E87A30" },
-    LIVREE: { label: "Livrée", emoji: "✓", color: "#22a06b" },
-    ANNULEE: { label: "Annulée", emoji: "✗", color: "#cc0000" },
+    EN_COURS:  { label: "En cours de préparation", emoji: "📦", color: "#E87A30" },
+    CONFIRMED: { label: "Confirmée par le vendeur", emoji: "✅", color: "#2563eb" },
+    SHIPPED:   { label: "Expédiée", emoji: "🚚", color: "#7c3aed" },
+    LIVREE:    { label: "Livrée", emoji: "✓", color: "#22a06b" },
+    ANNULEE:   { label: "Annulée", emoji: "✗", color: "#cc0000" },
   };
   const meta = statusLabels[newStatus] ?? {
     label: newStatus,
@@ -463,6 +465,76 @@ export async function sendQuoteConfirmationBuyer(input: {
         <p>Vous recevrez un email dès que le vendeur aura répondu. En attendant, vous pouvez suivre l'état de votre devis ci-dessous.</p>
       `,
       cta: { label: "Suivre mon devis →", href: `${SITE_URL}/devis/${accessToken}` },
+    }),
+  });
+}
+
+/* ============================================================
+   ALERTES PRIX & STOCK
+   ============================================================ */
+
+/** Email envoyé à un abonné quand le prix d'un produit baisse. */
+export async function sendPriceDropAlert(input: {
+  buyerEmail: string;
+  buyerName: string;
+  productName: string;
+  productId: string;
+  oldPrice: number;
+  newPrice: number;
+}) {
+  const { buyerEmail, buyerName, productName, productId, oldPrice, newPrice } = input;
+  const drop = Math.round(((oldPrice - newPrice) / oldPrice) * 100);
+  const oldStr = oldPrice.toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
+  const newStr = newPrice.toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
+
+  return send({
+    to: buyerEmail,
+    subject: `📉 Baisse de prix : ${productName} — ${newStr}`,
+    context: "price-drop-alert",
+    html: emailLayout({
+      title: "Bonne nouvelle !",
+      body: `
+        <p>Bonjour ${buyerName},</p>
+        <p>Le prix de <strong>${productName}</strong> sur lequel vous avez activé une alerte vient de baisser.</p>
+        <div style="background:#f0faf5;border:2px solid #22a06b;border-radius:12px;padding:20px;margin:20px 0;text-align:center">
+          <p style="margin:0 0 4px;font-size:13px;color:#888;text-decoration:line-through">${oldStr}</p>
+          <p style="margin:0;font-size:32px;font-weight:700;color:#22a06b">${newStr}</p>
+          <p style="margin:6px 0 0;display:inline-block;background:#22a06b;color:white;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:700">−${drop}%</p>
+        </div>
+        <p style="font-size:13px;color:#666">Profitez-en avant que le stock ne s'épuise !</p>
+      `,
+      cta: { label: "Voir le produit →", href: `${SITE_URL}/marketplace/${productId}` },
+    }),
+  });
+}
+
+/** Email envoyé à un abonné quand un produit en rupture revient en stock. */
+export async function sendStockReturnAlert(input: {
+  buyerEmail: string;
+  buyerName: string;
+  productName: string;
+  productId: string;
+  newStock: number;
+}) {
+  const { buyerEmail, buyerName, productName, productId, newStock } = input;
+
+  return send({
+    to: buyerEmail,
+    subject: `📦 De retour en stock : ${productName}`,
+    context: "stock-return-alert",
+    html: emailLayout({
+      title: "Le produit est de retour !",
+      body: `
+        <p>Bonjour ${buyerName},</p>
+        <p><strong>${productName}</strong> est de nouveau disponible ! Vous aviez activé une alerte stock sur ce produit.</p>
+        <div style="background:#f0faf5;border:2px solid #22a06b;border-radius:12px;padding:20px;margin:20px 0;text-align:center">
+          <p style="margin:0;font-size:36px">📦</p>
+          <p style="margin:8px 0 0;font-size:18px;font-weight:700;color:#22a06b">En stock</p>
+          <p style="margin:4px 0 0;font-size:13px;color:#666">${newStock} unité${newStock > 1 ? "s" : ""} disponible${newStock > 1 ? "s" : ""}</p>
+        </div>
+        <p style="font-size:13px;color:#888">⚠ Dépêchez-vous, le stock peut s'écouler rapidement !</p>
+      `,
+      cta: { label: "Commander maintenant →", href: `${SITE_URL}/marketplace/${productId}` },
     }),
   });
 }

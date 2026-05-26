@@ -81,6 +81,67 @@ export async function GET(req: NextRequest) {
   }
 }
 
+/**
+ * Supprime l'avis de l'acheteur sur un produit donné.
+ *
+ *  DELETE /api/marketplace/reviews?buyerId=...&productId=...
+ *
+ * On vérifie que l'avis appartient bien au buyerId fourni avant de supprimer
+ * (sinon n'importe qui pourrait effacer l'avis d'un autre acheteur).
+ */
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const buyerId = searchParams.get("buyerId");
+    const productId = searchParams.get("productId");
+    const reviewId = searchParams.get("id");
+
+    if (!buyerId) {
+      return NextResponse.json({ error: "buyerId requis" }, { status: 400 });
+    }
+
+    if (reviewId) {
+      // Suppression par ID — on vérifie l'appartenance
+      const review = await prisma.review.findFirst({
+        where: { id: reviewId, buyerId },
+        select: { id: true },
+      });
+      if (!review) {
+        return NextResponse.json(
+          { error: "Avis introuvable ou accès refusé" },
+          { status: 404 }
+        );
+      }
+      await prisma.review.delete({ where: { id: reviewId } });
+      return NextResponse.json({ success: true });
+    }
+
+    if (!productId) {
+      return NextResponse.json(
+        { error: "productId ou id requis" },
+        { status: 400 }
+      );
+    }
+
+    // Suppression par (buyerId, productId)
+    const review = await prisma.review.findUnique({
+      where: { buyerId_productId: { buyerId, productId } },
+      select: { id: true },
+    });
+    if (!review) {
+      return NextResponse.json(
+        { error: "Aucun avis à supprimer" },
+        { status: 404 }
+      );
+    }
+    await prisma.review.delete({ where: { id: review.id } });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("[api/marketplace/reviews] DELETE error:", error);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();

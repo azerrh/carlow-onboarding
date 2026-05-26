@@ -1,33 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
+import { cn } from "@/lib/cn";
 
 /**
  * Bouton de traduction de description produit (FR → EN/DE/ES via Claude).
  *
- * Affiche un bouton compact qui ouvre un sélecteur de langues. Au clic,
- * appelle /api/ai/translate?productId=... qui cache le résultat en DB
- * pour les visiteurs suivants (gratuit pour les hits).
- *
- * Auto-suggest selon `navigator.language` : si le visiteur est en EN/DE/ES,
- * on lui pré-affiche un CTA "Translate to English" plutôt que de cacher
- * la feature dans un menu.
+ * - Le résultat est mis en cache côté serveur dans `Product.translations`
+ *   (JSON map { lang: text }) → un second clic sur la même langue est
+ *   instantané.
+ * - Compact UI : 3 puces langue alignées, état "loading" par langue active.
  */
 
 type Lang = "en" | "de" | "es";
 
-const LANG_LABELS: Record<Lang, { flag: string; native: string; verb: string }> = {
-  en: { flag: "🇬🇧", native: "English", verb: "Translate" },
-  de: { flag: "🇩🇪", native: "Deutsch", verb: "Übersetzen" },
-  es: { flag: "🇪🇸", native: "Español", verb: "Traducir" },
+const LANG_INFO: Record<Lang, { flag: string; label: string }> = {
+  en: { flag: "🇬🇧", label: "English" },
+  de: { flag: "🇩🇪", label: "Deutsch" },
+  es: { flag: "🇪🇸", label: "Español" },
 };
-
-function detectSuggestedLang(): Lang | null {
-  if (typeof navigator === "undefined") return null;
-  const raw = (navigator.language || "").toLowerCase().slice(0, 2);
-  if (raw === "en" || raw === "de" || raw === "es") return raw;
-  return null;
-}
 
 export function TranslateButton({
   productId,
@@ -38,123 +29,117 @@ export function TranslateButton({
   originalText: string;
   onTranslated?: (translated: string, lang: Lang) => void;
 }) {
-  const [selectedLang, setSelectedLang] = useState<Lang | null>(null);
-  const [translated, setTranslated] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<Lang | null>(null);
+  const [activeLang, setActiveLang] = useState<Lang | null>(null);
+  const [translation, setTranslation] = useState<string>("");
   const [error, setError] = useState("");
-  const [open, setOpen] = useState(false);
-  const [suggestion, setSuggestion] = useState<Lang | null>(null);
 
-  useEffect(() => {
-    setSuggestion(detectSuggestedLang());
-  }, []);
-
-  const fetchTranslation = useCallback(
-    async (lang: Lang) => {
-      setBusy(true);
-      setError("");
-      try {
-        const res = await fetch("/api/ai/translate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ productId, targetLang: lang }),
-        });
-        const data = await res.json();
-        if (!res.ok || !data.success) {
-          setError(data?.error ?? "Traduction indisponible.");
-          return;
-        }
-        setTranslated(data.translation);
-        setSelectedLang(lang);
-        setOpen(false);
-        onTranslated?.(data.translation, lang);
-      } catch {
-        setError("Erreur réseau.");
-      } finally {
-        setBusy(false);
+  async function translate(lang: Lang) {
+    // Si on reclique sur la même langue déjà affichée, on referme.
+    if (activeLang === lang) {
+      setActiveLang(null);
+      setTranslation("");
+      return;
+    }
+    setBusy(lang);
+    setError("");
+    try {
+      const res = await fetch("/api/ai/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId,
+          text: originalText,
+          targetLang: lang,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setError(data?.error ?? "Traduction impossible.");
+        return;
       }
-    },
-    [productId, onTranslated]
-  );
+      setTranslation(data.translation);
+      setActiveLang(lang);
+      onTranslated?.(data.translation, lang);
+    } catch {
+      setError("Erreur réseau.");
+    } finally {
+      setBusy(null);
+    }
+  }
 
-  // Si une langue est sélectionnée, on affiche le texte traduit + un
-  // bouton pour revenir au FR.
-  if (selectedLang && translated) {
-    const meta = LANG_LABELS[selectedLang];
-    return (
-      <div className="rounded-xl border border-[rgb(var(--primary))]/30 bg-[rgb(var(--primary))]/[0.03] p-4">
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[rgb(var(--primary))]">
-            ✨ {meta.flag} {meta.native} (Claude AI)
-          </span>
-          <button
-            onClick={() => {
-              setSelectedLang(null);
-              setTranslated(null);
-            }}
-            className="text-[11px] font-medium text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]"
-          >
-            ← Original (FR)
-          </button>
-        </div>
-        <p className="whitespace-pre-line text-sm leading-relaxed">
-          {translated}
-        </p>
-      </div>
-    );
+  if (!originalText || originalText.trim().length === 0) {
+    return null;
   }
 
   return (
-    <div className="relative">
+    <div className="mt-3">
       <div className="flex flex-wrap items-center gap-2">
-        {suggestion && !open && (
-          <button
-            onClick={() => fetchTranslation(suggestion)}
-            disabled={busy}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[rgb(var(--primary))]/30 bg-white px-3 text-xs font-semibold text-[rgb(var(--primary))] hover:bg-[rgb(var(--primary))]/[0.06] disabled:opacity-50"
-          >
-            {LANG_LABELS[suggestion].flag} ✨{" "}
-            {busy
-              ? "…"
-              : `${LANG_LABELS[suggestion].verb} (${LANG_LABELS[suggestion].native})`}
-          </button>
-        )}
-        <button
-          onClick={() => setOpen((v) => !v)}
-          disabled={busy}
-          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[rgb(var(--border))] bg-white px-3 text-xs font-medium text-[rgb(var(--muted))] hover:border-[rgb(var(--primary))]/30 hover:text-[rgb(var(--primary))] disabled:opacity-50"
-        >
-          🌍 Traduire
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            className="h-3 w-3"
-          >
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-        </button>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--muted))]">
+          ✨ Traduire :
+        </span>
+        {(Object.keys(LANG_INFO) as Lang[]).map((lang) => {
+          const isLoading = busy === lang;
+          const isActive = activeLang === lang;
+          return (
+            <button
+              key={lang}
+              onClick={() => translate(lang)}
+              disabled={busy !== null}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-all duration-150",
+                isActive
+                  ? "border-[rgb(var(--primary))] bg-[rgb(var(--primary))]/10 text-[rgb(var(--primary))]"
+                  : "border-[rgb(var(--border))]/80 bg-[rgb(var(--card))] text-[rgb(var(--muted))] hover:border-[rgb(var(--primary))]/40 hover:text-[rgb(var(--primary))]",
+                isLoading && "animate-pulse",
+                busy !== null && !isLoading && "cursor-not-allowed opacity-50"
+              )}
+              title={`Traduire en ${LANG_INFO[lang].label}`}
+            >
+              <span>{LANG_INFO[lang].flag}</span>
+              <span>{LANG_INFO[lang].label}</span>
+              {isLoading && (
+                <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      {open && (
-        <div className="absolute left-0 top-full z-20 mt-1.5 w-48 overflow-hidden rounded-xl border border-[rgb(var(--border))] bg-white shadow-lg">
-          {(["en", "de", "es"] as Lang[]).map((l) => (
-            <button
-              key={l}
-              onClick={() => fetchTranslation(l)}
-              disabled={busy}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition hover:bg-[rgb(var(--primary))]/[0.04] disabled:opacity-50"
-            >
-              <span className="text-base">{LANG_LABELS[l].flag}</span>
-              <span className="flex-1 font-medium">{LANG_LABELS[l].native}</span>
-            </button>
-          ))}
+      {error && (
+        <div className="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs text-red-700">
+          ⚠️ {error}
         </div>
       )}
 
-      {error && (
-        <p className="mt-2 text-[11px] text-red-600">{error}</p>
+      {activeLang && translation && (
+        <div className="mt-3 animate-fade-in rounded-xl border border-[rgb(var(--primary))]/25 bg-gradient-to-br from-[rgb(var(--primary))]/[0.04] to-transparent p-4">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--primary))]">
+              <span>{LANG_INFO[activeLang].flag}</span>
+              <span>Traduction · {LANG_INFO[activeLang].label}</span>
+            </span>
+            <button
+              onClick={() => {
+                setActiveLang(null);
+                setTranslation("");
+              }}
+              className="text-xs text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]"
+              title="Masquer la traduction"
+            >
+              ✕
+            </button>
+          </div>
+          <p className="whitespace-pre-line text-sm leading-relaxed text-[rgb(var(--fg))]/90">
+            {translation}
+          </p>
+          <p className="mt-2 text-[10px] italic text-[rgb(var(--muted))]">
+            Traduit automatiquement par IA (Claude). Pour usage informatif.
+          </p>
+        </div>
       )}
     </div>
   );

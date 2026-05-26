@@ -7,12 +7,14 @@ import { Brand } from "@/components/ui/Brand";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { cn } from "@/lib/cn";
-import { useCart, useCartSummary, CartItem } from "@/hooks/useCart";
+import { useCart, useCartSummary, CartItem, getEffectivePrice } from "@/hooks/useCart";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useCompare, COMPARE_MAX } from "@/hooks/useCompare";
 import { ProductCardSkeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { SearchAutocomplete } from "@/components/marketplace/SearchAutocomplete";
+import { Chatbot } from "@/components/marketplace/Chatbot";
 
 interface Product {
   id: string;
@@ -26,6 +28,8 @@ interface Product {
   imageUrl: string | null;
   vendor: { id: string; name: string };
   catalog: { id: string; name: string | null };
+  ratingAvg?: number;
+  ratingCount?: number;
 }
 
 function MarketplaceInner() {
@@ -45,7 +49,7 @@ function MarketplaceInner() {
   const [priceMin, setPriceMin] = useState<string>("");
   const [priceMax, setPriceMax] = useState<string>("");
   const [inStockOnly, setInStockOnly] = useState(false);
-  const [sortBy, setSortBy] = useState<"recent" | "priceAsc" | "priceDesc" | "name">("recent");
+  const [sortBy, setSortBy] = useState<"recent" | "priceAsc" | "priceDesc" | "name" | "rating">("recent");
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const { totalItems, totalPrice } = useCartSummary();
@@ -117,6 +121,14 @@ function MarketplaceInner() {
     if (sortBy === "priceAsc") sorted.sort((a, b) => a.price - b.price);
     else if (sortBy === "priceDesc") sorted.sort((a, b) => b.price - a.price);
     else if (sortBy === "name") sorted.sort((a, b) => a.name.localeCompare(b.name, "fr"));
+    else if (sortBy === "rating") {
+      // Trie par note moyenne décroissante, en plaçant les produits sans avis à la fin.
+      sorted.sort((a, b) => {
+        const aRating = a.ratingCount && a.ratingCount > 0 ? (a.ratingAvg ?? 0) : -1;
+        const bRating = b.ratingCount && b.ratingCount > 0 ? (b.ratingAvg ?? 0) : -1;
+        return bRating - aRating;
+      });
+    }
     // "recent" garde l'ordre serveur (déjà trié par createdAt desc).
     return sorted;
   }, [products, search, categoryFilter, vendorFilter, priceMin, priceMax, inStockOnly, sortBy]);
@@ -185,22 +197,28 @@ function MarketplaceInner() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[rgb(var(--bg))]">
       {/* Header */}
-      <header className="sticky top-0 z-20 border-b border-[rgb(var(--border))] bg-white/90 backdrop-blur">
+      <header className="sticky top-0 z-20 border-b border-[rgb(var(--border))]/70 bg-[rgb(var(--card))]/85 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-5">
             <Brand variant="compact" />
-            <nav className="hidden items-center gap-4 text-sm sm:flex">
-              <Link href="/marketplace" className="font-medium text-[rgb(var(--primary))]">
+            <nav className="hidden items-center gap-1 text-sm sm:flex">
+              <Link
+                href="/marketplace"
+                className="rounded-lg px-3 py-1.5 font-semibold text-[rgb(var(--primary))] transition hover:bg-[rgb(var(--primary))]/8"
+              >
                 Marketplace
               </Link>
-              <Link href="/login" className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]">
+              <Link
+                href="/login"
+                className="rounded-lg px-3 py-1.5 font-medium text-[rgb(var(--muted))] transition hover:bg-black/[0.04] hover:text-[rgb(var(--fg))]"
+              >
                 Devenir vendeur
               </Link>
             </nav>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-2.5">
             <ThemeToggle size="sm" />
             <Link href="/buyer/login" className="hidden sm:inline-flex">
               <Button variant="ghost" size="sm">Connexion acheteur</Button>
@@ -208,7 +226,7 @@ function MarketplaceInner() {
             <Link href="/buyer/login" className="sm:hidden">
               <button
                 aria-label="Connexion acheteur"
-                className="grid h-9 w-9 place-items-center rounded-xl border border-[rgb(var(--border))] bg-white text-[rgb(var(--muted))] hover:bg-black/[0.02]"
+                className="grid h-9 w-9 place-items-center rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--card))] text-[rgb(var(--muted))] hover:bg-black/[0.03] transition"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
                   <circle cx="12" cy="8" r="3.5" />
@@ -219,18 +237,16 @@ function MarketplaceInner() {
             <button
               onClick={() => setCartOpen(true)}
               aria-label="Ouvrir le panier"
-              className="relative grid h-9 place-items-center rounded-xl border border-[rgb(var(--border))] bg-white px-2.5 text-sm font-medium hover:bg-black/[0.02] sm:px-3 sm:py-2"
+              className="relative inline-flex h-9 items-center gap-1.5 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--card))] px-3 text-sm font-medium transition hover:border-[rgb(var(--primary))]/30 hover:bg-[rgb(var(--primary))]/8 hover:text-[rgb(var(--primary))]"
             >
-              <span className="flex items-center gap-1.5">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
-                  <circle cx="9" cy="20" r="1.5" />
-                  <circle cx="17" cy="20" r="1.5" />
-                  <path d="M3 4h2l2.5 11h11l2-8H6" />
-                </svg>
-                <span className="hidden sm:inline">Panier</span>
-              </span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+                <circle cx="9" cy="20" r="1.5" />
+                <circle cx="17" cy="20" r="1.5" />
+                <path d="M3 4h2l2.5 11h11l2-8H6" />
+              </svg>
+              <span className="hidden sm:inline">Panier</span>
               {totalItems > 0 && (
-                <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-[1.25rem] place-items-center rounded-full bg-[rgb(var(--primary))] px-1 text-[10px] font-bold text-white">
+                <span className="absolute -right-1.5 -top-1.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-[rgb(var(--primary))] px-1 text-[9px] font-bold text-white shadow-sm">
                   {totalItems}
                 </span>
               )}
@@ -241,23 +257,52 @@ function MarketplaceInner() {
 
       {/* Hero */}
       <section className="relative mx-auto max-w-6xl px-4 pb-6 pt-6 sm:pt-10">
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[rgb(var(--primary))] via-[rgb(var(--primary))]/90 to-[#c46020] p-6 text-white sm:p-12">
-          <div className="relative z-10 max-w-lg">
-            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-              Marketplace EnR
-            </h1>
-            <p className="mt-2 text-sm text-white/85 sm:text-base">
-              Equipements d&apos;energies renouvelables neufs et reconditionnes. Panneaux solaires, onduleurs, batteries et plus.
-            </p>
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#E87A30] via-[#d96b20] to-[#b85514] p-6 text-white sm:p-12">
+          {/* Motif décoratif */}
+          <div className="pointer-events-none absolute inset-0">
+            <div className="absolute -right-12 -top-12 h-56 w-56 rounded-full bg-white/10 blur-2xl sm:h-72 sm:w-72" />
+            <div className="absolute -bottom-16 -left-8 h-48 w-48 rounded-full bg-black/10 blur-2xl sm:h-64 sm:w-64" />
+            <div className="absolute right-1/4 top-1/2 h-32 w-32 -translate-y-1/2 rounded-full bg-white/5 blur-xl" />
+            {/* Grille subtile */}
+            <svg className="absolute inset-0 h-full w-full opacity-[0.06]" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="hero-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+                  <path d="M 32 0 L 0 0 0 32" fill="none" stroke="white" strokeWidth="0.5"/>
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#hero-grid)" />
+            </svg>
           </div>
-          <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/10 sm:h-48 sm:w-48" />
-          <div className="pointer-events-none absolute -bottom-12 -right-12 h-32 w-32 rounded-full bg-white/5 sm:h-56 sm:w-56" />
+
+          <div className="relative z-10 max-w-xl">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur-sm">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+              Marketplace B2B • Énergies renouvelables
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-4xl">
+              Trouvez vos équipements<br className="hidden sm:block" /> EnR au meilleur prix
+            </h1>
+            <p className="mt-3 max-w-md text-sm text-white/80 sm:text-base">
+              Panneaux solaires, onduleurs, batteries et plus — neufs ou reconditionnés, directement auprès de vendeurs certifiés.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <div className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-medium backdrop-blur-sm">
+                ✓ Vendeurs vérifiés
+              </div>
+              <div className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-medium backdrop-blur-sm">
+                ✓ Paiement sécurisé
+              </div>
+              <div className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-medium backdrop-blur-sm">
+                ✓ Devis en ligne
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Filters */}
       <div className="mx-auto max-w-6xl px-4 pb-6">
-        <div className="rounded-2xl border border-[rgb(var(--border))]/60 bg-white p-3 sm:p-4">
+        <div className="rounded-2xl border border-[rgb(var(--border))]/70 bg-[rgb(var(--card))] p-3 sm:p-4 card-shadow">
           {/* Ligne 1 : recherche + tri + bouton avancé */}
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <SearchAutocomplete
@@ -287,6 +332,7 @@ function MarketplaceInner() {
               aria-label="Trier"
             >
               <option value="recent">Plus récents</option>
+              <option value="rating">Mieux notés</option>
               <option value="priceAsc">Prix croissant</option>
               <option value="priceDesc">Prix décroissant</option>
               <option value="name">Nom (A-Z)</option>
@@ -414,36 +460,59 @@ function MarketplaceInner() {
           </div>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="rounded-xl border border-dashed border-[rgb(var(--border))] bg-white/50 px-4 py-12 text-center">
-            <div className="text-3xl">📦</div>
-            <p className="mt-3 text-sm font-medium">Aucun produit trouve.</p>
-          </div>
+        <div className="mx-auto max-w-6xl px-4 pb-16">
+          <EmptyState
+            icon="🔍"
+            title="Aucun produit ne correspond à votre recherche"
+            description={
+              activeFilterCount > 0
+                ? `Essayez de modifier vos filtres ou réinitialisez-les pour voir tous les produits disponibles.`
+                : "La marketplace est en cours de constitution. Revenez bientôt pour découvrir nos premiers vendeurs."
+            }
+            action={
+              activeFilterCount > 0 ? (
+                <Button variant="secondary" onClick={resetFilters}>
+                  ✕ Réinitialiser les filtres ({activeFilterCount})
+                </Button>
+              ) : (
+                <Link href="/register">
+                  <Button>Devenir vendeur pionnier →</Button>
+                </Link>
+              )
+            }
+            variant="highlight"
+          />
         </div>
       ) : (
         <div className="mx-auto max-w-6xl px-4 pb-16">
-          <p className="mb-4 text-xs text-[rgb(var(--muted))]">
+          <p className="mb-4 text-xs font-medium text-[rgb(var(--muted))]">
             {filtered.length} produit{filtered.length > 1 ? "s" : ""}
           </p>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filtered.map((p) => (
-              <Card
+              <div
                 key={p.id}
-                className="group flex flex-col overflow-hidden transition hover:border-[rgb(var(--primary))]/30 hover:shadow-sm"
+                className={cn(
+                  "group flex flex-col overflow-hidden rounded-[var(--radius)] border border-[rgb(var(--border))]/80 bg-[rgb(var(--card))] card-shadow",
+                  "transition-all duration-200 hover:-translate-y-0.5 hover:border-[rgb(var(--primary))]/30 hover:card-shadow-hover"
+                )}
               >
-                {/* Image + bouton favori */}
+                {/* Image + boutons */}
                 <div className="relative">
-                  <Link href={`/marketplace/${p.id}`} className="relative aspect-[4/3] bg-[#f8f9fc] block">
+                  <Link
+                    href={`/marketplace/${p.id}`}
+                    className="relative block aspect-[4/3] overflow-hidden bg-[rgb(var(--bg))]"
+                  >
                     {p.imageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={p.imageUrl}
                         alt={p.name}
-                        className="h-full w-full object-cover transition group-hover:scale-[1.02]"
+                        className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]"
                       />
                     ) : (
-                      <div className="grid h-full place-items-center text-[rgb(var(--muted))]">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" className="h-12 w-12">
+                      <div className="grid h-full place-items-center text-[rgb(var(--muted))]/40">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="h-14 w-14">
                           <rect x="3" y="5" width="18" height="14" rx="2" />
                           <circle cx="8.5" cy="10.5" r="1.5" />
                           <path d="M21 16l-5-5-9 9" />
@@ -451,106 +520,91 @@ function MarketplaceInner() {
                       </div>
                     )}
                     {p.stock === 0 && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold">
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-[1px]">
+                        <span className="rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-[rgb(var(--fg))] shadow">
                           Rupture de stock
                         </span>
                       </div>
                     )}
                   </Link>
-                  <div className="absolute right-2 top-2 flex flex-col gap-1.5">
+
+                  {/* Boutons flottants */}
+                  <div className="absolute right-2.5 top-2.5 flex flex-col gap-1.5">
                     <button
                       type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleToggleFavorite(p);
-                      }}
-                      aria-label={
-                        isFavorite(p.id) ? "Retirer des favoris" : "Ajouter aux favoris"
-                      }
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleToggleFavorite(p); }}
+                      aria-label={isFavorite(p.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
                       aria-pressed={isFavorite(p.id)}
                       className={cn(
-                        "grid h-9 w-9 place-items-center rounded-full border bg-white/95 shadow-sm backdrop-blur transition hover:scale-110",
+                        "grid h-8 w-8 place-items-center rounded-full border bg-[rgb(var(--card))]/95 shadow-sm backdrop-blur-sm transition-all duration-150 hover:scale-110",
                         isFavorite(p.id)
                           ? "border-red-200 text-red-500"
-                          : "border-[rgb(var(--border))] text-[rgb(var(--muted))] hover:text-red-500"
+                          : "border-[rgb(var(--border))] text-[rgb(var(--muted))] hover:border-red-200 hover:text-red-500"
                       )}
                     >
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill={isFavorite(p.id) ? "currentColor" : "none"}
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        className="h-4 w-4"
-                      >
+                      <svg viewBox="0 0 24 24" fill={isFavorite(p.id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8" className="h-3.5 w-3.5">
                         <path d="M12 21s-7-4.5-9.5-9C1 9 2 5 6 5c2 0 3 1 4 2.5C11 6 12 5 14 5c4 0 5 4 3.5 7-2.5 4.5-9.5 9-9.5 9z" />
                       </svg>
                     </button>
                     <button
                       type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleToggleCompare(p);
-                      }}
-                      aria-label={
-                        compareIds.includes(p.id)
-                          ? "Retirer du comparateur"
-                          : "Ajouter au comparateur"
-                      }
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleToggleCompare(p); }}
+                      aria-label={compareIds.includes(p.id) ? "Retirer du comparateur" : "Ajouter au comparateur"}
                       aria-pressed={compareIds.includes(p.id)}
                       title="Comparer"
                       className={cn(
-                        "grid h-9 w-9 place-items-center rounded-full border bg-white/95 shadow-sm backdrop-blur transition hover:scale-110",
+                        "grid h-8 w-8 place-items-center rounded-full border bg-[rgb(var(--card))]/95 shadow-sm backdrop-blur-sm transition-all duration-150 hover:scale-110",
                         compareIds.includes(p.id)
                           ? "border-[rgb(var(--primary))]/50 text-[rgb(var(--primary))]"
-                          : "border-[rgb(var(--border))] text-[rgb(var(--muted))] hover:text-[rgb(var(--primary))]"
+                          : "border-[rgb(var(--border))] text-[rgb(var(--muted))] hover:border-[rgb(var(--primary))]/40 hover:text-[rgb(var(--primary))]"
                       )}
                     >
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        className="h-4 w-4"
-                      >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-3.5 w-3.5">
                         <path d="M8 5v14M16 5v14M3 9h10M21 15H11" />
                       </svg>
                     </button>
                   </div>
                 </div>
 
+                {/* Contenu */}
                 <div className="flex flex-1 flex-col p-4">
                   <div className="flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      {p.category && (
+                        <span className="inline-block rounded-md bg-[rgb(var(--primary))]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[rgb(var(--primary))]">
+                          {p.category}
+                        </span>
+                      )}
+                      {p.ratingCount !== undefined && p.ratingCount > 0 && p.ratingAvg !== undefined && (
+                        <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-amber-600">
+                          <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                          </svg>
+                          {p.ratingAvg.toFixed(1)}
+                          <span className="font-normal text-[rgb(var(--muted))]">
+                            ({p.ratingCount})
+                          </span>
+                        </span>
+                      )}
+                    </div>
                     <Link href={`/marketplace/${p.id}`}>
-                      <h3 className="text-sm font-semibold leading-tight hover:text-[rgb(var(--primary))] transition">
+                      <h3 className="mt-1.5 text-sm font-semibold leading-snug transition hover:text-[rgb(var(--primary))]">
                         {p.name}
                       </h3>
                     </Link>
-                    {p.category && (
-                      <span className="mt-1.5 inline-block rounded-md bg-[rgb(var(--primary))]/8 px-1.5 py-0.5 text-[10px] font-semibold text-[rgb(var(--primary))]">
-                        {p.category}
-                      </span>
-                    )}
                     {p.description && (
-                      <p className="mt-2 line-clamp-2 text-xs text-[rgb(var(--muted))]">
+                      <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-[rgb(var(--muted))]">
                         {p.description}
                       </p>
                     )}
                   </div>
 
-                  <div className="mt-3 flex items-end justify-between">
-                    <div>
-                      <Link href={`/marketplace/${p.id}`}>
-                        <span className="text-lg font-semibold hover:text-[rgb(var(--primary))] transition">
-                          {p.price.toLocaleString("fr-FR", {
-                            style: "currency",
-                            currency: "EUR",
-                          })}
-                        </span>
-                      </Link>
-                      <div className="text-[10px] text-[rgb(var(--muted))]">
+                  <div className="mt-3 flex items-end justify-between gap-2 border-t border-[rgb(var(--border))]/60 pt-3">
+                    <div className="min-w-0">
+                      <div className="text-base font-bold tracking-tight text-[rgb(var(--fg))]">
+                        {p.price.toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}
+                      </div>
+                      <div className="truncate text-[10px] font-medium text-[rgb(var(--muted))]">
                         {p.vendor.name}
                       </div>
                     </div>
@@ -558,12 +612,13 @@ function MarketplaceInner() {
                       size="sm"
                       disabled={p.stock === 0}
                       onClick={() => handleAddToCart(p)}
+                      className="shrink-0"
                     >
                       Ajouter
                     </Button>
                   </div>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         </div>
@@ -571,6 +626,9 @@ function MarketplaceInner() {
 
       {/* Cart drawer */}
       {cartOpen && <CartDrawer onClose={() => setCartOpen(false)} />}
+
+      {/* Chatbot IA flottant */}
+      <Chatbot />
 
       {/* Barre flottante comparateur */}
       {compareIds.length > 0 && (
@@ -644,6 +702,14 @@ export default function MarketplacePage() {
   );
 }
 
+interface AppliedPromo {
+  vendorId: string;
+  code: string;
+  discountCents: number;
+  type: "PERCENT" | "FIXED";
+  discountValue: number;
+}
+
 function CartDrawer({ onClose }: { onClose: () => void }) {
   const items = useCart((s) => s.items);
   const removeItem = useCart((s) => s.removeItem);
@@ -656,6 +722,106 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
   const [buyerAddress, setBuyerAddress] = useState("");
   const [buyerPhone, setBuyerPhone] = useState("");
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  // Codes promo appliqués (un seul code par vendeur)
+  const [promoInput, setPromoInput] = useState("");
+  const [promoVendorId, setPromoVendorId] = useState<string>("");
+  const [applyingPromo, setApplyingPromo] = useState(false);
+  const [promoError, setPromoError] = useState("");
+  const [appliedPromos, setAppliedPromos] = useState<AppliedPromo[]>([]);
+
+  // Vendeurs uniques dans le panier (pour le sélecteur de promo)
+  const cartVendors = useMemo(() => {
+    const map = new Map<string, { name: string; subtotalCents: number }>();
+    for (const item of items) {
+      const effective = getEffectivePrice(item);
+      const subtotalCents = Math.round(effective * item.quantity * 100);
+      const existing = map.get(item.vendorId);
+      if (existing) {
+        existing.subtotalCents += subtotalCents;
+      } else {
+        map.set(item.vendorId, { name: item.vendorName, subtotalCents });
+      }
+    }
+    return Array.from(map.entries()).map(([vendorId, v]) => ({
+      vendorId,
+      name: v.name,
+      subtotalCents: v.subtotalCents,
+    }));
+  }, [items]);
+
+  // Sélectionne automatiquement le 1er vendeur si un seul
+  useEffect(() => {
+    if (cartVendors.length === 1) setPromoVendorId(cartVendors[0].vendorId);
+  }, [cartVendors]);
+
+  const totalDiscountCents = appliedPromos.reduce(
+    (sum, p) => sum + p.discountCents,
+    0
+  );
+  const totalAfterDiscount = Math.max(
+    0,
+    totalPrice - totalDiscountCents / 100
+  );
+
+  async function handleApplyPromo() {
+    setPromoError("");
+    if (!promoInput.trim()) {
+      setPromoError("Saisissez un code.");
+      return;
+    }
+    const targetVendorId =
+      cartVendors.length === 1 ? cartVendors[0].vendorId : promoVendorId;
+    if (!targetVendorId) {
+      setPromoError("Choisissez le vendeur concerné.");
+      return;
+    }
+    // Empêche d'appliquer 2 codes au même vendeur
+    if (appliedPromos.some((p) => p.vendorId === targetVendorId)) {
+      setPromoError("Un code est déjà appliqué pour ce vendeur.");
+      return;
+    }
+
+    const vendor = cartVendors.find((v) => v.vendorId === targetVendorId);
+    if (!vendor) return;
+
+    setApplyingPromo(true);
+    try {
+      const res = await fetch("/api/marketplace/promo-codes/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: promoInput.trim(),
+          vendorId: targetVendorId,
+          subtotalCents: vendor.subtotalCents,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setPromoError(data?.error ?? "Code invalide.");
+        return;
+      }
+      setAppliedPromos((prev) => [
+        ...prev,
+        {
+          vendorId: targetVendorId,
+          code: data.promo.code,
+          discountCents: data.promo.discountCents,
+          type: data.promo.type,
+          discountValue: data.promo.discountValue,
+        },
+      ]);
+      setPromoInput("");
+    } catch {
+      setPromoError("Erreur réseau.");
+    } finally {
+      setApplyingPromo(false);
+    }
+  }
+
+  function removePromo(vendorId: string) {
+    setAppliedPromos((prev) => prev.filter((p) => p.vendorId !== vendorId));
+  }
 
   async function handleCheckout() {
     if (items.length === 0) return;
@@ -712,12 +878,23 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
           {/* Items */}
           <div className="flex-1 overflow-y-auto px-6 py-4">
             {items.length === 0 ? (
-              <div className="py-12 text-center">
-                <div className="text-3xl">🛒</div>
-                <p className="mt-3 text-sm font-medium">Panier vide</p>
-                <p className="mt-1 text-xs text-[rgb(var(--muted))]">
-                  Ajoutez des produits depuis la marketplace.
-                </p>
+              <div className="grid h-full place-items-center py-12 text-center">
+                <div>
+                  <div className="mx-auto grid h-20 w-20 place-items-center rounded-3xl bg-gradient-to-br from-[rgb(var(--primary))]/15 to-[rgb(var(--primary))]/8 text-4xl animate-bounce-in">
+                    🛒
+                  </div>
+                  <p className="mt-5 text-base font-bold">Panier vide</p>
+                  <p className="mt-1.5 text-sm text-[rgb(var(--muted))]">
+                    Ajoutez des produits depuis la marketplace<br />pour commencer votre commande.
+                  </p>
+                  <Button
+                    size="sm"
+                    className="mt-5"
+                    onClick={onClose}
+                  >
+                    Parcourir la marketplace →
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
@@ -809,19 +986,135 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
                 />
               </div>
 
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Total</span>
-                <span className="text-xl font-bold">
-                  {totalPrice.toLocaleString("fr-FR", {
-                    style: "currency",
-                    currency: "EUR",
-                  })}
-                </span>
+              {/* Codes promo */}
+              <div className="rounded-xl border border-[rgb(var(--border))]/70 bg-[rgb(var(--bg))]/50 p-3">
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--muted))]">
+                  🎟️ Code promo
+                </p>
+
+                {appliedPromos.length > 0 && (
+                  <div className="mb-2 space-y-1.5">
+                    {appliedPromos.map((p) => {
+                      const vendorName =
+                        cartVendors.find((v) => v.vendorId === p.vendorId)?.name ??
+                        "Vendeur";
+                      return (
+                        <div
+                          key={p.vendorId}
+                          className="flex items-center justify-between rounded-lg border border-[rgb(var(--success))]/30 bg-[rgb(var(--success))]/8 px-2.5 py-1.5 text-xs"
+                        >
+                          <div>
+                            <span className="font-mono font-bold text-[rgb(var(--success))]">
+                              {p.code}
+                            </span>
+                            <span className="ml-1.5 text-[rgb(var(--muted))]">
+                              · {vendorName} · −
+                              {p.type === "PERCENT"
+                                ? `${p.discountValue}%`
+                                : `${(p.discountValue / 100).toFixed(2)}€`}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-[rgb(var(--success))]">
+                              −{(p.discountCents / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}
+                            </span>
+                            <button
+                              onClick={() => removePromo(p.vendorId)}
+                              className="text-[rgb(var(--muted))] hover:text-red-500"
+                              aria-label="Retirer le code"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Champ d'application */}
+                {cartVendors.length > appliedPromos.length && (
+                  <div className="flex flex-col gap-2">
+                    {cartVendors.length > 1 && (
+                      <select
+                        value={promoVendorId}
+                        onChange={(e) => setPromoVendorId(e.target.value)}
+                        className="h-9 w-full cursor-pointer rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--card))] px-2.5 text-xs"
+                      >
+                        <option value="">Pour quel vendeur ?</option>
+                        {cartVendors
+                          .filter(
+                            (v) =>
+                              !appliedPromos.some((p) => p.vendorId === v.vendorId)
+                          )
+                          .map((v) => (
+                            <option key={v.vendorId} value={v.vendorId}>
+                              {v.name}
+                            </option>
+                          ))}
+                      </select>
+                    )}
+                    <div className="flex gap-1.5">
+                      <input
+                        value={promoInput}
+                        onChange={(e) =>
+                          setPromoInput(
+                            e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, "")
+                          )
+                        }
+                        placeholder="SUMMER25"
+                        className="h-9 flex-1 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--card))] px-2.5 font-mono text-xs font-semibold uppercase tracking-wider focus:border-[rgb(var(--primary))]/50 focus:outline-none focus:ring-2 focus:ring-[rgb(var(--primary))]/12"
+                      />
+                      <button
+                        onClick={handleApplyPromo}
+                        disabled={applyingPromo || !promoInput}
+                        className="rounded-lg bg-[rgb(var(--primary))] px-3 text-xs font-bold text-white transition hover:brightness-[1.06] disabled:opacity-50"
+                      >
+                        {applyingPromo ? "…" : "Appliquer"}
+                      </button>
+                    </div>
+                    {promoError && (
+                      <p className="text-[11px] font-medium text-red-600">
+                        ⚠️ {promoError}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Total */}
+              <div className="space-y-1.5">
+                {totalDiscountCents > 0 && (
+                  <>
+                    <div className="flex items-center justify-between text-xs text-[rgb(var(--muted))]">
+                      <span>Sous-total</span>
+                      <span>
+                        {totalPrice.toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs font-semibold text-[rgb(var(--success))]">
+                      <span>Remise codes promo</span>
+                      <span>
+                        −{(totalDiscountCents / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}
+                      </span>
+                    </div>
+                  </>
+                )}
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-sm font-bold">Total à payer</span>
+                  <span className="text-2xl font-bold tracking-tight">
+                    {totalAfterDiscount.toLocaleString("fr-FR", {
+                      style: "currency",
+                      currency: "EUR",
+                    })}
+                  </span>
+                </div>
               </div>
               <Button
                 className="w-full"
                 onClick={handleCheckout}
                 disabled={checkoutLoading || !buyerEmail}
+                size="lg"
               >
                 {checkoutLoading ? "Redirection…" : "Payer avec Stripe →"}
               </Button>

@@ -241,6 +241,38 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("[checkout/stripe] error:", error);
+
+    // Renvoie un message plus parlant selon la cause de l'erreur — sans
+    // exposer de secrets. Si la clé Stripe manque, on le dit clairement
+    // pour aider à débugger en environnement de déploiement.
+    if (error instanceof Error) {
+      const msg = error.message;
+      if (msg.includes("STRIPE_SECRET_KEY")) {
+        return NextResponse.json(
+          {
+            error:
+              "Configuration Stripe manquante côté serveur. Vérifiez la variable STRIPE_SECRET_KEY sur Vercel.",
+          },
+          { status: 500 }
+        );
+      }
+      // Erreurs Stripe API (clé invalide, mode test/live mismatch, etc.)
+      if ("type" in error && typeof (error as { type?: string }).type === "string") {
+        const stripeErr = error as { type: string; message: string };
+        return NextResponse.json(
+          {
+            error: `Stripe a refusé la requête (${stripeErr.type}) : ${stripeErr.message}`,
+          },
+          { status: 500 }
+        );
+      }
+      // Fallback : on remonte le message pour faciliter le debug
+      return NextResponse.json(
+        { error: `Erreur de paiement : ${msg}` },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
       { error: "Erreur lors de la création du paiement" },
       { status: 500 }

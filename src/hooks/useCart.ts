@@ -1,6 +1,11 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+export interface VolumeDiscountTier {
+  minQty: number;
+  discountPct: number;
+}
+
 export interface CartItem {
   productId: string;
   name: string;
@@ -16,6 +21,37 @@ export interface CartItem {
    * (api/checkout/stripe relit les stocks en DB).
    */
   maxStock?: number;
+  /**
+   * Paliers de remise volume définis par le vendeur.
+   * Stockés ici pour que le panier puisse afficher et appliquer la remise
+   * sans re-fetch API.
+   */
+  volumeDiscounts?: VolumeDiscountTier[];
+}
+
+/**
+ * Retourne le palier de remise applicable pour une quantité donnée.
+ * Renvoie null si aucun palier ne s'applique.
+ */
+export function getApplicableDiscount(
+  discounts: VolumeDiscountTier[] | undefined,
+  qty: number
+): VolumeDiscountTier | null {
+  if (!discounts || discounts.length === 0) return null;
+  // On prend le palier le plus avantageux dont minQty <= qty
+  const applicable = discounts
+    .filter((d) => qty >= d.minQty)
+    .sort((a, b) => b.discountPct - a.discountPct);
+  return applicable[0] ?? null;
+}
+
+/**
+ * Calcule le prix effectif après remise volume.
+ */
+export function getEffectivePrice(item: CartItem): number {
+  const tier = getApplicableDiscount(item.volumeDiscounts, item.quantity);
+  if (!tier) return item.price;
+  return item.price * (1 - tier.discountPct / 100);
 }
 
 interface CartStore {
@@ -33,7 +69,7 @@ function getTotalItems(items: CartItem[]) {
 }
 
 function getTotalPrice(items: CartItem[]) {
-  return items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  return items.reduce((sum, i) => sum + getEffectivePrice(i) * i.quantity, 0);
 }
 
 function clampQuantity(qty: number, maxStock?: number): number {

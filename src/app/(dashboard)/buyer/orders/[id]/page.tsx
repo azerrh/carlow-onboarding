@@ -7,6 +7,7 @@ import { Brand } from "@/components/ui/Brand";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { OrderChat } from "@/components/chat/OrderChat";
+import { cn } from "@/lib/cn";
 
 interface OrderLine {
   id: string;
@@ -23,20 +24,41 @@ interface OrderLine {
   };
 }
 
+interface OrderEvent {
+  id: string;
+  status: string;
+  note: string | null;
+  createdAt: string;
+}
+
 interface Order {
   id: string;
   status: string;
   totalCents: number;
   orderedAt: string;
   updatedAt: string;
+  trackingNumber: string | null;
+  carrier: string | null;
+  estimatedDelivery: string | null;
   lines: OrderLine[];
+  events: OrderEvent[];
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string; icon: string }> = {
-  EN_COURS: { label: "En cours", color: "text-amber-700", bg: "bg-amber-50 border-amber-200", icon: "📦" },
-  LIVREE: { label: "Livree", color: "text-green-700", bg: "bg-green-50 border-green-200", icon: "✅" },
-  ANNULEE: { label: "Annulee", color: "text-red-700", bg: "bg-red-50 border-red-200", icon: "❌" },
+  EN_COURS:  { label: "En cours",  color: "text-amber-700",  bg: "bg-amber-50 border-amber-200",   icon: "📦" },
+  CONFIRMED: { label: "Confirmée", color: "text-blue-700",   bg: "bg-blue-50 border-blue-200",     icon: "✅" },
+  SHIPPED:   { label: "Expédiée",  color: "text-purple-700", bg: "bg-purple-50 border-purple-200", icon: "🚚" },
+  LIVREE:    { label: "Livrée",    color: "text-green-700",  bg: "bg-green-50 border-green-200",   icon: "🎉" },
+  ANNULEE:   { label: "Annulée",   color: "text-red-700",    bg: "bg-red-50 border-red-200",       icon: "❌" },
 };
+
+// Étapes de la timeline dans l'ordre logique
+const TIMELINE_STEPS = [
+  { status: "EN_COURS",  label: "Commande reçue",   icon: "📦" },
+  { status: "CONFIRMED", label: "Confirmée",         icon: "✅" },
+  { status: "SHIPPED",   label: "Expédiée",          icon: "🚚" },
+  { status: "LIVREE",    label: "Livrée",            icon: "🎉" },
+];
 
 function formatCents(c: number): string {
   return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(c / 100);
@@ -186,6 +208,102 @@ function DetailInner() {
             {status.icon} {status.label}
           </span>
         </div>
+
+        {/* Timeline de statuts */}
+        {order.status !== "ANNULEE" && (
+          <Card className="mt-6 p-5">
+            <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-[rgb(var(--muted))]">
+              Suivi de votre commande
+            </p>
+            <div className="flex items-center gap-0">
+              {TIMELINE_STEPS.map((step, i) => {
+                const stepIdx = TIMELINE_STEPS.findIndex((s) => s.status === order.status);
+                const isCompleted = i <= stepIdx;
+                const isCurrent = i === stepIdx;
+                return (
+                  <div key={step.status} className="flex flex-1 items-center">
+                    <div className="flex flex-col items-center">
+                      <div className={cn(
+                        "flex h-10 w-10 items-center justify-center rounded-full border-2 text-sm transition",
+                        isCompleted
+                          ? "border-[rgb(var(--success))] bg-[rgb(var(--success))] text-white"
+                          : "border-[rgb(var(--border))] bg-white text-[rgb(var(--muted))]",
+                        isCurrent && "ring-4 ring-[rgb(var(--success))]/20"
+                      )}>
+                        {step.icon}
+                      </div>
+                      <span className={cn(
+                        "mt-2 text-center text-[10px] font-semibold leading-tight",
+                        isCompleted ? "text-[rgb(var(--success))]" : "text-[rgb(var(--muted))]"
+                      )}>
+                        {step.label}
+                      </span>
+                    </div>
+                    {i < TIMELINE_STEPS.length - 1 && (
+                      <div className={cn(
+                        "mx-1 mb-4 h-0.5 flex-1",
+                        i < stepIdx ? "bg-[rgb(var(--success))]" : "bg-[rgb(var(--border))]"
+                      )} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Historique des événements */}
+            {order.events && order.events.length > 0 && (
+              <div className="mt-5 space-y-2 border-t border-[rgb(var(--border))] pt-4">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--muted))]">Historique</p>
+                {order.events.map((ev) => {
+                  const s = STATUS_MAP[ev.status] ?? STATUS_MAP.EN_COURS;
+                  return (
+                    <div key={ev.id} className="flex items-start gap-3 text-xs">
+                      <span className="mt-0.5 text-sm">{s.icon}</span>
+                      <div>
+                        <span className="font-semibold">{s.label}</span>
+                        {ev.note && <span className="ml-2 text-[rgb(var(--muted))]">— {ev.note}</span>}
+                        <p className="text-[rgb(var(--muted))]">
+                          {new Date(ev.createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Card>
+        )}
+
+        {/* Suivi transporteur */}
+        {(order.trackingNumber || order.carrier || order.estimatedDelivery) && (
+          <Card className="mt-4 border-purple-200 bg-purple-50 p-5">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-purple-700">
+              🚚 Informations d&apos;expédition
+            </p>
+            <div className="grid gap-3 sm:grid-cols-3 text-sm">
+              {order.carrier && (
+                <div>
+                  <p className="text-[10px] font-bold uppercase text-purple-400">Transporteur</p>
+                  <p className="font-semibold text-purple-900">{order.carrier}</p>
+                </div>
+              )}
+              {order.trackingNumber && (
+                <div>
+                  <p className="text-[10px] font-bold uppercase text-purple-400">N° de suivi</p>
+                  <p className="font-mono font-semibold text-purple-900">{order.trackingNumber}</p>
+                </div>
+              )}
+              {order.estimatedDelivery && (
+                <div>
+                  <p className="text-[10px] font-bold uppercase text-purple-400">Livraison estimée</p>
+                  <p className="font-semibold text-purple-900">
+                    {new Date(order.estimatedDelivery).toLocaleDateString("fr-FR", { day: "2-digit", month: "long" })}
+                  </p>
+                </div>
+              )}
+            </div>
+          </Card>
+        )}
 
         {/* Summary */}
         <div className="mt-6 grid gap-4 sm:grid-cols-3">

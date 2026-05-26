@@ -583,18 +583,18 @@ function StatTile({
   icon: string;
 }) {
   return (
-    <Card className="p-5">
+    <Card className="p-5 transition-all duration-200 hover:-translate-y-0.5">
       <div className="flex items-center gap-3">
-        <span className="grid h-10 w-10 place-items-center rounded-xl bg-[rgb(var(--primary))]/10 text-lg">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[rgb(var(--primary))]/15 to-[rgb(var(--primary))]/8 text-lg">
           {icon}
         </span>
-        <div>
-          <div className="text-xs uppercase tracking-wider text-[rgb(var(--muted))]">
+        <div className="min-w-0">
+          <div className="text-[10px] font-bold uppercase tracking-[0.12em] text-[rgb(var(--muted))]">
             {label}
           </div>
-          <div className="text-xl font-semibold tracking-tight">{value}</div>
+          <div className="truncate text-xl font-bold tracking-tight">{value}</div>
           {sublabel && (
-            <div className="text-[10px] text-[rgb(var(--muted))]">{sublabel}</div>
+            <div className="text-[10px] font-medium text-[rgb(var(--muted))]">{sublabel}</div>
           )}
         </div>
       </div>
@@ -614,7 +614,7 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 rounded-xl border border-[rgb(var(--border))]/60 bg-white/60 px-4 py-3 text-sm font-medium transition hover:border-[rgb(var(--primary))]/30 hover:bg-[rgb(var(--primary))]/[0.04]"
+      className="flex items-center gap-3 rounded-xl border border-[rgb(var(--border))]/60 bg-[rgb(var(--card))]/60 px-4 py-3.5 text-sm font-semibold transition-all duration-150 hover:-translate-y-0.5 hover:border-[rgb(var(--primary))]/30 hover:bg-[rgb(var(--primary))]/8 hover:text-[rgb(var(--primary))]"
     >
       <span className="text-base">{icon}</span>
       {label}

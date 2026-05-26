@@ -16,6 +16,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
             },
           },
         },
+        events: {
+          orderBy: { createdAt: "asc" },
+          select: { id: true, status: true, note: true, createdAt: true },
+        },
       },
     });
 

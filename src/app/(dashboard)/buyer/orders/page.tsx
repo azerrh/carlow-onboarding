@@ -80,6 +80,7 @@ function OrdersInner() {
   const [loading, setLoading] = useState(true);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [toast, setToast] = useState("");
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     const id = localStorage.getItem("buyerId");
@@ -108,6 +109,20 @@ function OrdersInner() {
   useEffect(() => {
     if (buyerId) loadOrders();
   }, [buyerId, loadOrders]);
+
+  function handleExportCsv() {
+    if (!buyerId) return;
+    setExporting(true);
+    const params = new URLSearchParams({ id: buyerId });
+    if (statusFilter !== "all") params.set("status", statusFilter);
+    const a = document.createElement("a");
+    a.href = `/api/buyer/orders/export?${params.toString()}`;
+    a.download = "";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => setExporting(false), 1500);
+  }
 
   async function handleCancel(orderId: string) {
     if (!buyerId) return;
@@ -148,68 +163,105 @@ function OrdersInner() {
   return (
     <div className="portal-page min-h-screen">
       {/* Header */}
-      <div className="sticky top-0 z-10 border-b border-[rgb(var(--border))] bg-white/80 backdrop-blur">
+      <div className="sticky top-0 z-10 border-b border-[rgb(var(--border))]/70 bg-[rgb(var(--card))]/85 backdrop-blur-md">
         <div className="mx-auto flex max-w-[1100px] items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <Brand variant="compact" />
-            <span className="text-sm text-[rgb(var(--muted))]">/</span>
-            <Link
-              href="/buyer/dashboard"
-              className="text-sm text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]"
-            >
-              Dashboard
-            </Link>
-            <span className="text-sm text-[rgb(var(--muted))]">/</span>
-            <span className="text-sm font-medium">Mes commandes</span>
+            <nav className="hidden items-center gap-1 text-sm sm:flex">
+              <Link href="/buyer/dashboard" className="rounded-lg px-2.5 py-1.5 font-medium text-[rgb(var(--muted))] transition hover:bg-black/[0.04] hover:text-[rgb(var(--fg))]">
+                Tableau de bord
+              </Link>
+              <span className="text-[rgb(var(--border))]">/</span>
+              <span className="rounded-lg px-2.5 py-1.5 text-sm font-semibold text-[rgb(var(--primary))]">
+                Mes commandes
+              </span>
+            </nav>
           </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => {
-              localStorage.removeItem("buyerId");
-              router.push("/buyer/login");
-            }}
-          >
-            Deconnexion
-          </Button>
+          <div className="flex items-center gap-2">
+            <Link href="/marketplace">
+              <Button variant="ghost" size="sm">Marketplace</Button>
+            </Link>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                localStorage.removeItem("buyerId");
+                router.push("/buyer/login");
+              }}
+            >
+              Déconnexion
+            </Button>
+          </div>
         </div>
       </div>
 
       <div className="mx-auto max-w-[1100px] px-4 py-8">
-        {/* Title */}
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
-            Mes commandes
-          </h1>
-          <p className="mt-1 text-sm text-[rgb(var(--muted))]">
-            Historique et suivi de vos commandes
-          </p>
+        {/* Title + Export */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Mes commandes
+            </h1>
+            <p className="mt-1 text-sm text-[rgb(var(--muted))]">
+              Historique et suivi de toutes vos commandes
+            </p>
+          </div>
+          <button
+            onClick={handleExportCsv}
+            disabled={exporting || orders.length === 0}
+            title="Télécharger mes commandes en CSV (Excel)"
+            className={cn(
+              "inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border border-[rgb(var(--border))]/80 bg-[rgb(var(--card))] px-4 text-sm font-semibold text-[rgb(var(--fg))] transition-all duration-150",
+              "hover:border-[rgb(var(--success))]/40 hover:bg-[rgb(var(--success))]/8 hover:text-[rgb(var(--success))]",
+              "disabled:cursor-not-allowed disabled:opacity-40",
+              exporting && "cursor-wait"
+            )}
+          >
+            {exporting ? (
+              <>
+                <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Export…
+              </>
+            ) : (
+              <>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Exporter CSV
+              </>
+            )}
+          </button>
         </div>
 
         {/* Stats */}
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <StatTile label="Total" value={stats.total} icon="🛒" />
           <StatTile label="En cours" value={stats.enCours} icon="📦" />
-          <StatTile label="Livrees" value={stats.livree} icon="✅" />
-          <StatTile label="Annulees" value={stats.annulee} icon="❌" />
+          <StatTile label="Livrées" value={stats.livree} icon="✅" />
+          <StatTile label="Annulées" value={stats.annulee} icon="❌" />
         </div>
 
         {/* Filters */}
-        <div className="mt-6 flex gap-2">
+        <div className="mt-6 flex flex-wrap gap-2">
           {[
             { key: "all", label: "Toutes" },
             { key: "EN_COURS", label: "En cours" },
-            { key: "LIVREE", label: "Livrees" },
-            { key: "ANNULEE", label: "Annulees" },
+            { key: "LIVREE", label: "Livrées" },
+            { key: "ANNULEE", label: "Annulées" },
           ].map((f) => (
             <Link
               key={f.key}
               href={`/buyer/orders${f.key !== "all" ? `?status=${f.key}` : ""}`}
               className={cn(
-                "rounded-lg px-3 py-1.5 text-xs font-medium transition",
+                "rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all duration-150",
                 statusFilter === f.key
-                  ? "bg-[rgb(var(--success))] text-white"
-                  : "bg-black/[0.04] text-[rgb(var(--muted))] hover:bg-black/[0.08]"
+                  ? "bg-[rgb(var(--success))] text-white shadow-sm"
+                  : "bg-[rgb(var(--card))] border border-[rgb(var(--border))]/70 text-[rgb(var(--muted))] hover:border-[rgb(var(--success))]/30 hover:text-[rgb(var(--fg))]"
               )}
             >
               {f.label}
@@ -396,16 +448,16 @@ function StatTile({
   icon: string;
 }) {
   return (
-    <Card className="p-5">
+    <Card className="p-5 transition-all duration-200 hover:-translate-y-0.5">
       <div className="flex items-center gap-3">
-        <span className="grid h-10 w-10 place-items-center rounded-xl bg-[rgb(var(--success))]/10 text-lg">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[rgb(var(--success))]/15 to-[rgb(var(--success))]/8 text-lg">
           {icon}
         </span>
         <div>
-          <div className="text-xs uppercase tracking-wider text-[rgb(var(--muted))]">
+          <div className="text-[10px] font-bold uppercase tracking-[0.12em] text-[rgb(var(--muted))]">
             {label}
           </div>
-          <div className="text-xl font-semibold tracking-tight">{value}</div>
+          <div className="text-xl font-bold tracking-tight">{value}</div>
         </div>
       </div>
     </Card>

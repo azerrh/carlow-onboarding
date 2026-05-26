@@ -28,6 +28,9 @@ interface VendorOrder {
   vendorSubtotalCents: number;
   itemCount: number;
   lines: OrderLine[];
+  trackingNumber?: string | null;
+  carrier?: string | null;
+  estimatedDelivery?: string | null;
 }
 
 interface VendorMe {
@@ -43,22 +46,12 @@ const STATUS_FILTERS: { value: string; label: string }[] = [
   { value: "ANNULEE", label: "Annulées" },
 ];
 
-const STATUS_STYLE: Record<string, { bg: string; text: string; label: string }> = {
-  EN_COURS: {
-    bg: "bg-amber-50 border-amber-200",
-    text: "text-amber-700",
-    label: "En cours",
-  },
-  LIVREE: {
-    bg: "bg-[rgb(var(--success))]/10 border-[rgb(var(--success))]/30",
-    text: "text-[rgb(var(--success))]",
-    label: "Livrée",
-  },
-  ANNULEE: {
-    bg: "bg-red-50 border-red-200",
-    text: "text-red-700",
-    label: "Annulée",
-  },
+const STATUS_STYLE: Record<string, { bg: string; text: string; label: string; icon: string }> = {
+  EN_COURS:  { bg: "bg-amber-50 border-amber-200", text: "text-amber-700", label: "En cours", icon: "📦" },
+  CONFIRMED: { bg: "bg-blue-50 border-blue-200", text: "text-blue-700", label: "Confirmée", icon: "✅" },
+  SHIPPED:   { bg: "bg-purple-50 border-purple-200", text: "text-purple-700", label: "Expédiée", icon: "🚚" },
+  LIVREE:    { bg: "bg-[rgb(var(--success))]/10 border-[rgb(var(--success))]/30", text: "text-[rgb(var(--success))]", label: "Livrée", icon: "🎉" },
+  ANNULEE:   { bg: "bg-red-50 border-red-200", text: "text-red-700", label: "Annulée", icon: "❌" },
 };
 
 function formatCents(cents: number): string {
@@ -234,13 +227,32 @@ export default function VendorOrdersPage() {
             <button
               onClick={handleExportCsv}
               disabled={exporting || orders.length === 0}
-              title="Exporter en CSV pour Excel / comptabilité"
+              title="Télécharger les commandes en CSV pour Excel / comptabilité"
               className={cn(
-                "inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border border-[rgb(var(--border))] bg-white px-4 text-xs font-semibold text-[rgb(var(--fg))] transition hover:border-[rgb(var(--primary))]/30 hover:bg-[rgb(var(--primary))]/[0.04] hover:text-[rgb(var(--primary))] disabled:opacity-40",
+                "inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border border-[rgb(var(--border))]/80 bg-[rgb(var(--card))] px-4 text-sm font-semibold text-[rgb(var(--fg))] transition-all duration-150",
+                "hover:border-[rgb(var(--primary))]/40 hover:bg-[rgb(var(--primary))]/8 hover:text-[rgb(var(--primary))]",
+                "disabled:cursor-not-allowed disabled:opacity-40",
                 exporting && "cursor-wait"
               )}
             >
-              {exporting ? "⏳ Export…" : "📥 Exporter CSV"}
+              {exporting ? (
+                <>
+                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Export…
+                </>
+              ) : (
+                <>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  Exporter CSV
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -383,6 +395,17 @@ export default function VendorOrdersPage() {
                       </div>
                     </div>
 
+                    {/* Suivi & statut */}
+                    <OrderTrackingPanel
+                      order={order}
+                      vendorId={vendorId}
+                      onUpdated={(updated) => {
+                        setOrders((prev) =>
+                          prev.map((o) => o.id === order.id ? { ...o, ...updated } : o)
+                        );
+                      }}
+                    />
+
                     <div className="mt-4 flex flex-wrap gap-2">
                       <Button
                         variant="secondary"
@@ -480,6 +503,166 @@ function InfoBlock({
         {label}
       </p>
       <div className="mt-1.5">{children}</div>
+    </div>
+  );
+}
+
+// ── Status flow ──────────────────────────────────────────────
+const STATUS_FLOW = [
+  { value: "EN_COURS",  label: "En cours",  icon: "📦" },
+  { value: "CONFIRMED", label: "Confirmer", icon: "✅" },
+  { value: "SHIPPED",   label: "Expédier",  icon: "🚚" },
+  { value: "LIVREE",    label: "Livrer",    icon: "🎉" },
+];
+
+function OrderTrackingPanel({
+  order,
+  vendorId,
+  onUpdated,
+}: {
+  order: VendorOrder;
+  vendorId: string | null;
+  onUpdated: (data: Partial<VendorOrder>) => void;
+}) {
+  const [trackingNumber, setTrackingNumber] = useState(order.trackingNumber ?? "");
+  const [carrier, setCarrier] = useState(order.carrier ?? "");
+  const [estimatedDelivery, setEstimatedDelivery] = useState(
+    order.estimatedDelivery ? order.estimatedDelivery.slice(0, 10) : ""
+  );
+  const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  async function updateOrder(newStatus?: string) {
+    if (!vendorId) return;
+    setSaving(true);
+    setMsg("");
+    try {
+      const res = await fetch("/api/vendor/orders", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: order.id,
+          vendorId,
+          ...(newStatus ? { status: newStatus, note: note || undefined } : {}),
+          trackingNumber: trackingNumber || null,
+          carrier: carrier || null,
+          estimatedDelivery: estimatedDelivery || null,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        onUpdated({
+          ...(newStatus ? { status: newStatus } : {}),
+          trackingNumber: trackingNumber || null,
+          carrier: carrier || null,
+          estimatedDelivery: estimatedDelivery || null,
+        });
+        setMsg("✓ Mis à jour");
+        setNote("");
+      } else {
+        setMsg(data.error ?? "Erreur");
+      }
+    } catch {
+      setMsg("Erreur réseau");
+    } finally {
+      setSaving(false);
+      setTimeout(() => setMsg(""), 3000);
+    }
+  }
+
+  const isFinal = order.status === "LIVREE" || order.status === "ANNULEE";
+
+  return (
+    <div className="mt-4 rounded-xl border border-[rgb(var(--border))]/60 bg-white p-4">
+      <p className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--muted))]">
+        Suivi & statut
+      </p>
+
+      {/* Status buttons */}
+      {!isFinal && (
+        <div className="mt-3">
+          <p className="text-xs text-[rgb(var(--muted))] mb-2">Faire passer la commande à :</p>
+          <div className="flex flex-wrap gap-2">
+            {STATUS_FLOW.filter((s) => s.value !== "EN_COURS" && s.value !== order.status).map((s) => (
+              <button
+                key={s.value}
+                disabled={saving}
+                onClick={() => updateOrder(s.value)}
+                className={cn(
+                  "inline-flex h-8 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold transition disabled:opacity-50",
+                  s.value === "LIVREE"
+                    ? "border-[rgb(var(--success))]/40 bg-[rgb(var(--success))]/10 text-[rgb(var(--success))] hover:bg-[rgb(var(--success))]/20"
+                    : s.value === "SHIPPED"
+                      ? "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100"
+                      : "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
+                )}
+              >
+                {s.icon} {s.label}
+              </button>
+            ))}
+            <button
+              disabled={saving}
+              onClick={() => updateOrder("ANNULEE")}
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50 transition"
+            >
+              ❌ Annuler
+            </button>
+          </div>
+          <input
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Note (optionnel) — ex : Expédié via Chronopost"
+            className="mt-2 h-9 w-full rounded-lg border border-[rgb(var(--border))] bg-[#fafaf9] px-3 text-xs"
+          />
+        </div>
+      )}
+
+      {/* Tracking fields */}
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <label className="block">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-[rgb(var(--muted))]">Transporteur</span>
+          <input
+            value={carrier}
+            onChange={(e) => setCarrier(e.target.value)}
+            placeholder="Colissimo, DHL…"
+            className="mt-1 h-9 w-full rounded-lg border border-[rgb(var(--border))] bg-[#fafaf9] px-3 text-xs"
+          />
+        </label>
+        <label className="block">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-[rgb(var(--muted))]">N° de suivi</span>
+          <input
+            value={trackingNumber}
+            onChange={(e) => setTrackingNumber(e.target.value)}
+            placeholder="6Q1234567890"
+            className="mt-1 h-9 w-full rounded-lg border border-[rgb(var(--border))] bg-[#fafaf9] px-3 text-xs font-mono"
+          />
+        </label>
+        <label className="block">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-[rgb(var(--muted))]">Livraison estimée</span>
+          <input
+            type="date"
+            value={estimatedDelivery}
+            onChange={(e) => setEstimatedDelivery(e.target.value)}
+            className="mt-1 h-9 w-full rounded-lg border border-[rgb(var(--border))] bg-[#fafaf9] px-3 text-xs"
+          />
+        </label>
+      </div>
+
+      <div className="mt-3 flex items-center gap-3">
+        <button
+          onClick={() => updateOrder()}
+          disabled={saving}
+          className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[rgb(var(--primary))] px-4 text-xs font-semibold text-white hover:brightness-95 disabled:opacity-60 transition"
+        >
+          {saving ? "…" : "💾 Enregistrer le suivi"}
+        </button>
+        {msg && (
+          <span className={cn("text-xs font-semibold", msg.startsWith("✓") ? "text-[rgb(var(--success))]" : "text-red-600")}>
+            {msg}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

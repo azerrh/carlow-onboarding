@@ -62,7 +62,13 @@ export default function ComparePage() {
           if (!res.ok) return null;
           const data = await res.json();
           if (!data.success) return null;
-          return data.product as ComparedProduct;
+          const raw = data.product;
+          // Normaliser : le vendeur et l'image sont imbriqués dans catalog/photos
+          return {
+            ...raw,
+            vendor: raw.catalog?.vendor ?? { id: "", name: "Inconnu" },
+            imageUrl: raw.photos?.[0]?.url ?? null,
+          } as ComparedProduct;
         })
       );
       setProducts(results.filter((p): p is ComparedProduct => !!p));

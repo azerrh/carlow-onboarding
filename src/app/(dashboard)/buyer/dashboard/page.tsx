@@ -136,22 +136,37 @@ export default function BuyerDashboardPage() {
   return (
     <div className="portal-page min-h-screen">
       {/* Header */}
-      <div className="sticky top-0 z-10 border-b border-[rgb(var(--border))] bg-white/80 backdrop-blur">
+      <div className="sticky top-0 z-10 border-b border-[rgb(var(--border))]/70 bg-[rgb(var(--card))]/85 backdrop-blur-md">
         <div className="mx-auto flex max-w-[1100px] items-center justify-between px-4 py-3">
-          <Brand variant="compact" />
-          <div className="flex items-center gap-3">
-            <span className="hidden text-sm text-[rgb(var(--muted))] sm:inline">
-              {buyer.name}
-            </span>
-            <Link href="/buyer/account">
-              <Button variant="ghost" size="sm">Mon compte</Button>
+          <div className="flex items-center gap-5">
+            <Brand variant="compact" />
+            <nav className="hidden items-center gap-1 text-sm sm:flex">
+              <Link href="/buyer/dashboard" className="rounded-xl px-3 py-1.5 font-semibold text-[rgb(var(--primary))] transition hover:bg-[rgb(var(--primary))]/8">
+                Tableau de bord
+              </Link>
+              <Link href="/buyer/orders" className="rounded-xl px-3 py-1.5 font-medium text-[rgb(var(--muted))] transition hover:bg-black/[0.04] hover:text-[rgb(var(--fg))]">
+                Commandes
+              </Link>
+              <Link href="/buyer/devis" className="rounded-xl px-3 py-1.5 font-medium text-[rgb(var(--muted))] transition hover:bg-black/[0.04] hover:text-[rgb(var(--fg))]">
+                Devis
+              </Link>
+              <Link href="/buyer/favoris" className="rounded-xl px-3 py-1.5 font-medium text-[rgb(var(--muted))] transition hover:bg-black/[0.04] hover:text-[rgb(var(--fg))]">
+                Favoris
+              </Link>
+              <Link href="/buyer/avis" className="rounded-xl px-3 py-1.5 font-medium text-[rgb(var(--muted))] transition hover:bg-black/[0.04] hover:text-[rgb(var(--fg))]">
+                Avis
+              </Link>
+            </nav>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link href="/marketplace">
+              <Button variant="ghost" size="sm">Marketplace</Button>
             </Link>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleLogout}
-            >
-              Deconnexion
+            <Link href="/buyer/account">
+              <Button variant="secondary" size="sm">Mon compte</Button>
+            </Link>
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="hidden sm:inline-flex text-[rgb(var(--muted))] hover:text-red-500">
+              Déconnexion
             </Button>
           </div>
         </div>
@@ -161,15 +176,16 @@ export default function BuyerDashboardPage() {
         {/* Welcome */}
         <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div>
-            <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
-              Bonjour, {buyer.name} !
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+              Bonjour, {buyer.name} 👋
             </h1>
             <p className="mt-1 text-sm text-[rgb(var(--muted))]">
               Bienvenue sur votre espace acheteur Carlow.
             </p>
           </div>
-          <div className="rounded-full border border-[rgb(var(--success))]/30 bg-[rgb(var(--success))]/10 px-3 py-1 text-xs font-semibold text-[rgb(var(--success))]">
-            ● Compte acheteur
+          <div className="inline-flex items-center gap-2 rounded-full border border-[rgb(var(--success))]/30 bg-[rgb(var(--success))]/10 px-3 py-1.5 text-xs font-semibold text-[rgb(var(--success))]">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[rgb(var(--success))]" />
+            Compte acheteur actif
           </div>
         </div>
 
@@ -316,7 +332,7 @@ export default function BuyerDashboardPage() {
         </Card>
 
         {/* Quick actions */}
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           <Link
             href="/buyer/orders"
             className="flex items-center gap-3 rounded-xl border border-[rgb(var(--border))]/60 bg-white/60 px-4 py-3 text-sm font-medium transition hover:border-[rgb(var(--success))]/30 hover:bg-[rgb(var(--success))]/[0.04]"
@@ -339,6 +355,13 @@ export default function BuyerDashboardPage() {
             Mes favoris
           </Link>
           <Link
+            href="/buyer/alertes"
+            className="flex items-center gap-3 rounded-xl border border-[rgb(var(--border))]/60 bg-white/60 px-4 py-3 text-sm font-medium transition hover:border-amber-300 hover:bg-amber-50"
+          >
+            <span className="text-base">🔔</span>
+            Mes alertes
+          </Link>
+          <Link
             href="/buyer/account"
             className="flex items-center gap-3 rounded-xl border border-[rgb(var(--border))]/60 bg-white/60 px-4 py-3 text-sm font-medium transition hover:border-[rgb(var(--success))]/30 hover:bg-[rgb(var(--success))]/[0.04]"
           >
@@ -346,10 +369,10 @@ export default function BuyerDashboardPage() {
             Mon profil
           </Link>
         </div>
-        <div className="mt-3">
+        <div className="mt-3 sm:hidden">
           <button
             onClick={handleLogout}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-[rgb(var(--border))]/60 bg-white/60 px-4 py-2.5 text-xs font-medium text-[rgb(var(--muted))] transition hover:border-red-300 hover:bg-red-50 hover:text-red-600 sm:w-auto"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-[rgb(var(--border))]/60 bg-[rgb(var(--card))]/60 px-4 py-2.5 text-xs font-medium text-[rgb(var(--muted))] transition hover:border-red-300 hover:bg-red-50 hover:text-red-600"
           >
             <span>🚪</span>
             Déconnexion
@@ -370,16 +393,16 @@ function StatTile({
   icon: string;
 }) {
   return (
-    <Card className="p-5">
+    <Card className="p-5 transition-all duration-200 hover:-translate-y-0.5">
       <div className="flex items-center gap-3">
-        <span className="grid h-10 w-10 place-items-center rounded-xl bg-[rgb(var(--success))]/10 text-lg">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[rgb(var(--success))]/15 to-[rgb(var(--success))]/8 text-lg">
           {icon}
         </span>
-        <div>
-          <div className="text-xs uppercase tracking-wider text-[rgb(var(--muted))]">
+        <div className="min-w-0">
+          <div className="text-[10px] font-bold uppercase tracking-[0.12em] text-[rgb(var(--muted))]">
             {label}
           </div>
-          <div className="text-xl font-semibold tracking-tight">{value}</div>
+          <div className="truncate text-xl font-bold tracking-tight">{value}</div>
         </div>
       </div>
     </Card>

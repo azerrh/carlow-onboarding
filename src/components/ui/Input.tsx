@@ -10,14 +10,14 @@ export function Input({
   return (
     <input
       className={cn(
-        "h-11 w-full rounded-xl border border-[rgb(var(--border))] bg-white px-3 text-sm text-[rgb(var(--fg))]",
-        "placeholder:text-[rgb(var(--muted))]/70",
-        "outline-none transition",
-        "focus:border-[rgb(var(--primary))]/60 focus:ring-4 focus:ring-[rgb(var(--primary))]/15",
+        "h-11 w-full rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--card))] px-3.5 text-sm text-[rgb(var(--fg))]",
+        "placeholder:text-[rgb(var(--muted))]/60",
+        "outline-none transition-all duration-150",
+        "focus:border-[rgb(var(--primary))]/50 focus:ring-3 focus:ring-[rgb(var(--primary))]/12",
+        "hover:border-[rgb(var(--border))]/80",
         className,
       )}
       {...props}
     />
   );
 }
-

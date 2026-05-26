@@ -440,7 +440,7 @@ function CreateProductModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-xl"
+        className="w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-semibold">Nouveau produit</h2>

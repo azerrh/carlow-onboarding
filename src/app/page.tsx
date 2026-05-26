@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ProductCardSkeleton } from "@/components/ui/Skeleton";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { Chatbot } from "@/components/marketplace/Chatbot";
 import { cn } from "@/lib/cn";
 
 interface MarketplaceProduct {
@@ -55,6 +56,115 @@ const TRUST_LOGOS = [
   { label: "Stripe", subtitle: "Paiements sécurisés" },
   { label: "VIES", subtitle: "TVA EU validée" },
   { label: "Resend", subtitle: "Emails transactionnels" },
+];
+
+const CATEGORIES = [
+  {
+    icon: "☀️",
+    title: "Photovoltaïque",
+    desc: "Panneaux solaires monocristallins et polycristallins",
+    color: "from-amber-400/15 to-orange-400/10",
+    border: "border-amber-300/40",
+  },
+  {
+    icon: "🔋",
+    title: "Stockage & Batteries",
+    desc: "Batteries lithium, gestion énergétique intelligente",
+    color: "from-emerald-400/15 to-teal-400/10",
+    border: "border-emerald-300/40",
+  },
+  {
+    icon: "⚡",
+    title: "Onduleurs",
+    desc: "Hybrides, micro-onduleurs et string inverters",
+    color: "from-blue-400/15 to-indigo-400/10",
+    border: "border-blue-300/40",
+  },
+  {
+    icon: "🚗",
+    title: "Mobilité IRVE",
+    desc: "Bornes de recharge VE résidentielles et tertiaires",
+    color: "from-purple-400/15 to-violet-400/10",
+    border: "border-purple-300/40",
+  },
+  {
+    icon: "🌡️",
+    title: "Pompes à chaleur",
+    desc: "PAC air-eau, air-air, géothermie",
+    color: "from-rose-400/15 to-pink-400/10",
+    border: "border-rose-300/40",
+  },
+  {
+    icon: "🌳",
+    title: "Biomasse",
+    desc: "Chaudières granulés, bois bûches, mixtes",
+    color: "from-green-400/15 to-lime-400/10",
+    border: "border-green-300/40",
+  },
+];
+
+const STATS = [
+  { value: "500+", label: "Vendeurs certifiés", icon: "🏭" },
+  { value: "10k+", label: "Produits référencés", icon: "📦" },
+  { value: "27", label: "Pays UE couverts", icon: "🌍" },
+  { value: "98%", label: "Satisfaction client", icon: "⭐" },
+];
+
+const TESTIMONIALS = [
+  {
+    name: "Thomas Lefevre",
+    role: "Directeur, SolarPro France",
+    company: "Installateur photovoltaïque",
+    quote:
+      "Carlow nous a permis de centraliser nos achats matériel sur une seule plateforme. Le gain de temps est énorme et les vendeurs sont tous certifiés.",
+    rating: 5,
+    avatar: "TL",
+  },
+  {
+    name: "Marie Dupont",
+    role: "Responsable achats, EcoEnergie",
+    company: "Bureau d'études EnR",
+    quote:
+      "Le comparateur de produits et le suivi de commande en temps réel sont des fonctionnalités essentielles. Carlow comprend vraiment les besoins B2B.",
+    rating: 5,
+    avatar: "MD",
+  },
+  {
+    name: "Karim El Bouchikhi",
+    role: "Co-fondateur, GreenInverters",
+    company: "Fabricant d'onduleurs",
+    quote:
+      "Nous avons doublé notre chiffre d'affaires en 6 mois grâce à la visibilité offerte par Carlow auprès des installateurs européens.",
+    rating: 5,
+    avatar: "KE",
+  },
+];
+
+const FAQS = [
+  {
+    q: "Combien coûte l'inscription sur Carlow ?",
+    a: "L'inscription est 100% gratuite pour les acheteurs ET les vendeurs. Carlow se rémunère uniquement via une commission de 4% sur les transactions réalisées, prélevée automatiquement lors du paiement.",
+  },
+  {
+    q: "Combien de temps prend la validation d'un compte vendeur ?",
+    a: "L'onboarding prend environ 20 minutes. Une fois votre dossier soumis (informations société, documents légaux, certifications), notre équipe valide votre compte sous 24 à 48 heures ouvrées.",
+  },
+  {
+    q: "Quels documents dois-je fournir en tant que vendeur ?",
+    a: "K-Bis de moins de 3 mois, statuts de la société, RIB IBAN, certifications produits (CE, Certisolis PPE2 si applicable). La vérification TVA est automatique via le service VIES de la Commission européenne.",
+  },
+  {
+    q: "Comment fonctionnent les paiements ?",
+    a: "Tous les paiements transitent par Stripe (PCI-DSS niveau 1). Carlow utilise Stripe Connect pour reverser automatiquement les fonds aux vendeurs sous 7 jours ouvrés après la livraison.",
+  },
+  {
+    q: "Puis-je vendre dans toute l'Europe ?",
+    a: "Oui, Carlow couvre les 27 pays de l'Union Européenne. Vous définissez librement vos zones de livraison, vos tarifs Incoterms et vos délais.",
+  },
+  {
+    q: "Que se passe-t-il en cas de litige ?",
+    a: "Carlow propose un service de médiation gratuit. Pour les commandes payées via la plateforme, nous offrons une protection acheteur de 30 jours avec remboursement intégral si le produit ne correspond pas à la description.",
+  },
 ];
 
 function formatPrice(p: number): string {
@@ -298,6 +408,96 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Catégories */}
+      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(var(--primary))]">
+            Notre catalogue
+          </p>
+          <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
+            6 catégories d&apos;équipements EnR
+          </h2>
+          <p className="mt-4 text-[rgb(var(--muted))]">
+            Tout le matériel dont vous avez besoin pour vos projets d&apos;énergies renouvelables, certifié et prêt à installer.
+          </p>
+        </div>
+
+        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {CATEGORIES.map((c, i) => (
+            <Link
+              key={c.title}
+              href={`/marketplace?category=${encodeURIComponent(c.title)}`}
+              className={cn(
+                "group relative overflow-hidden rounded-2xl border bg-gradient-to-br p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl",
+                c.color,
+                c.border,
+                `animate-slide-up-${(i % 4) + 1}`
+              )}
+            >
+              <div className="flex items-center gap-4">
+                <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-white/80 text-3xl shadow-sm backdrop-blur transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
+                  {c.icon}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-base font-bold tracking-tight">{c.title}</h3>
+                  <p className="mt-1 text-xs text-[rgb(var(--muted))]">{c.desc}</p>
+                </div>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 shrink-0 text-[rgb(var(--muted))] transition-all duration-300 group-hover:translate-x-1 group-hover:text-[rgb(var(--primary))]">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Stats counter */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-[rgb(var(--primary))] via-[#d96b20] to-[#b85514] py-16 text-white sm:py-20">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-black/10 blur-3xl" />
+          <svg className="absolute inset-0 h-full w-full opacity-[0.07]" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="stats-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="0.5" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#stats-grid)" />
+          </svg>
+        </div>
+
+        <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/80">
+              Chiffres clés
+            </p>
+            <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
+              La marketplace EnR de référence en Europe
+            </h2>
+          </div>
+
+          <div className="mt-12 grid grid-cols-2 gap-6 lg:grid-cols-4">
+            {STATS.map((s, i) => (
+              <div
+                key={s.label}
+                className={cn(
+                  "rounded-2xl border border-white/15 bg-white/10 p-6 text-center backdrop-blur-sm transition-all duration-300 hover:bg-white/15",
+                  `animate-slide-up-${(i % 4) + 1}`
+                )}
+              >
+                <div className="text-3xl">{s.icon}</div>
+                <p className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+                  {s.value}
+                </p>
+                <p className="mt-1 text-xs font-medium uppercase tracking-wide text-white/80">
+                  {s.label}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Marketplace preview — vraies données */}
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -466,6 +666,72 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Témoignages */}
+      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(var(--primary))]">
+            Ils nous font confiance
+          </p>
+          <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
+            La parole à nos utilisateurs
+          </h2>
+          <p className="mt-4 text-[rgb(var(--muted))]">
+            Des installateurs, des bureaux d&apos;études et des fabricants nous racontent leur expérience.
+          </p>
+        </div>
+
+        <div className="mt-12 grid gap-6 lg:grid-cols-3">
+          {TESTIMONIALS.map((t, i) => (
+            <Card
+              key={t.name}
+              className={cn(
+                "relative flex flex-col p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl",
+                `animate-slide-up-${(i % 4) + 1}`
+              )}
+            >
+              {/* Icône guillemet */}
+              <svg
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="absolute right-6 top-6 h-8 w-8 text-[rgb(var(--primary))]/15"
+              >
+                <path d="M9.5 6c-3.5 0-6 2.5-6 6v6h6v-6h-3c0-2 1-3 3-3V6zm11 0c-3.5 0-6 2.5-6 6v6h6v-6h-3c0-2 1-3 3-3V6z" />
+              </svg>
+
+              {/* Étoiles */}
+              <div className="flex gap-0.5">
+                {Array.from({ length: t.rating }).map((_, j) => (
+                  <svg key={j} viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 text-amber-400">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  </svg>
+                ))}
+              </div>
+
+              {/* Citation */}
+              <p className="mt-5 flex-1 text-sm leading-relaxed text-[rgb(var(--fg))]/85">
+                &ldquo;{t.quote}&rdquo;
+              </p>
+
+              {/* Auteur */}
+              <div className="mt-6 flex items-center gap-3 border-t border-[rgb(var(--border))]/60 pt-5">
+                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[rgb(var(--primary))] to-[#c05510] text-sm font-bold text-white shadow-sm">
+                  {t.avatar}
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold">{t.name}</p>
+                  <p className="truncate text-xs text-[rgb(var(--muted))]">
+                    {t.role}
+                  </p>
+                  <p className="truncate text-[10px] font-semibold uppercase tracking-wide text-[rgb(var(--primary))]/80">
+                    {t.company}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </section>
+
       {/* Features */}
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-2xl text-center">
@@ -534,6 +800,68 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* FAQ */}
+      <section className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-20">
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(var(--primary))]">
+            Questions fréquentes
+          </p>
+          <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
+            Vous avez des questions ?
+          </h2>
+          <p className="mt-4 text-[rgb(var(--muted))]">
+            Les réponses aux questions les plus fréquentes des vendeurs et des acheteurs.
+          </p>
+        </div>
+
+        <div className="mt-10 space-y-3">
+          {FAQS.map((faq, i) => (
+            <FaqItem key={i} question={faq.q} answer={faq.a} index={i} />
+          ))}
+        </div>
+
+        <div className="mt-8 text-center">
+          <p className="text-sm text-[rgb(var(--muted))]">
+            Une autre question ?{" "}
+            <a
+              href="mailto:contact@carlow.fr"
+              className="font-bold text-[rgb(var(--primary))] hover:underline underline-offset-2"
+            >
+              Contactez-nous directement →
+            </a>
+          </p>
+        </div>
+      </section>
+
+      {/* Newsletter */}
+      <section className="mx-auto max-w-6xl px-4 pb-10 sm:px-6">
+        <Card className="relative overflow-hidden p-8 sm:p-12">
+          <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[rgb(var(--primary))]/10 blur-3xl" />
+          <div className="absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-[rgb(var(--success))]/10 blur-3xl" />
+
+          <div className="relative grid gap-6 lg:grid-cols-2 lg:items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full bg-[rgb(var(--primary))]/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-[rgb(var(--primary))]">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                  <polyline points="22,6 12,13 2,6" />
+                </svg>
+                Newsletter Carlow
+              </div>
+              <h2 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
+                Recevez l&apos;actu EnR chaque mois
+              </h2>
+              <p className="mt-2 text-sm text-[rgb(var(--muted))]">
+                Nouveaux produits, vendeurs vedettes, tendances du marché et offres exclusives.
+                Pas de spam — 1 email/mois maximum.
+              </p>
+            </div>
+
+            <NewsletterForm />
+          </div>
+        </Card>
+      </section>
+
       {/* CTA final */}
       <section className="mx-auto max-w-6xl px-4 pb-20 pt-10 sm:px-6">
         <Card className="card-shadow relative overflow-hidden p-10 sm:p-14">
@@ -541,7 +869,7 @@ export default function HomePage() {
           <div className="absolute -bottom-12 -left-8 -z-0 h-56 w-56 rounded-full bg-[rgb(var(--success))]/15 blur-3xl" />
           <div className="relative flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
             <div>
-              <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
                 Prêt à rejoindre Carlow ?
               </h2>
               <p className="mt-2 text-[rgb(var(--muted))]">
@@ -550,12 +878,13 @@ export default function HomePage() {
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <Button onClick={() => router.push("/register")}>
+              <Button onClick={() => router.push("/register")} size="lg">
                 Devenir vendeur →
               </Button>
               <Button
                 variant="secondary"
                 onClick={() => router.push("/marketplace")}
+                size="lg"
               >
                 Voir la marketplace
               </Button>
@@ -659,6 +988,9 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+
+      {/* Chatbot IA flottant */}
+      <Chatbot />
     </div>
   );
 }
@@ -684,5 +1016,109 @@ function Bullet({ children }: { children: React.ReactNode }) {
       </span>
       <span className="text-[rgb(var(--fg))]">{children}</span>
     </li>
+  );
+}
+
+function FaqItem({ question, answer, index }: { question: string; answer: string; index: number }) {
+  const [open, setOpen] = useState(index === 0); // 1ère question ouverte par défaut
+  return (
+    <div
+      className={cn(
+        "overflow-hidden rounded-2xl border bg-[rgb(var(--card))] transition-all duration-200",
+        open
+          ? "border-[rgb(var(--primary))]/40 shadow-md"
+          : "border-[rgb(var(--border))]/70 hover:border-[rgb(var(--primary))]/25"
+      )}
+    >
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
+      >
+        <span className="text-sm font-semibold sm:text-base">{question}</span>
+        <span
+          className={cn(
+            "grid h-7 w-7 shrink-0 place-items-center rounded-full transition-all duration-200",
+            open
+              ? "rotate-45 bg-[rgb(var(--primary))] text-white"
+              : "bg-[rgb(var(--primary))]/10 text-[rgb(var(--primary))]"
+          )}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-4 w-4">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        </span>
+      </button>
+      <div
+        className={cn(
+          "grid transition-all duration-300 ease-in-out",
+          open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        )}
+      >
+        <div className="overflow-hidden">
+          <p className="px-6 pb-5 text-sm leading-relaxed text-[rgb(var(--muted))]">
+            {answer}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NewsletterForm() {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setStatus("loading");
+    setMessage("");
+    // Simulation (à connecter à un vrai endpoint quand prêt)
+    setTimeout(() => {
+      setStatus("success");
+      setMessage("Merci ! Vous êtes inscrit. À très vite dans votre boîte mail.");
+      setEmail("");
+    }, 700);
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="votre@email.fr"
+          required
+          disabled={status === "loading"}
+          className="h-12 flex-1 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--card))] px-4 text-sm outline-none transition-all duration-150 placeholder:text-[rgb(var(--muted))]/60 focus:border-[rgb(var(--primary))]/50 focus:ring-3 focus:ring-[rgb(var(--primary))]/12 disabled:opacity-60"
+        />
+        <Button type="submit" size="lg" disabled={status === "loading"}>
+          {status === "loading" ? "Envoi…" : "S'inscrire →"}
+        </Button>
+      </div>
+      {message && (
+        <p
+          className={cn(
+            "text-xs font-medium",
+            status === "success"
+              ? "text-[rgb(var(--success))]"
+              : "text-red-600"
+          )}
+        >
+          {status === "success" ? "✓ " : "⚠️ "}
+          {message}
+        </p>
+      )}
+      <p className="text-[10px] text-[rgb(var(--muted))]">
+        En vous inscrivant, vous acceptez notre{" "}
+        <Link href="/legal/confidentialite" className="underline hover:text-[rgb(var(--fg))]">
+          politique de confidentialité
+        </Link>
+        . Désinscription en 1 clic.
+      </p>
+    </form>
   );
 }

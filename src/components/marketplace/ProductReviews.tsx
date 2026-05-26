@@ -135,6 +135,34 @@ export function ProductReviews({ productId }: { productId: string }) {
     }
   }
 
+  async function handleDelete() {
+    if (!buyerId || !myReview) return;
+    if (!confirm("Supprimer définitivement votre avis sur ce produit ?")) return;
+    setSubmitting(true);
+    setSubmitError("");
+    setSubmitSuccess("");
+    try {
+      const res = await fetch(
+        `/api/marketplace/reviews?buyerId=${encodeURIComponent(buyerId)}&productId=${encodeURIComponent(productId)}`,
+        { method: "DELETE" }
+      );
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setSubmitError(data?.error ?? "Impossible de supprimer l'avis");
+        return;
+      }
+      setSubmitSuccess("Avis supprimé ✓");
+      setMyReview(null);
+      setFormRating(5);
+      setFormComment("");
+      await fetchReviews();
+    } catch {
+      setSubmitError("Erreur réseau, réessayez.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <section className="mt-12">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -215,19 +243,31 @@ export function ProductReviews({ productId }: { productId: string }) {
                 </p>
               )}
 
-              <div className="mt-3 flex items-center justify-between">
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                 <p className="text-[11px] text-[rgb(var(--muted))]">
                   {myReview
                     ? "Vous avez déjà un avis. La soumission le mettra à jour."
                     : "Un seul avis par produit. Vous pourrez le modifier plus tard."}
                 </p>
-                <Button type="submit" size="sm" disabled={submitting}>
-                  {submitting
-                    ? "Envoi…"
-                    : myReview
-                      ? "Mettre à jour"
-                      : "Publier l'avis"}
-                </Button>
+                <div className="flex items-center gap-2">
+                  {myReview && (
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      disabled={submitting}
+                      className="rounded-lg px-3 py-1.5 text-xs font-semibold text-red-500 transition hover:bg-red-500/10 disabled:opacity-50"
+                    >
+                      Supprimer
+                    </button>
+                  )}
+                  <Button type="submit" size="sm" disabled={submitting}>
+                    {submitting
+                      ? "Envoi…"
+                      : myReview
+                        ? "Mettre à jour"
+                        : "Publier l'avis"}
+                  </Button>
+                </div>
               </div>
             </form>
           </Card>

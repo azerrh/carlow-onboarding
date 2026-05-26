@@ -274,151 +274,182 @@ export default function VendorSalesStatsPage() {
             )}
           </Card>
 
-          {/* Rapport IA */}
-          <Card className="mt-6 p-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <h2 className="text-base font-semibold">✨ Rapport IA</h2>
-                <p className="mt-0.5 text-xs text-[rgb(var(--muted))]">
-                  Claude analyse vos ventes et génère des recommandations personnalisées.
-                </p>
-              </div>
-              <button
-                onClick={generateAiReport}
-                disabled={aiReportBusy}
-                className={cn(
-                  "inline-flex h-9 shrink-0 items-center gap-2 rounded-xl border border-[rgb(var(--primary))]/30 bg-[rgb(var(--primary))]/[0.06] px-4 text-xs font-semibold text-[rgb(var(--primary))] transition hover:bg-[rgb(var(--primary))]/[0.12] disabled:opacity-50",
-                  aiReportBusy && "animate-pulse cursor-wait"
-                )}
-              >
-                {aiReportBusy ? "✨ Analyse en cours…" : aiReport ? "🔄 Regénérer" : "✨ Générer mon analyse"}
-              </button>
-            </div>
+          {/* Rapport IA des ventes — analyse Claude */}
+          <Card className="mt-6 overflow-hidden p-0">
+            {/* Bande dégradée en haut */}
+            <div className="h-1 w-full bg-gradient-to-r from-[rgb(var(--primary))] via-[#e8923a] to-[rgb(var(--success))]" />
 
-            {aiReportError && (
-              <p className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-                {aiReportError}
-              </p>
-            )}
-
-            {!aiReport && !aiReportBusy && !aiReportError && (
-              <div className="mt-6 rounded-xl border border-dashed border-[rgb(var(--primary))]/20 bg-[rgb(var(--primary))]/[0.02] px-6 py-8 text-center">
-                <div className="text-3xl">🤖</div>
-                <p className="mt-2 text-sm font-medium text-[rgb(var(--fg))]">
-                  Votre rapport IA vous attend
-                </p>
-                <p className="mt-1 text-xs text-[rgb(var(--muted))]">
-                  Cliquez sur &quot;Générer mon analyse&quot; pour obtenir des insights sur vos ventes.
-                </p>
-              </div>
-            )}
-
-            {aiReport && (
-              <div className="mt-5 space-y-5">
-                {/* Score */}
-                <div className="flex items-center gap-4">
-                  <div
-                    className={cn(
-                      "relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-xl font-bold text-white",
-                      aiReport.score >= 70
-                        ? "bg-[rgb(var(--success))]"
-                        : aiReport.score >= 40
-                          ? "bg-amber-500"
-                          : "bg-red-500"
-                    )}
-                  >
-                    {aiReport.score}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between text-xs text-[rgb(var(--muted))]">
-                      <span>Score de santé commerciale</span>
-                      <span>{aiReport.score}/100</span>
-                    </div>
-                    <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-black/[0.06]">
-                      <div
-                        className={cn(
-                          "h-full rounded-full transition-all duration-700",
-                          aiReport.score >= 70
-                            ? "bg-[rgb(var(--success))]"
-                            : aiReport.score >= 40
-                              ? "bg-amber-500"
-                              : "bg-red-500"
-                        )}
-                        style={{ width: `${aiReport.score}%` }}
-                      />
-                    </div>
-                    <p className="mt-2 text-sm leading-relaxed text-[rgb(var(--fg))]">
-                      {aiReport.synthese}
+            <div className="p-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex items-start gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[rgb(var(--primary))] to-[#c05510] text-lg shadow-sm">
+                    ✨
+                  </span>
+                  <div>
+                    <h2 className="text-base font-bold tracking-tight gradient-text">
+                      Rapport IA des ventes
+                    </h2>
+                    <p className="mt-0.5 text-xs text-[rgb(var(--muted))]">
+                      Claude analyse vos performances et vous donne des recommandations stratégiques personnalisées.
                     </p>
                   </div>
                 </div>
-
-                {/* Points forts + attention */}
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {aiReport.points_forts.length > 0 && (
-                    <div className="rounded-xl border border-[rgb(var(--success))]/20 bg-[rgb(var(--success))]/[0.04] p-4">
-                      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-[rgb(var(--success))]">
-                        ✓ Points forts
-                      </h3>
-                      <ul className="space-y-1">
-                        {aiReport.points_forts.map((pf, i) => (
-                          <li key={i} className="flex items-start gap-2 text-xs text-[rgb(var(--fg))]">
-                            <span className="mt-0.5 shrink-0 text-[rgb(var(--success))]">•</span>
-                            {pf}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                <button
+                  onClick={generateAiReport}
+                  disabled={aiReportBusy}
+                  className={cn(
+                    "inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border border-[rgb(var(--primary))]/40 bg-[rgb(var(--card))] px-4 text-sm font-bold text-[rgb(var(--primary))] transition-all duration-150",
+                    "hover:border-[rgb(var(--primary))] hover:bg-[rgb(var(--primary))]/10 hover:shadow-[0_2px_8px_rgb(var(--primary)/0.15)]",
+                    "disabled:cursor-not-allowed disabled:opacity-50",
+                    aiReportBusy && "cursor-wait"
                   )}
-                  {aiReport.points_attention.length > 0 && (
-                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-                      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-amber-700">
-                        ⚠ Points d&apos;attention
-                      </h3>
-                      <ul className="space-y-1">
-                        {aiReport.points_attention.map((pa, i) => (
-                          <li key={i} className="flex items-start gap-2 text-xs text-amber-800">
-                            <span className="mt-0.5 shrink-0">•</span>
-                            {pa}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                >
+                  {aiReportBusy ? (
+                    <>
+                      <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Analyse en cours…
+                    </>
+                  ) : aiReport ? (
+                    "🔄 Regénérer"
+                  ) : (
+                    "✨ Générer le rapport"
                   )}
-                </div>
-
-                {/* Recommandations */}
-                <div>
-                  <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[rgb(var(--muted))]">
-                    Recommandations
-                  </h3>
-                  <div className="space-y-3">
-                    {aiReport.recommandations.map((r, i) => (
-                      <div
-                        key={i}
-                        className="flex items-start gap-3 rounded-xl border border-[rgb(var(--border))] bg-white px-4 py-3"
-                      >
-                        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-[rgb(var(--primary))]/10 text-xs font-bold text-[rgb(var(--primary))]">
-                          {i + 1}
-                        </span>
-                        <div>
-                          <p className="text-sm font-semibold">{r.titre}</p>
-                          <p className="mt-0.5 text-xs text-[rgb(var(--muted))]">{r.detail}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {aiReportDate && (
-                  <p className="text-right text-[10px] text-[rgb(var(--muted))]">
-                    Généré le {new Date(aiReportDate).toLocaleString("fr-FR")}
-                  </p>
-                )}
+                </button>
               </div>
-            )}
-          </Card>
 
+              {aiReportError && (
+                <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700 animate-fade-in">
+                  ⚠️ {aiReportError}
+                </div>
+              )}
+
+              {aiReport && (
+                <div className="mt-6 animate-fade-in space-y-5">
+                  {/* Score global */}
+                  <div className="flex items-center gap-4 rounded-2xl border border-[rgb(var(--primary))]/20 bg-gradient-to-br from-[rgb(var(--primary))]/[0.05] to-transparent p-4">
+                    <div className="relative grid h-20 w-20 shrink-0 place-items-center">
+                      <svg viewBox="0 0 80 80" className="absolute inset-0 -rotate-90">
+                        <circle cx="40" cy="40" r="34" stroke="rgb(var(--border))" strokeWidth="6" fill="none" />
+                        <circle
+                          cx="40"
+                          cy="40"
+                          r="34"
+                          stroke="rgb(var(--primary))"
+                          strokeWidth="6"
+                          fill="none"
+                          strokeLinecap="round"
+                          strokeDasharray={`${(2 * Math.PI * 34 * aiReport.score) / 100} ${2 * Math.PI * 34}`}
+                          className="transition-all duration-1000"
+                        />
+                      </svg>
+                      <span className="text-2xl font-bold text-[rgb(var(--primary))]">
+                        {aiReport.score}
+                      </span>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--primary))]">
+                        Synthèse globale · Score {aiReport.score}/100
+                      </p>
+                      <p className="mt-1 text-sm leading-relaxed">
+                        {aiReport.synthese}
+                      </p>
+                      {aiReportDate && (
+                        <p className="mt-2 text-[10px] italic text-[rgb(var(--muted))]">
+                          Généré le{" "}
+                          {new Date(aiReportDate).toLocaleString("fr-FR", {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Points forts & attention */}
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    {aiReport.points_forts.length > 0 && (
+                      <div className="rounded-2xl border border-[rgb(var(--success))]/25 bg-[rgb(var(--success))]/[0.04] p-4">
+                        <h3 className="flex items-center gap-2 text-sm font-bold text-[rgb(var(--success))]">
+                          <span>✅</span> Points forts
+                        </h3>
+                        <ul className="mt-3 space-y-2">
+                          {aiReport.points_forts.map((p, i) => (
+                            <li key={i} className="flex items-start gap-2 text-xs leading-relaxed">
+                              <span className="mt-0.5 text-[rgb(var(--success))]">▸</span>
+                              <span>{p}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {aiReport.points_attention.length > 0 && (
+                      <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4">
+                        <h3 className="flex items-center gap-2 text-sm font-bold text-amber-700">
+                          <span>⚠️</span> Points d&apos;attention
+                        </h3>
+                        <ul className="mt-3 space-y-2">
+                          {aiReport.points_attention.map((p, i) => (
+                            <li key={i} className="flex items-start gap-2 text-xs leading-relaxed">
+                              <span className="mt-0.5 text-amber-600">▸</span>
+                              <span>{p}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Recommandations */}
+                  {aiReport.recommandations.length > 0 && (
+                    <div>
+                      <h3 className="flex items-center gap-2 text-sm font-bold text-[rgb(var(--primary))]">
+                        <span>💡</span> Recommandations IA
+                      </h3>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                        {aiReport.recommandations.map((r, i) => (
+                          <div
+                            key={i}
+                            className="rounded-2xl border border-[rgb(var(--border))]/70 bg-[rgb(var(--card))] p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-[rgb(var(--primary))]/30"
+                          >
+                            <div className="flex items-start gap-2">
+                              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-[rgb(var(--primary))]/10 text-xs font-bold text-[rgb(var(--primary))]">
+                                {i + 1}
+                              </span>
+                              <div className="min-w-0">
+                                <p className="text-sm font-semibold">{r.titre}</p>
+                                <p className="mt-1 text-xs leading-relaxed text-[rgb(var(--muted))]">
+                                  {r.detail}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <p className="text-[10px] italic text-[rgb(var(--muted))]">
+                    💡 Ce rapport est généré automatiquement par Claude (Anthropic) à partir de vos données de ventes. Il s&apos;agit d&apos;une analyse algorithmique à valider par votre jugement.
+                  </p>
+                </div>
+              )}
+
+              {!aiReport && !aiReportBusy && !aiReportError && (
+                <div className="mt-4 rounded-xl border border-dashed border-[rgb(var(--primary))]/25 bg-[rgb(var(--primary))]/[0.03] p-4 text-center">
+                  <p className="text-xs text-[rgb(var(--muted))]">
+                    Cliquez sur <strong>✨ Générer le rapport</strong> pour obtenir une analyse personnalisée de vos performances commerciales.
+                  </p>
+                </div>
+              )}
+            </div>
+          </Card>
           {/* 2 colonnes : top produits + statuts */}
           <div className="mt-6 grid gap-6 lg:grid-cols-3">
             <Card className="p-6 lg:col-span-2">
@@ -554,27 +585,27 @@ function KpiCard({
   return (
     <Card
       className={cn(
-        "p-5",
+        "p-5 transition-all duration-200 hover:-translate-y-0.5",
         highlight &&
-          "border-[rgb(var(--primary))]/30 bg-gradient-to-br from-[rgb(var(--primary))]/[0.04] to-transparent"
+          "border-[rgb(var(--primary))]/25 bg-gradient-to-br from-[rgb(var(--primary))]/8 to-transparent"
       )}
     >
       <div className="flex items-center gap-3">
         <span
           className={cn(
-            "grid h-11 w-11 place-items-center rounded-2xl text-lg",
+            "grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-lg",
             highlight
-              ? "bg-[rgb(var(--primary))]/15"
-              : "bg-[rgb(var(--primary))]/10"
+              ? "bg-gradient-to-br from-[rgb(var(--primary))]/20 to-[rgb(var(--primary))]/10"
+              : "bg-gradient-to-br from-[rgb(var(--primary))]/15 to-[rgb(var(--primary))]/8"
           )}
         >
           {icon}
         </span>
         <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--muted))]">
+          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[rgb(var(--muted))]">
             {label}
           </p>
-          <p className="truncate text-lg font-semibold tracking-tight">
+          <p className="truncate text-lg font-bold tracking-tight">
             {value}
           </p>
         </div>

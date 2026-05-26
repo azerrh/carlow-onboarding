@@ -7,10 +7,58 @@ import { prisma } from "@/lib/prisma";
  * GET /api/vendor/orders/export?id=<vendorId>&status=<ALL|EN_COURS|LIVREE|ANNULEE>
  *
  * Retourne un fichier CSV téléchargeable directement dans le navigateur.
- * Colonnes : N° commande, Date, Acheteur, Email, Produit, Référence, Qté, Prix unitaire HT, Sous-total HT, Statut.
+ * Encodage UTF-8 + BOM pour compatibilité Excel Windows.
  *
- * Note : "HT" dans le sens "prix stocké" — la TVA est gérée côté Stripe/comptabilité.
+ * Colonnes :
+ *   N° commande | Date | Acheteur | Email | Produit | Référence
+ *   Catégorie | Quantité | Prix unitaire (€) | Sous-total (€)
+ *   Statut | Transporteur | N° de suivi | Livraison estimée
  */
+
+export const runtime = "nodejs";
+
+const SEP = ";";
+const BOM = "﻿"; // BOM UTF-8 — nécessaire pour qu'Excel Windows détecte l'encodage
+
+const STATUS_LABELS: Record<string, string> = {
+  EN_COURS: "En cours",
+  CONFIRMED: "Confirmée",
+  SHIPPED: "Expédiée",
+  LIVREE: "Livrée",
+  ANNULEE: "Annulée",
+};
+
+function esc(v: string | number | null | undefined): string {
+  if (v === null || v === undefined) return "";
+  const s = String(v);
+  if (s.includes(SEP) || s.includes('"') || s.includes("\n") || s.includes("\r")) {
+    return `"${s.replace(/"/g, '""')}"`;
+  }
+  return s;
+}
+
+function formatDate(d: Date): string {
+  return d.toLocaleString("fr-FR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatDateOnly(d: Date): string {
+  return d.toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function formatEur(cents: number): string {
+  return (cents / 100).toFixed(2).replace(".", ",");
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -46,19 +94,19 @@ export async function GET(req: NextRequest) {
             id: true,
             status: true,
             orderedAt: true,
+            trackingNumber: true,
+            carrier: true,
+            estimatedDelivery: true,
             buyer: { select: { name: true, email: true } },
           },
         },
       },
     });
 
-    // --- Construction CSV ---
-    const BOM = "﻿"; // BOM UTF-8 pour Excel Windows
-    const SEP = ";";
-
+    // --- Construction du CSV ---
     const headers = [
       "N° commande",
-      "Date",
+      "Date commande",
       "Acheteur",
       "Email acheteur",
       "Produit",
@@ -68,38 +116,10 @@ export async function GET(req: NextRequest) {
       "Prix unitaire (€)",
       "Sous-total (€)",
       "Statut",
+      "Transporteur",
+      "N° de suivi",
+      "Livraison estimée",
     ];
-
-    const STATUS_LABELS: Record<string, string> = {
-      EN_COURS: "En cours",
-      LIVREE: "Livrée",
-      ANNULEE: "Annulée",
-    };
-
-    function esc(v: string | null | undefined): string {
-      if (!v) return "";
-      // Si la valeur contient le séparateur, des guillemets ou un saut de ligne,
-      // on l'encadre de guillemets doubles et on double les guillemets internes.
-      const s = String(v);
-      if (s.includes(SEP) || s.includes('"') || s.includes("\n")) {
-        return `"${s.replace(/"/g, '""')}"`;
-      }
-      return s;
-    }
-
-    function formatDate(d: Date): string {
-      return d.toLocaleString("fr-FR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    }
-
-    function formatEur(cents: number): string {
-      return (cents / 100).toFixed(2).replace(".", ",");
-    }
 
     const rows: string[] = [
       BOM + headers.map(esc).join(SEP),
@@ -112,18 +132,32 @@ export async function GET(req: NextRequest) {
           esc(ol.product.name),
           esc(ol.product.reference),
           esc(ol.product.category),
-          esc(String(ol.quantity)),
+          esc(ol.quantity),
           esc(formatEur(ol.unitPriceCents)),
           esc(formatEur(ol.unitPriceCents * ol.quantity)),
           esc(STATUS_LABELS[ol.order.status] ?? ol.order.status),
+          esc(ol.order.carrier),
+          esc(ol.order.trackingNumber),
+          esc(ol.order.estimatedDelivery ? formatDateOnly(ol.order.estimatedDelivery) : ""),
         ].join(SEP)
       ),
     ];
 
+    if (orderLines.length === 0) {
+      rows.push(
+        [esc("(aucune commande pour ce filtre)"), ...Array(13).fill("")].join(SEP)
+      );
+    }
+
     const csv = rows.join("\r\n");
+
     const now = new Date();
     const dateTag = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
-    const filename = `carlow-commandes-${dateTag}.csv`;
+    const vendorSlug = (vendor.companyName ?? vendor.name)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .slice(0, 24);
+    const filename = `carlow-commandes-${vendorSlug}-${dateTag}.csv`;
 
     return new NextResponse(csv, {
       status: 200,

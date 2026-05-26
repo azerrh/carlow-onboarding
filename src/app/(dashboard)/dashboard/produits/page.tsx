@@ -180,9 +180,35 @@ function ProductsInner({ preselectedCatalog }: { preselectedCatalog: string | nu
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => {
+                if (!vendorId) return;
+                const a = document.createElement("a");
+                a.href = `/api/vendor/products/export?vendorId=${vendorId}`;
+                a.download = "";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+              }}
+              disabled={products.length === 0}
+              title="Télécharger votre catalogue en CSV (Excel)"
+              className="inline-flex h-10 items-center gap-2 rounded-xl border border-[rgb(var(--border))]/80 bg-[rgb(var(--card))] px-4 text-sm font-semibold text-[rgb(var(--fg))] transition-all duration-150 hover:border-[rgb(var(--primary))]/40 hover:bg-[rgb(var(--primary))]/8 hover:text-[rgb(var(--primary))] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Export CSV
+            </button>
             <Link href="/dashboard/produits/import">
               <Button variant="secondary" disabled={catalogs.length === 0}>
-                📥 Import CSV
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+                Import CSV
               </Button>
             </Link>
             <Button
@@ -491,6 +517,139 @@ function ProductModal({
   const [aiBusy, setAiBusy] = useState<"describe" | "vision" | null>(null);
   const [aiError, setAiError] = useState("");
   const [aiInfo, setAiInfo] = useState("");
+  // Remises volume
+  const [discounts, setDiscounts] = useState<{ minQty: string; discountPct: string }[]>([]);
+  const [discountsLoaded, setDiscountsLoaded] = useState(false);
+  const [discountSaving, setDiscountSaving] = useState(false);
+  const [discountMsg, setDiscountMsg] = useState("");
+  // Photos produit
+  const [photos, setPhotos] = useState<Array<{ id: string; url: string; primary: boolean }>>([]);
+  const [photoLoading, setPhotoLoading] = useState(false);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoError, setPhotoError] = useState("");
+
+  /** Recharge la liste depuis l'API — utilisé après upload/delete/setPrimary. */
+  const refreshPhotos = useCallback(async () => {
+    if (!isEdit || !product || !vendorId) return;
+    try {
+      const res = await fetch(
+        `/api/vendor/products/photos?productId=${product.id}&vendorId=${vendorId}`
+      );
+      const data = await res.json();
+      if (data.success) setPhotos(data.photos);
+    } catch {
+      // silencieux
+    }
+  }, [isEdit, product, vendorId]);
+
+  // Charger les photos quand on ouvre en édition
+  useEffect(() => {
+    if (!isEdit || !product || !vendorId) return;
+    setPhotoLoading(true);
+    refreshPhotos().finally(() => setPhotoLoading(false));
+  }, [isEdit, product, vendorId, refreshPhotos]);
+
+  async function handleUploadPhoto(file: File) {
+    if (!isEdit || !product || !vendorId) return;
+    setPhotoUploading(true);
+    setPhotoError("");
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("productId", product.id);
+      fd.append("vendorId", vendorId);
+      const res = await fetch("/api/vendor/products/photos", {
+        method: "POST",
+        body: fd,
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setPhotoError(data?.error || "Erreur lors de l'upload.");
+        return;
+      }
+      await refreshPhotos();
+    } catch {
+      setPhotoError("Erreur réseau.");
+    } finally {
+      setPhotoUploading(false);
+    }
+  }
+
+  async function handleDeletePhoto(photoId: string) {
+    if (!vendorId) return;
+    if (!confirm("Supprimer cette photo ?")) return;
+    try {
+      const res = await fetch(
+        `/api/vendor/products/photos?id=${photoId}&vendorId=${vendorId}`,
+        { method: "DELETE" }
+      );
+      const data = await res.json();
+      if (data.success) await refreshPhotos();
+      else setPhotoError(data?.error || "Erreur lors de la suppression.");
+    } catch {
+      setPhotoError("Erreur réseau.");
+    }
+  }
+
+  async function handleSetPrimary(photoId: string) {
+    if (!vendorId) return;
+    try {
+      const res = await fetch("/api/vendor/products/photos", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ photoId, vendorId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setPhotos((ps) => ps.map((p) => ({ ...p, primary: p.id === photoId })));
+      }
+    } catch {
+      // silencieux
+    }
+  }
+
+  // Charger les remises existantes quand on édite
+  useEffect(() => {
+    if (!isEdit || !product || !vendorId) return;
+    fetch(`/api/vendor/volume-discounts?productId=${product.id}&vendorId=${vendorId}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success) {
+          setDiscounts(
+            (d.discounts ?? []).map((t: { minQty: number; discountPct: number }) => ({
+              minQty: String(t.minQty),
+              discountPct: String(t.discountPct),
+            }))
+          );
+        }
+      })
+      .catch(() => {})
+      .finally(() => setDiscountsLoaded(true));
+  }, [isEdit, product, vendorId]);
+
+  async function saveDiscounts() {
+    if (!isEdit || !product || !vendorId) return;
+    setDiscountSaving(true);
+    setDiscountMsg("");
+    try {
+      const tiers = discounts
+        .filter((d) => d.minQty && d.discountPct)
+        .map((d) => ({ minQty: Number(d.minQty), discountPct: Number(d.discountPct) }));
+      const res = await fetch("/api/vendor/volume-discounts", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: product.id, vendorId, discounts: tiers }),
+      });
+      const data = await res.json();
+      if (data.success) setDiscountMsg("✓ Remises enregistrées");
+      else setDiscountMsg("Erreur lors de l'enregistrement");
+    } catch {
+      setDiscountMsg("Erreur réseau");
+    } finally {
+      setDiscountSaving(false);
+      setTimeout(() => setDiscountMsg(""), 3000);
+    }
+  }
 
   /**
    * ✨ Génère une description produit via Claude à partir du nom + catégorie.
@@ -754,31 +913,158 @@ function ProductModal({
             />
           </label>
 
-          {/* Bloc IA */}
-          <div className="sm:col-span-2 rounded-xl border border-dashed border-[rgb(var(--primary))]/30 bg-[rgb(var(--primary))]/[0.03] p-3">
+          {/* Photos produit — uniquement en mode édition */}
+          {isEdit && (
+            <div className="sm:col-span-2 rounded-xl border border-dashed border-[rgb(var(--primary))]/30 bg-[rgb(var(--primary))]/[0.03] p-3">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wider text-[rgb(var(--primary))]">
+                  📷 Photos du produit
+                </span>
+                <label
+                  className={cn(
+                    "inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-[rgb(var(--primary))]/30 bg-white px-3 text-xs font-semibold text-[rgb(var(--primary))] hover:bg-[rgb(var(--primary))]/[0.06]",
+                    photoUploading && "animate-pulse cursor-wait opacity-60"
+                  )}
+                >
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="hidden"
+                    disabled={photoUploading}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleUploadPhoto(f);
+                      e.target.value = ""; // permet de re-upload le même fichier
+                    }}
+                  />
+                  {photoUploading ? "📤 Upload…" : "📤 Ajouter une photo"}
+                </label>
+              </div>
+              <p className="mt-1 text-[10px] text-[rgb(var(--muted))]">
+                JPG, PNG, WEBP ou GIF — max 5 MB. La première photo devient
+                automatiquement la photo principale.
+              </p>
+
+              {photoError && (
+                <p className="mt-2 text-[11px] text-red-600">{photoError}</p>
+              )}
+
+              {photoLoading ? (
+                <p className="mt-3 text-[11px] text-[rgb(var(--muted))]">
+                  Chargement des photos…
+                </p>
+              ) : photos.length === 0 ? (
+                <div className="mt-3 grid place-items-center rounded-lg border border-dashed border-[rgb(var(--border))] bg-white/50 px-4 py-6 text-center">
+                  <div className="text-2xl">🖼️</div>
+                  <p className="mt-1 text-[11px] text-[rgb(var(--muted))]">
+                    Aucune photo pour l&apos;instant
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-3 grid gap-2 grid-cols-3 sm:grid-cols-4">
+                  {photos.map((p) => (
+                    <div
+                      key={p.id}
+                      className="group relative aspect-square overflow-hidden rounded-lg border border-[rgb(var(--border))] bg-black/[0.04]"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={p.url}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                      {p.primary && (
+                        <span className="absolute left-1 top-1 rounded-md bg-amber-400 px-1.5 py-0.5 text-[9px] font-bold uppercase text-amber-950">
+                          Principale
+                        </span>
+                      )}
+                      <div className="absolute inset-x-0 bottom-0 flex gap-1 bg-gradient-to-t from-black/70 to-transparent p-1.5 opacity-0 transition group-hover:opacity-100">
+                        {!p.primary && (
+                          <button
+                            type="button"
+                            onClick={() => handleSetPrimary(p.id)}
+                            className="rounded-md bg-white/95 px-1.5 py-0.5 text-[9px] font-semibold text-amber-700 hover:bg-amber-50"
+                            title="Définir comme photo principale"
+                          >
+                            ★ Principale
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePhoto(p.id)}
+                          className="ml-auto rounded-md bg-white/95 px-1.5 py-0.5 text-[9px] font-semibold text-red-600 hover:bg-red-50"
+                          title="Supprimer"
+                        >
+                          🗑 Supprimer
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          {!isEdit && (
+            <div className="sm:col-span-2 rounded-xl border border-dashed border-[rgb(var(--muted))]/30 bg-black/[0.02] p-3 text-[11px] text-[rgb(var(--muted))]">
+              📷 <strong>Photos :</strong> enregistrez d&apos;abord le produit,
+              puis rouvrez-le pour ajouter des photos.
+            </div>
+          )}
+
+          {/* Bloc IA — Assistant Claude pour générer descriptions et analyser photos */}
+          <div className="sm:col-span-2 overflow-hidden rounded-2xl border border-[rgb(var(--primary))]/30 bg-gradient-to-br from-[rgb(var(--primary))]/[0.05] via-transparent to-[rgb(var(--success))]/[0.04] p-4">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-[rgb(var(--primary))]">
-                ✨ Assistant IA
+              <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-[rgb(var(--primary))] to-[#c05510] text-sm shadow-sm">
+                ✨
+              </span>
+              <span className="text-xs font-bold uppercase tracking-wider gradient-text">
+                Assistant IA (Claude)
+              </span>
+              <span className="rounded-full bg-[rgb(var(--success))]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[rgb(var(--success))]">
+                ● Activé
               </span>
             </div>
-            <div className="mt-2 flex flex-wrap gap-2">
+            <p className="mt-2 text-[11px] text-[rgb(var(--muted))]">
+              Laissez l&apos;IA rédiger votre description ou analyser une photo pour pré-remplir les champs.
+            </p>
+
+            <div className="mt-3 flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={generateDescription}
-                disabled={aiBusy !== null}
+                disabled={aiBusy !== null || !form.name.trim()}
                 className={cn(
-                  "inline-flex h-9 items-center gap-1.5 rounded-lg border border-[rgb(var(--primary))]/30 bg-white px-3 text-xs font-semibold text-[rgb(var(--primary))] hover:bg-[rgb(var(--primary))]/[0.06] disabled:opacity-50",
-                  aiBusy === "describe" && "animate-pulse"
+                  "group inline-flex h-10 items-center gap-2 rounded-xl border border-[rgb(var(--primary))]/40 bg-[rgb(var(--card))] px-4 text-xs font-bold text-[rgb(var(--primary))] transition-all duration-150",
+                  "hover:border-[rgb(var(--primary))] hover:bg-[rgb(var(--primary))]/10 hover:shadow-[0_2px_8px_rgb(var(--primary)/0.15)]",
+                  "disabled:cursor-not-allowed disabled:opacity-50",
+                  aiBusy === "describe" && "cursor-wait"
                 )}
+                title="Génère une description optimisée à partir du nom et de la catégorie"
               >
-                {aiBusy === "describe" ? "✨ Génération…" : "✨ Générer la description"}
+                {aiBusy === "describe" ? (
+                  <>
+                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Génération…
+                  </>
+                ) : (
+                  <>
+                    <span className="transition-transform group-hover:rotate-12">✨</span>
+                    Générer la description
+                  </>
+                )}
               </button>
 
               <label
                 className={cn(
-                  "inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-[rgb(var(--primary))]/30 bg-white px-3 text-xs font-semibold text-[rgb(var(--primary))] hover:bg-[rgb(var(--primary))]/[0.06]",
-                  aiBusy === "vision" && "animate-pulse cursor-wait"
+                  "group inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl border border-[rgb(var(--primary))]/40 bg-[rgb(var(--card))] px-4 text-xs font-bold text-[rgb(var(--primary))] transition-all duration-150",
+                  "hover:border-[rgb(var(--primary))] hover:bg-[rgb(var(--primary))]/10 hover:shadow-[0_2px_8px_rgb(var(--primary)/0.15)]",
+                  aiBusy !== null && "cursor-not-allowed opacity-50",
+                  aiBusy === "vision" && "cursor-wait"
                 )}
+                title="Analyse une photo pour deviner le nom, la catégorie et générer une description"
               >
                 <input
                   type="file"
@@ -788,25 +1074,130 @@ function ProductModal({
                   onChange={(e) => {
                     const f = e.target.files?.[0];
                     if (f) handleAnalyzeImage(f);
-                    e.target.value = ""; // permet re-upload même fichier
+                    e.target.value = "";
                   }}
                 />
-                {aiBusy === "vision" ? "🖼️ Analyse…" : "🖼️ Analyser une photo"}
+                {aiBusy === "vision" ? (
+                  <>
+                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Analyse en cours…
+                  </>
+                ) : (
+                  <>
+                    <span className="transition-transform group-hover:scale-110">🖼️</span>
+                    Analyser une photo
+                  </>
+                )}
               </label>
             </div>
+
             {aiInfo && (
-              <p className="mt-2 text-[11px] text-[rgb(var(--success))]">
-                {aiInfo}
-              </p>
+              <div className="mt-3 flex items-start gap-2 rounded-lg border border-[rgb(var(--success))]/30 bg-[rgb(var(--success))]/10 px-3 py-2 text-xs text-[rgb(var(--success))] animate-fade-in">
+                <span>✓</span>
+                <span className="font-medium">{aiInfo}</span>
+              </div>
             )}
             {aiError && (
-              <p className="mt-2 text-[11px] text-red-600">{aiError}</p>
+              <div className="mt-3 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 animate-fade-in">
+                <span>⚠️</span>
+                <span className="font-medium">{aiError}</span>
+              </div>
             )}
-            <p className="mt-2 text-[10px] text-[rgb(var(--muted))]">
-              L&apos;IA s&apos;appuie sur le nom et la catégorie pour générer.
-              Relisez systématiquement le résultat avant d&apos;enregistrer.
+
+            <p className="mt-3 text-[10px] text-[rgb(var(--muted))]">
+              💡 Astuce : remplissez d&apos;abord le <strong>nom</strong> et la <strong>catégorie</strong> pour de meilleurs résultats. Relisez et ajustez le texte généré avant de valider.
             </p>
           </div>
+
+          {/* Remises volume — uniquement en mode édition */}
+          {isEdit && discountsLoaded && (
+            <div className="sm:col-span-2 rounded-xl border border-dashed border-[rgb(var(--success))]/40 bg-[rgb(var(--success))]/[0.03] p-3">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wider text-[rgb(var(--success))]">
+                  🏷️ Remises volume
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setDiscounts((d) => [...d, { minQty: "", discountPct: "" }])}
+                  className="inline-flex h-7 items-center gap-1 rounded-lg border border-[rgb(var(--success))]/40 bg-white px-2.5 text-xs font-semibold text-[rgb(var(--success))] hover:bg-[rgb(var(--success))]/[0.06]"
+                >
+                  + Ajouter un palier
+                </button>
+              </div>
+              <p className="mt-1 text-[10px] text-[rgb(var(--muted))]">
+                Ex : 10 unités → −10 %. Les remises s&apos;appliquent automatiquement sur la fiche produit et dans le panier.
+              </p>
+
+              {discounts.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {discounts.map((tier, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <div className="flex flex-1 items-center gap-2">
+                        <input
+                          type="number"
+                          min="1"
+                          placeholder="Qté min"
+                          value={tier.minQty}
+                          onChange={(e) =>
+                            setDiscounts((d) =>
+                              d.map((x, j) => j === i ? { ...x, minQty: e.target.value } : x)
+                            )
+                          }
+                          className="h-9 w-28 rounded-lg border border-[rgb(var(--border))] bg-white px-3 text-sm"
+                        />
+                        <span className="text-xs text-[rgb(var(--muted))]">unités</span>
+                        <span className="text-xs text-[rgb(var(--muted))]">→</span>
+                        <input
+                          type="number"
+                          min="1"
+                          max="99"
+                          step="0.5"
+                          placeholder="%"
+                          value={tier.discountPct}
+                          onChange={(e) =>
+                            setDiscounts((d) =>
+                              d.map((x, j) => j === i ? { ...x, discountPct: e.target.value } : x)
+                            )
+                          }
+                          className="h-9 w-20 rounded-lg border border-[rgb(var(--border))] bg-white px-3 text-sm"
+                        />
+                        <span className="text-xs text-[rgb(var(--muted))]">% de remise</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setDiscounts((d) => d.filter((_, j) => j !== i))}
+                        className="grid h-7 w-7 place-items-center rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="mt-3 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={saveDiscounts}
+                  disabled={discountSaving}
+                  className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[rgb(var(--success))] px-4 text-xs font-semibold text-white hover:brightness-95 disabled:opacity-60"
+                >
+                  {discountSaving ? "Enregistrement…" : "💾 Enregistrer les remises"}
+                </button>
+                {discountMsg && (
+                  <span className={cn(
+                    "text-xs font-semibold",
+                    discountMsg.startsWith("✓") ? "text-[rgb(var(--success))]" : "text-red-600"
+                  )}>
+                    {discountMsg}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
 
           <label className="sm:col-span-2">
             <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-[rgb(var(--muted))]">

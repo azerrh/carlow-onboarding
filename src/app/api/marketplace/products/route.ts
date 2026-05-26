@@ -44,6 +44,7 @@ export async function GET(req: NextRequest) {
           },
         },
         photos: { orderBy: { order: "asc" }, take: 1 },
+        reviews: { select: { rating: true } }, // pour calculer la note moyenne
       },
     });
 
@@ -71,25 +72,34 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      products: filtered.map((p) => ({
-        id: p.id,
-        name: p.name,
-        description: p.description,
-        price: p.price,
-        category: p.category,
-        reference: p.reference,
-        stock: p.stock,
-        active: p.active,
-        imageUrl: p.photos[0]?.url ?? null,
-        vendor: {
-          id: p.catalog.vendor.id,
-          name: p.catalog.vendor.companyName ?? p.catalog.vendor.name,
-        },
-        catalog: {
-          id: p.catalog.id,
-          name: p.catalog.name,
-        },
-      })),
+      products: filtered.map((p) => {
+        const ratingCount = p.reviews.length;
+        const ratingAvg =
+          ratingCount > 0
+            ? p.reviews.reduce((s, r) => s + r.rating, 0) / ratingCount
+            : 0;
+        return {
+          id: p.id,
+          name: p.name,
+          description: p.description,
+          price: p.price,
+          category: p.category,
+          reference: p.reference,
+          stock: p.stock,
+          active: p.active,
+          imageUrl: p.photos[0]?.url ?? null,
+          vendor: {
+            id: p.catalog.vendor.id,
+            name: p.catalog.vendor.companyName ?? p.catalog.vendor.name,
+          },
+          catalog: {
+            id: p.catalog.id,
+            name: p.catalog.name,
+          },
+          ratingAvg: Math.round(ratingAvg * 10) / 10, // ex: 4.3
+          ratingCount,
+        };
+      }),
       categories,
     });
   } catch (error) {

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { Brand } from "@/components/ui/Brand";
 import { Button } from "@/components/ui/Button";
-import { useCart, useCartSummary } from "@/hooks/useCart";
+import { useCart, useCartSummary, getApplicableDiscount, getEffectivePrice, VolumeDiscountTier, CartItem } from "@/hooks/useCart";
 import { ProductReviews } from "@/components/marketplace/ProductReviews";
 import { RecentlyViewed } from "@/components/marketplace/RecentlyViewed";
 import { TranslateButton } from "@/components/marketplace/TranslateButton";
@@ -55,6 +55,8 @@ function ProductDetailInner() {
   const [toast, setToast] = useState("");
   const [cartOpen, setCartOpen] = useState(false);
   const [quoteOpen, setQuoteOpen] = useState(false);
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [volumeDiscounts, setVolumeDiscounts] = useState<VolumeDiscountTier[]>([]);
 
   const addItem = useCart((s) => s.addItem);
   const { totalItems } = useCartSummary();
@@ -65,35 +67,45 @@ function ProductDetailInner() {
     // section "Vous avez consulté" sur les autres fiches produit.
     trackView(productId);
     setLoading(true);
-    fetch(`/api/marketplace/products/${productId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          setProduct(data.product);
-          setRelated(data.related ?? []);
-        } else {
-          setError(data.error || "Produit non trouve");
-        }
-      })
-      .catch(() => setError("Erreur reseau"))
-      .finally(() => setLoading(false));
+    Promise.all([
+      fetch(`/api/marketplace/products/${productId}`).then((r) => r.json()),
+      fetch(`/api/marketplace/products/${productId}/discounts`).then((r) => r.json()),
+    ]).then(([data, discData]) => {
+      if (data.success) {
+        const p = data.product;
+        // Le vendeur est imbriqué dans catalog.vendor côté Prisma.
+        // On le hisse au niveau racine pour correspondre à l'interface Product.
+        setProduct({
+          ...p,
+          vendor: p.catalog?.vendor ?? { id: "", name: "Inconnu", companyName: null },
+        });
+        setRelated(data.related ?? []);
+      } else {
+        setError(data.error || "Produit non trouve");
+      }
+      if (discData.success) setVolumeDiscounts(discData.discounts ?? []);
+    })
+    .catch(() => setError("Erreur reseau"))
+    .finally(() => setLoading(false));
   }, [productId]);
 
   function handleAddToCart() {
     if (!product || product.stock === 0) return;
-    for (let i = 0; i < quantity; i++) {
-      addItem({
-        productId: product.id,
-        name: product.name,
-        price: product.price,
-        quantity: 1,
-        vendorId: product.vendor.id,
-        vendorName: product.vendor.name,
-        imageUrl: product.photos[0]?.url ?? undefined,
-      });
-    }
-    setToast(`${quantity}x ${product.name} ajoute${quantity > 1 ? "s" : ""} au panier`);
-    setTimeout(() => setToast(""), 2500);
+    addItem({
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      quantity,
+      vendorId: product.vendor.id,
+      vendorName: product.vendor.name,
+      imageUrl: product.photos[0]?.url ?? undefined,
+      maxStock: product.stock,
+      volumeDiscounts: volumeDiscounts.length > 0 ? volumeDiscounts : undefined,
+    });
+    const tier = getApplicableDiscount(volumeDiscounts, quantity);
+    const savings = tier ? ` (−${tier.discountPct}% remise volume)` : "";
+    setToast(`${quantity}× ${product.name} ajouté${quantity > 1 ? "s" : ""} au panier${savings}`);
+    setTimeout(() => setToast(""), 3000);
   }
 
   if (loading) {
@@ -301,7 +313,70 @@ function ProductDetailInner() {
             {/* Price */}
             <div className="mt-6 flex items-baseline gap-2">
               <span className="text-3xl font-bold tracking-tight">{formatPrice(product.price)}</span>
+              <span className="text-sm text-[rgb(var(--muted))]">/ unité HT</span>
             </div>
+
+            {/* Volume discount table */}
+            {volumeDiscounts.length > 0 && (
+              <div className="mt-4 overflow-hidden rounded-xl border border-[rgb(var(--success))]/30 bg-[rgb(var(--success))]/[0.03]">
+                <div className="flex items-center gap-2 border-b border-[rgb(var(--success))]/20 px-4 py-2.5">
+                  <span className="text-[rgb(var(--success))]">🏷️</span>
+                  <span className="text-xs font-semibold text-[rgb(var(--success))]">Remises volume disponibles</span>
+                </div>
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-[rgb(var(--success))]/10">
+                      <th className="px-4 py-2 text-left font-semibold text-[rgb(var(--muted))]">Quantité min.</th>
+                      <th className="px-4 py-2 text-center font-semibold text-[rgb(var(--muted))]">Remise</th>
+                      <th className="px-4 py-2 text-right font-semibold text-[rgb(var(--muted))]">Prix unitaire</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {volumeDiscounts.map((tier, i) => {
+                      const isActive = quantity >= tier.minQty;
+                      const effectivePrice = product.price * (1 - tier.discountPct / 100);
+                      return (
+                        <tr
+                          key={i}
+                          className={cn(
+                            "border-b border-[rgb(var(--success))]/10 last:border-0",
+                            isActive && "bg-[rgb(var(--success))]/10"
+                          )}
+                        >
+                          <td className="px-4 py-2.5 font-medium">
+                            {isActive && <span className="mr-1.5 text-[rgb(var(--success))]">✓</span>}
+                            {tier.minQty}+ unités
+                          </td>
+                          <td className="px-4 py-2.5 text-center">
+                            <span className={cn(
+                              "rounded-full px-2 py-0.5 font-bold",
+                              isActive
+                                ? "bg-[rgb(var(--success))] text-white"
+                                : "bg-[rgb(var(--success))]/10 text-[rgb(var(--success))]"
+                            )}>
+                              −{tier.discountPct}%
+                            </span>
+                          </td>
+                          <td className="px-4 py-2.5 text-right font-semibold">
+                            {formatPrice(effectivePrice)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                {(() => {
+                  const active = getApplicableDiscount(volumeDiscounts, quantity);
+                  if (!active) return null;
+                  return (
+                    <div className="border-t border-[rgb(var(--success))]/20 bg-[rgb(var(--success))]/10 px-4 py-2 text-xs font-semibold text-[rgb(var(--success))]">
+                      ✓ Remise de {active.discountPct}% appliquée pour {quantity} unités — vous économisez{" "}
+                      {formatPrice(product.price * active.discountPct / 100)} / unité
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
 
             {/* Description */}
             {product.description && (
@@ -357,6 +432,26 @@ function ProductDetailInner() {
                   </button>
                 </div>
               </div>
+              {/* Alerte prix & stock */}
+              <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-dashed border-[rgb(var(--border))] px-4 py-3">
+                <div>
+                  <p className="text-xs font-semibold text-[rgb(var(--fg))]">
+                    {product.stock === 0 ? "Rupture de stock ?" : "Prix en baisse ?"}
+                  </p>
+                  <p className="text-[11px] text-[rgb(var(--muted))]">
+                    {product.stock === 0
+                      ? "Soyez alerté dès le retour en stock."
+                      : "Soyez alerté si le prix baisse ou le stock redevient disponible."}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setAlertOpen(true)}
+                  className="shrink-0 inline-flex h-9 items-center gap-1.5 rounded-xl border border-[rgb(var(--border))] bg-white px-4 text-xs font-semibold text-[rgb(var(--muted))] hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700 transition"
+                >
+                  🔔 M&apos;alerter
+                </button>
+              </div>
+
               <div className="flex items-center gap-3">
                 {/* Quantity selector */}
                 <div className="flex items-center rounded-xl border border-[rgb(var(--border))]">
@@ -449,6 +544,17 @@ function ProductDetailInner() {
           productName={product.name}
           productPrice={product.price}
           onClose={() => setQuoteOpen(false)}
+        />
+      )}
+
+      {/* Alerte prix & stock modal */}
+      {alertOpen && (
+        <AlertModal
+          productId={product.id}
+          productName={product.name}
+          productPrice={product.price}
+          productStock={product.stock}
+          onClose={() => setAlertOpen(false)}
         />
       )}
 
@@ -621,9 +727,150 @@ function QuoteModal({
   );
 }
 
+/* ---- Alert Modal ---- */
+
+function AlertModal({
+  productId,
+  productName,
+  productPrice,
+  productStock,
+  onClose,
+}: {
+  productId: string;
+  productName: string;
+  productPrice: number;
+  productStock: number;
+  onClose: () => void;
+}) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
+  const [err, setErr] = useState("");
+
+  // Pré-remplir depuis localStorage si l'acheteur est connecté
+  useEffect(() => {
+    const bid = localStorage.getItem("buyerId");
+    if (!bid) return;
+    fetch(`/api/buyer/me?id=${bid}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success) {
+          setName(d.buyer?.name ?? "");
+          setEmail(d.buyer?.email ?? "");
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setErr("");
+    setSubmitting(true);
+    try {
+      const buyerId = localStorage.getItem("buyerId");
+      const res = await fetch("/api/alerts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId, buyerEmail: email, buyerName: name, buyerId }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) { setErr(data?.error ?? "Erreur"); return; }
+      setDone(true);
+    } catch {
+      setErr("Erreur réseau.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={onClose}>
+      <div
+        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {done ? (
+          <div className="py-6 text-center">
+            <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-amber-100 text-2xl">🔔</div>
+            <h2 className="mt-4 text-base font-semibold">Alerte activée !</h2>
+            <p className="mt-2 text-sm text-[rgb(var(--muted))]">
+              Vous recevrez un email si le prix baisse ou si le stock revient pour{" "}
+              <strong>{productName}</strong>.
+            </p>
+            <button
+              onClick={onClose}
+              className="mt-5 h-10 rounded-xl bg-[rgb(var(--primary))] px-6 text-sm font-semibold text-white hover:brightness-95"
+            >
+              Fermer
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="mb-4">
+              <h2 className="text-base font-semibold">🔔 Activer une alerte</h2>
+              <p className="mt-1 text-sm text-[rgb(var(--muted))]">
+                Vous serez notifié par email si :
+              </p>
+              <ul className="mt-2 space-y-1 text-xs text-[rgb(var(--muted))]">
+                <li>📉 Le prix de <strong>{productName}</strong> ({productPrice.toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}) baisse</li>
+                {productStock === 0 && <li>📦 Le produit revient en stock</li>}
+              </ul>
+            </div>
+
+            {err && (
+              <div className="mb-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</div>
+            )}
+
+            <form onSubmit={handleSubmit} className="grid gap-3">
+              <label className="block">
+                <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-[rgb(var(--muted))]">Nom *</span>
+                <input
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Votre nom"
+                  className="h-10 w-full rounded-xl border border-[rgb(var(--border))] px-3 text-sm focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/15"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-[rgb(var(--muted))]">Email *</span>
+                <input
+                  required
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="votre@email.fr"
+                  className="h-10 w-full rounded-xl border border-[rgb(var(--border))] px-3 text-sm focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/15"
+                />
+              </label>
+              <div className="flex justify-end gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="h-10 rounded-xl border border-[rgb(var(--border))] px-4 text-sm font-semibold hover:bg-black/[0.02]"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="h-10 rounded-xl bg-amber-500 px-5 text-sm font-semibold text-white hover:bg-amber-600 disabled:opacity-60 transition"
+                >
+                  {submitting ? "…" : "🔔 Activer l'alerte"}
+                </button>
+              </div>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ---- Cart Drawer (reused from marketplace) ---- */
 
-import { CartItem } from "@/hooks/useCart";
+// CartItem, getEffectivePrice, getApplicableDiscount already imported above
 
 function CartDrawer({ onClose }: { onClose: () => void }) {
   const items = useCart((s) => s.items);
@@ -695,7 +942,20 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
                         <button onClick={() => updateQuantity(item.productId, item.quantity - 1)} className="grid h-6 w-6 place-items-center rounded-md border text-xs hover:bg-black/[0.02] transition">−</button>
                         <span className="text-xs font-medium w-4 text-center">{item.quantity}</span>
                         <button onClick={() => updateQuantity(item.productId, item.quantity + 1)} className="grid h-6 w-6 place-items-center rounded-md border text-xs hover:bg-black/[0.02] transition">+</button>
-                        <span className="ml-auto text-sm font-semibold">{(item.price * item.quantity).toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}</span>
+                        <div className="ml-auto text-right">
+                          {(() => {
+                            const tier = getApplicableDiscount(item.volumeDiscounts, item.quantity);
+                            const effPrice = getEffectivePrice(item);
+                            return (
+                              <>
+                                <span className="text-sm font-semibold">{(effPrice * item.quantity).toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}</span>
+                                {tier && (
+                                  <p className="text-[10px] font-semibold text-[rgb(var(--success))]">−{tier.discountPct}% volume</p>
+                                )}
+                              </>
+                            );
+                          })()}
+                        </div>
                       </div>
                     </div>
                     <button onClick={() => removeItem(item.productId)} className="self-start text-[rgb(var(--muted))] hover:text-red-600 transition">✕</button>

@@ -31,6 +31,12 @@ const ICON = {
       <rect x="14" y="14" width="7" height="7" rx="1.5" />
     </svg>
   ),
+  chart: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-5 w-5">
+      <path d="M3 3v18h18" />
+      <path d="M7 14l4-4 3 3 5-7" />
+    </svg>
+  ),
   users: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-5 w-5">
       <circle cx="9" cy="8" r="3.5" />
@@ -191,6 +197,7 @@ export function AdminShell({
       title: "Principal",
       items: [
         { label: "Tableau de bord", href: "/admin/dashboard", icon: ICON.dashboard },
+        { label: "Analytics avancés", href: "/admin/analytics", icon: ICON.chart },
       ],
     },
     {

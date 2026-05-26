@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendOrderStatusChangedEmail } from "@/lib/email";
 
 /**
  * Liste les commandes contenant au moins un produit du vendeur.
@@ -82,6 +83,9 @@ export async function GET(req: NextRequest) {
             name: order.buyer?.name ?? "—",
             email: order.buyer?.email ?? "",
           },
+          trackingNumber: order.trackingNumber ?? null,
+          carrier: order.carrier ?? null,
+          estimatedDelivery: order.estimatedDelivery?.toISOString() ?? null,
           // Total côté vendeur uniquement (pas le total global Stripe).
           vendorSubtotalCents,
           itemCount,
@@ -109,6 +113,79 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, orders: enriched });
   } catch (error) {
     console.error("[api/vendor/orders] error:", error);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+  }
+}
+
+/**
+ * PUT /api/vendor/orders
+ * body: { orderId, vendorId, status?, trackingNumber?, carrier?, estimatedDelivery?, note? }
+ *
+ * Met à jour le statut et/ou les infos de suivi d'une commande.
+ * Crée un OrderEvent pour la timeline. Envoie un email à l'acheteur.
+ */
+export async function PUT(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { orderId, vendorId, status, trackingNumber, carrier, estimatedDelivery, note } = body;
+
+    if (!orderId || !vendorId) {
+      return NextResponse.json({ error: "orderId et vendorId requis" }, { status: 400 });
+    }
+
+    // Vérifier que la commande contient bien un produit du vendeur
+    const order = await prisma.order.findFirst({
+      where: {
+        id: orderId,
+        lines: { some: { product: { catalog: { vendorId } } } },
+      },
+      include: {
+        buyer: { select: { name: true, email: true } },
+      },
+    });
+    if (!order) {
+      return NextResponse.json({ error: "Commande introuvable" }, { status: 404 });
+    }
+
+    const validStatuses = ["EN_COURS", "CONFIRMED", "SHIPPED", "LIVREE", "ANNULEE"];
+    if (status && !validStatuses.includes(status)) {
+      return NextResponse.json({ error: "Statut invalide" }, { status: 400 });
+    }
+
+    // Construire les données à mettre à jour
+    const updateData: Record<string, unknown> = {};
+    if (status) updateData.status = status;
+    if (trackingNumber !== undefined) updateData.trackingNumber = trackingNumber || null;
+    if (carrier !== undefined) updateData.carrier = carrier || null;
+    if (estimatedDelivery !== undefined) {
+      updateData.estimatedDelivery = estimatedDelivery ? new Date(estimatedDelivery) : null;
+    }
+
+    const [updated] = await prisma.$transaction([
+      prisma.order.update({ where: { id: orderId }, data: updateData }),
+      // Enregistrer l'événement dans la timeline
+      ...(status ? [prisma.orderEvent.create({
+        data: {
+          orderId,
+          status,
+          note: note || null,
+        },
+      })] : []),
+    ]);
+
+    // Notification email acheteur si le statut a changé
+    if (status && order.buyer) {
+      void sendOrderStatusChangedEmail({
+        buyerName: order.buyer.name,
+        buyerEmail: order.buyer.email,
+        orderId,
+        newStatus: status,
+      });
+    }
+
+    return NextResponse.json({ success: true, order: updated });
+  } catch (error) {
+    console.error("[api/vendor/orders PUT] error:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }

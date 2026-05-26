@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendPriceDropAlert, sendStockReturnAlert } from "@/lib/email";
 
 export async function GET(req: NextRequest) {
   try {
@@ -130,6 +131,59 @@ export async function PUT(req: NextRequest) {
     if (rest.active !== undefined) data.active = Boolean(rest.active);
 
     const product = await prisma.product.update({ where: { id }, data });
+
+    // ── Déclencher les alertes abonnés ─────────────────────────────────
+    // On le fait en fire-and-forget (pas de await bloquant) pour ne pas
+    // ralentir la réponse API. Les erreurs d'email sont loggées dans email.ts.
+    void (async () => {
+      try {
+        const priceDrop = rest.price !== undefined && Number(rest.price) < existing.price;
+        const stockReturn = rest.stock !== undefined && existing.stock === 0 && Number(rest.stock) > 0;
+
+        if (!priceDrop && !stockReturn) return;
+
+        const activeAlerts = await prisma.productAlert.findMany({
+          where: { productId: id, active: true },
+          select: { id: true, buyerEmail: true, buyerName: true, priceAtSubscription: true, stockAtSubscription: true },
+        });
+
+        if (activeAlerts.length === 0) return;
+
+        for (const alert of activeAlerts) {
+          if (priceDrop) {
+            await sendPriceDropAlert({
+              buyerEmail: alert.buyerEmail,
+              buyerName: alert.buyerName,
+              productName: product.name,
+              productId: product.id,
+              oldPrice: alert.priceAtSubscription,
+              newPrice: Number(rest.price),
+            });
+          }
+          if (stockReturn) {
+            await sendStockReturnAlert({
+              buyerEmail: alert.buyerEmail,
+              buyerName: alert.buyerName,
+              productName: product.name,
+              productId: product.id,
+              newStock: Number(rest.stock),
+            });
+          }
+        }
+
+        // Mettre à jour les snapshots dans toutes les alertes
+        await prisma.productAlert.updateMany({
+          where: { productId: id, active: true },
+          data: {
+            ...(rest.price !== undefined ? { priceAtSubscription: Number(rest.price) } : {}),
+            ...(rest.stock !== undefined ? { stockAtSubscription: Number(rest.stock) } : {}),
+          },
+        });
+      } catch (alertErr) {
+        console.error("[alerts trigger]", alertErr);
+      }
+    })();
+
     return NextResponse.json({ success: true, product });
   } catch (error) {
     console.error(error);

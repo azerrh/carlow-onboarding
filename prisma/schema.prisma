@@ -38,6 +38,7 @@ model Vendor {
   catalogs        Catalog[]
   notifications   Notification[]
   quotes          Quote[]
+  promoCodes      PromoCode[]
 }
 
 model Buyer {
@@ -54,6 +55,7 @@ model Buyer {
   favorites     Favorite[]
   reviews       Review[]
   quotes        Quote[]
+  alerts        ProductAlert[]
 }
 
 /* ============================================================
@@ -118,11 +120,13 @@ model Product {
   translations Json?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
-  photos      Photo[]
-  orderLines  OrderLine[]
-  favorites   Favorite[]
-  reviews     Review[]
-  quotes      Quote[]
+  photos          Photo[]
+  orderLines      OrderLine[]
+  favorites       Favorite[]
+  reviews         Review[]
+  quotes          Quote[]
+  alerts          ProductAlert[]
+  volumeDiscounts VolumeDiscount[]
 
   @@index([catalogId])
   @@index([category])
@@ -148,18 +152,41 @@ model Order {
   id        String      @id @default(cuid())
   buyerId   String
   buyer     Buyer       @relation(fields: [buyerId], references: [id], onDelete: Cascade)
-  status    String      @default("EN_COURS") // EN_COURS | LIVREE | ANNULEE
+  // EN_COURS | CONFIRMED | SHIPPED | LIVREE | ANNULEE
+  status    String      @default("EN_COURS")
   totalCents Int        @default(0)
   // Identifiant Stripe Checkout — sert à l'idempotence du webhook
   // ET à retrouver la commande depuis la page /checkout/success.
   stripeSessionId String? @unique
+  // Suivi transporteur (renseigné par le vendeur au moment de l'expédition)
+  trackingNumber    String?
+  carrier           String?
+  estimatedDelivery DateTime?
   orderedAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
   lines     OrderLine[]
   messages  Message[]
+  events    OrderEvent[]
 
   @@index([buyerId])
   @@index([status])
+}
+
+/* ============================================================
+   SUIVI COMMANDE — ÉVÉNEMENTS / TIMELINE
+   ============================================================ */
+
+model OrderEvent {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  // Nouveau statut appliqué à cet événement
+  status    String
+  // Note optionnelle du vendeur (ex : "Expédié via Chronopost")
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([orderId, createdAt])
 }
 
 /* ============================================================
@@ -336,6 +363,90 @@ model Quote {
   @@index([buyerEmail])
   @@index([productId])
   @@index([accessToken])
+}
+
+/* ============================================================
+   REMISES VOLUME
+   ============================================================ */
+
+model VolumeDiscount {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  // Quantité minimum pour déclencher la remise (ex: 10)
+  minQty      Int
+  // Pourcentage de remise (ex: 15 = -15%)
+  discountPct Float
+  createdAt   DateTime @default(now())
+
+  @@index([productId])
+}
+
+/* ============================================================
+   CODES PROMO VENDEUR
+   ============================================================ */
+
+model PromoCode {
+  id          String   @id @default(cuid())
+  vendorId    String
+  vendor      Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  // Le code que l'acheteur saisit (stocké en majuscules, unique par vendeur).
+  code        String
+  // PERCENT : discountValue est un pourcentage (ex: 10 = -10%)
+  // FIXED   : discountValue est en centimes (ex: 500 = -5€)
+  type        String   // "PERCENT" | "FIXED"
+  // Montant ou pourcentage de la remise
+  discountValue Float
+  // Montant minimum (en centimes) requis sur le sous-total vendeur
+  // pour appliquer le code. 0 = pas de minimum.
+  minSubtotalCents Int  @default(0)
+  // Nombre max d'utilisations totales. NULL = illimité.
+  maxUsages   Int?
+  // Combien de fois le code a déjà été utilisé.
+  usageCount  Int      @default(0)
+  // Date d'expiration optionnelle (NULL = jamais).
+  expiresAt   DateTime?
+  // Permet de désactiver le code sans le supprimer (historique d'utilisation).
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Un code donné est unique pour un vendeur (mais "SUMMER25" peut exister
+  // chez plusieurs vendeurs différents — chacun applique sa propre remise).
+  @@unique([vendorId, code])
+  @@index([vendorId])
+  @@index([code])
+}
+
+/* ============================================================
+   ALERTES PRIX & STOCK
+   ============================================================ */
+
+model ProductAlert {
+  id         String   @id @default(cuid())
+
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // Acheteur enregistré (optionnel — fonctionne aussi sans compte)
+  buyerId    String?
+  buyer      Buyer?   @relation(fields: [buyerId], references: [id], onDelete: SetNull)
+
+  buyerEmail String
+  buyerName  String
+
+  // Snapshot au moment de l'abonnement — pour détecter les variations
+  priceAtSubscription Float
+  stockAtSubscription Int
+
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  // Un email ne peut s'abonner qu'une fois par produit
+  @@unique([productId, buyerEmail])
+  @@index([productId])
+  @@index([buyerEmail])
+  @@index([buyerId])
 }
 
 model Notification {

@@ -191,12 +191,18 @@ export function VendorShell({
           icon: ICON.doc,
         },
         {
+          label: "Alertes",
+          href: "/dashboard/alertes",
+          icon: ICON.bell,
+        },
+        {
           label: "Catalogue",
           icon: ICON.bag,
-          matchPaths: ["/dashboard/catalogues", "/dashboard/produits"],
+          matchPaths: ["/dashboard/catalogues", "/dashboard/produits", "/dashboard/promo-codes"],
           children: [
             { label: "Produits", href: "/dashboard/produits", icon: ICON.bag },
             { label: "Catalogues", href: "/dashboard/catalogues", icon: ICON.book },
+            { label: "Codes promo", href: "/dashboard/promo-codes", icon: ICON.award },
           ],
         },
       ],
@@ -255,15 +261,15 @@ export function VendorShell({
   return (
     <div className="flex min-h-screen bg-[rgb(var(--bg))]">
       {/* Mini icon bar (>= lg) */}
-      <aside className="sticky top-0 z-30 hidden h-screen w-14 flex-col items-center gap-1 border-r border-[rgb(var(--border))] bg-white/80 py-4 lg:flex">
+      <aside className="sticky top-0 z-30 hidden h-screen w-[60px] flex-col items-center gap-1 border-r border-[rgb(var(--border))]/70 bg-[rgb(var(--card))]/90 py-4 backdrop-blur-sm lg:flex">
         <Link
           href="/dashboard"
-          className="grid h-9 w-9 place-items-center rounded-lg bg-[rgb(var(--primary))] text-white"
+          className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-[rgb(var(--primary))] to-[#c05510] text-white shadow-[0_2px_8px_rgb(var(--primary)/0.35)]"
           aria-label="Accueil tableau de bord"
         >
           <span className="text-sm font-bold">C</span>
         </Link>
-        <div className="my-1 h-px w-6 bg-[rgb(var(--border))]" />
+        <div className="my-2 h-px w-7 bg-[rgb(var(--border))]/60" />
 
         {flatTopItems.map((it, idx) => {
           const target = it.href ?? it.matchPaths?.[0] ?? "#";
@@ -274,10 +280,10 @@ export function VendorShell({
               href={target}
               title={it.label}
               className={cn(
-                "grid h-9 w-9 place-items-center rounded-lg transition",
+                "grid h-9 w-9 place-items-center rounded-xl transition-all duration-150",
                 active
-                  ? "bg-[rgb(var(--primary))] text-white"
-                  : "text-[rgb(var(--muted))] hover:bg-black/[0.04]"
+                  ? "bg-[rgb(var(--primary))]/12 text-[rgb(var(--primary))] shadow-[0_0_0_1px_rgb(var(--primary)/0.2)]"
+                  : "text-[rgb(var(--muted))] hover:bg-[rgb(var(--primary))]/8 hover:text-[rgb(var(--primary))]"
               )}
             >
               {it.icon}
@@ -289,7 +295,7 @@ export function VendorShell({
           <button
             onClick={handleLogout}
             title="Déconnexion"
-            className="grid h-9 w-9 place-items-center rounded-lg text-red-400 transition hover:bg-red-50 hover:text-red-600"
+            className="grid h-9 w-9 place-items-center rounded-xl text-[rgb(var(--muted))]/70 transition hover:bg-red-500/10 hover:text-red-500"
           >
             {ICON.logout}
           </button>
@@ -297,25 +303,25 @@ export function VendorShell({
       </aside>
 
       {/* Sidebar pleine (>= lg) */}
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 overflow-y-auto border-r border-[rgb(var(--border))] bg-white/80 lg:block">
-        <div className="border-b border-[rgb(var(--border))] px-5 py-4">
+      <aside className="sticky top-0 hidden h-screen w-[240px] shrink-0 overflow-y-auto border-r border-[rgb(var(--border))]/70 bg-[rgb(var(--card))]/90 backdrop-blur-sm lg:block">
+        <div className="border-b border-[rgb(var(--border))]/60 px-5 py-4">
           <Link href="/dashboard" className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-[rgb(var(--primary))] to-[rgb(var(--primary))]/70 text-white shadow-sm">
-              <span className="text-base font-bold">C</span>
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[rgb(var(--primary))] to-[#c05510] text-white shadow-[0_2px_8px_rgb(var(--primary)/0.3)]">
+              <span className="text-sm font-bold">C</span>
             </span>
             <div>
               <span className="text-sm font-bold tracking-tight">Carlow</span>
-              <span className="ml-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[rgb(var(--muted))]">
+              <span className="ml-1.5 rounded-md bg-[rgb(var(--primary))]/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[rgb(var(--primary))]">
                 Vendeur
               </span>
             </div>
           </Link>
         </div>
 
-        <nav className="px-3 py-4">
+        <nav className="px-2.5 py-4">
           {sections.map((section) => (
-            <div key={section.title} className="mb-4 last:mb-0">
-              <div className="px-3 pb-2 pt-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[rgb(var(--muted))]/70">
+            <div key={section.title} className="mb-5 last:mb-0">
+              <div className="px-3 pb-2 pt-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-[rgb(var(--muted))]/60">
                 {section.title}
               </div>
               <ul className="space-y-0.5">
@@ -331,7 +337,7 @@ export function VendorShell({
       {/* Overlay mobile */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
           onClick={() => setMobileOpen(false)}
           aria-hidden="true"
         />
@@ -340,24 +346,24 @@ export function VendorShell({
       {/* Drawer mobile */}
       <aside
         className={cn(
-          "fixed left-0 top-0 z-50 h-full w-72 overflow-y-auto border-r border-[rgb(var(--border))] bg-white shadow-xl transition-transform duration-300 ease-out lg:hidden",
+          "fixed left-0 top-0 z-50 h-full w-72 overflow-y-auto border-r border-[rgb(var(--border))]/70 bg-[rgb(var(--card))] shadow-2xl transition-transform duration-300 ease-out lg:hidden",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
         aria-hidden={!mobileOpen}
       >
-        <div className="border-b border-[rgb(var(--border))] px-4 py-4">
+        <div className="border-b border-[rgb(var(--border))]/60 px-4 py-4">
           <div className="flex items-center justify-between">
             <Link
               href="/dashboard"
               className="flex items-center gap-3"
               onClick={() => setMobileOpen(false)}
             >
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-[rgb(var(--primary))] text-white">
-                <span className="text-base font-bold">C</span>
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-[rgb(var(--primary))] to-[#c05510] text-white shadow-[0_2px_8px_rgb(var(--primary)/0.3)]">
+                <span className="text-sm font-bold">C</span>
               </span>
               <div>
-                <span className="text-sm font-bold">Carlow</span>
-                <span className="ml-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[rgb(var(--muted))]">
+                <span className="text-sm font-bold tracking-tight">Carlow</span>
+                <span className="ml-1.5 rounded-md bg-[rgb(var(--primary))]/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[rgb(var(--primary))]">
                   Vendeur
                 </span>
               </div>
@@ -365,7 +371,7 @@ export function VendorShell({
             <button
               onClick={() => setMobileOpen(false)}
               aria-label="Fermer le menu"
-              className="grid h-9 w-9 place-items-center rounded-lg text-[rgb(var(--muted))] hover:bg-black/[0.04]"
+              className="grid h-9 w-9 place-items-center rounded-xl text-[rgb(var(--muted))] hover:bg-black/[0.04]"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
                 <path d="M6 6l12 12M18 6L6 18" />
@@ -374,10 +380,10 @@ export function VendorShell({
           </div>
         </div>
 
-        <nav className="px-3 py-4">
+        <nav className="px-2.5 py-4">
           {sections.map((section) => (
-            <div key={section.title} className="mb-4">
-              <div className="px-3 pb-2 pt-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[rgb(var(--muted))]/70">
+            <div key={section.title} className="mb-5">
+              <div className="px-3 pb-2 pt-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-[rgb(var(--muted))]/60">
                 {section.title}
               </div>
               <ul className="space-y-0.5">
@@ -389,24 +395,24 @@ export function VendorShell({
           ))}
         </nav>
 
-        <div className="border-t border-[rgb(var(--border))] px-4 py-3">
+        <div className="border-t border-[rgb(var(--border))]/60 px-4 py-3">
           <button
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-red-500 transition hover:bg-red-500/10"
           >
-            <span className="text-red-500">{ICON.logout}</span>
+            <span>{ICON.logout}</span>
             Déconnexion
           </button>
         </div>
       </aside>
 
       {/* Contenu principal */}
-      <div className="flex min-h-screen flex-1 flex-col">
-        <header className="flex h-14 items-center gap-3 border-b border-[rgb(var(--border))] bg-white/80 px-4 lg:justify-end lg:px-6">
+      <div className="flex min-h-screen flex-1 flex-col overflow-hidden">
+        <header className="sticky top-0 z-20 flex h-[56px] items-center gap-3 border-b border-[rgb(var(--border))]/70 bg-[rgb(var(--card))]/85 px-4 backdrop-blur-md lg:justify-end lg:px-6">
           <button
             onClick={() => setMobileOpen(true)}
             aria-label="Ouvrir le menu"
-            className="grid h-9 w-9 place-items-center rounded-lg text-[rgb(var(--muted))] hover:bg-black/[0.04] lg:hidden"
+            className="grid h-9 w-9 place-items-center rounded-xl text-[rgb(var(--muted))] hover:bg-black/[0.05] lg:hidden"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
               <path d="M4 6h16M4 12h16M4 18h16" />
@@ -418,10 +424,10 @@ export function VendorShell({
             className="flex items-center gap-2 lg:hidden"
             onClick={() => setMobileOpen(false)}
           >
-            <span className="grid h-7 w-7 place-items-center rounded-lg bg-[rgb(var(--primary))] text-sm font-bold text-white">
+            <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-[rgb(var(--primary))] to-[#c05510] text-sm font-bold text-white shadow-[0_1px_4px_rgb(var(--primary)/0.35)]">
               C
             </span>
-            <span className="text-sm font-semibold tracking-tight">Carlow</span>
+            <span className="text-sm font-bold tracking-tight">Carlow</span>
           </Link>
 
           <div className="flex-1 lg:hidden" />
@@ -433,11 +439,11 @@ export function VendorShell({
           <Link
             href="/dashboard/notifications"
             aria-label="Notifications"
-            className="relative grid h-9 w-9 place-items-center rounded-lg text-[rgb(var(--muted))] transition hover:bg-black/[0.04]"
+            className="relative grid h-9 w-9 place-items-center rounded-xl text-[rgb(var(--muted))] transition hover:bg-[rgb(var(--primary))]/8 hover:text-[rgb(var(--primary))]"
           >
             {ICON.bell}
             {unreadNotifsCount > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-[1rem] place-items-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+              <span className="absolute -right-0.5 -top-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white shadow-sm">
                 {unreadNotifsCount}
               </span>
             )}
@@ -447,60 +453,79 @@ export function VendorShell({
           <div className="relative">
             <button
               onClick={() => setUserMenuOpen((v) => !v)}
-              className="flex items-center gap-2 rounded-full border border-[rgb(var(--border))] bg-white px-2 py-1.5 text-xs hover:border-[rgb(var(--primary))]/30 transition"
+              className={cn(
+                "flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-xs font-medium transition-all duration-150",
+                userMenuOpen
+                  ? "border-[rgb(var(--primary))]/40 bg-[rgb(var(--primary))]/8"
+                  : "border-[rgb(var(--border))]/80 bg-[rgb(var(--card))] hover:border-[rgb(var(--primary))]/30"
+              )}
             >
-              <span className="grid h-8 w-8 place-items-center rounded-full bg-[rgb(var(--primary))]/10 text-[rgb(var(--primary))]">
+              <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-[rgb(var(--primary))]/20 to-[rgb(var(--primary))]/10 text-[rgb(var(--primary))]">
                 {ICON.user}
               </span>
-              <span className="hidden font-medium sm:inline">
+              <span className="hidden max-w-[120px] truncate font-semibold sm:inline">
                 {vendorUser?.companyName ?? vendorUser?.name ?? "Vendeur"}
               </span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-3 w-3">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={cn("h-3 w-3 transition-transform duration-150", userMenuOpen && "rotate-180")}>
                 <path d="M6 9l6 6 6-6" />
               </svg>
             </button>
             {userMenuOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
-                <div className="absolute right-0 top-full z-50 mt-2 w-60 overflow-hidden rounded-xl border border-[rgb(var(--border))] bg-white shadow-lg">
-                  <div className="border-b border-[rgb(var(--border))] px-4 py-3">
-                    <div className="text-sm font-semibold">
-                      {vendorUser?.name ?? "Vendeur"}
-                    </div>
-                    <div className="truncate text-xs text-[rgb(var(--muted))]">
-                      {vendorUser?.email ?? ""}
+                <div className="animate-scale-in absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-[rgb(var(--border))]/80 bg-[rgb(var(--card))] shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
+                  <div className="border-b border-[rgb(var(--border))]/60 px-4 py-3.5">
+                    <div className="flex items-center gap-3">
+                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[rgb(var(--primary))]/20 to-[rgb(var(--primary))]/10 text-[rgb(var(--primary))]">
+                        {ICON.user}
+                      </span>
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold">
+                          {vendorUser?.name ?? "Vendeur"}
+                        </div>
+                        <div className="truncate text-xs text-[rgb(var(--muted))]">
+                          {vendorUser?.email ?? ""}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <Link
-                    href="/dashboard/entreprise"
-                    className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-black/[0.03]"
-                    onClick={() => setUserMenuOpen(false)}
-                  >
-                    {ICON.shop} Mon entreprise
-                  </Link>
-                  <Link
-                    href="/account"
-                    className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-black/[0.03]"
-                    onClick={() => setUserMenuOpen(false)}
-                  >
-                    {ICON.settings} Profil & paramètres
-                  </Link>
-                  <button
-                    onClick={() => {
-                      setUserMenuOpen(false);
-                      handleLogout();
-                    }}
-                    className="flex w-full items-center gap-2 border-t border-[rgb(var(--border))] px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                  >
-                    {ICON.logout} Déconnexion
-                  </button>
+                  <div className="p-1.5">
+                    <Link
+                      href="/dashboard/entreprise"
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm transition hover:bg-black/[0.04]"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      {ICON.shop}
+                      <span>Mon entreprise</span>
+                    </Link>
+                    <Link
+                      href="/account"
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm transition hover:bg-black/[0.04]"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      {ICON.settings}
+                      <span>Profil & paramètres</span>
+                    </Link>
+                  </div>
+                  <div className="border-t border-[rgb(var(--border))]/60 p-1.5">
+                    <button
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        handleLogout();
+                      }}
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-red-500 transition hover:bg-red-500/10"
+                    >
+                      {ICON.logout}
+                      <span>Déconnexion</span>
+                    </button>
+                  </div>
                 </div>
               </>
             )}
           </div>
         </header>
 
-        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 animate-fade-in">{children}</main>
       </div>
     </div>
   );
@@ -527,15 +552,15 @@ function SidebarItem({ item, pathname }: { item: NavItem; pathname: string }) {
         <Link
           href={item.href ?? "#"}
           className={cn(
-            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition",
+            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150",
             active
-              ? "bg-[rgb(var(--primary))]/[0.08] text-[rgb(var(--primary))]"
-              : "text-[rgb(var(--fg))] hover:bg-black/[0.03]"
+              ? "bg-[rgb(var(--primary))]/10 text-[rgb(var(--primary))] shadow-[0_0_0_1px_rgb(var(--primary)/0.15)]"
+              : "text-[rgb(var(--fg))]/80 hover:bg-black/[0.04] hover:text-[rgb(var(--fg))]"
           )}
         >
           <span
             className={cn(
-              "shrink-0",
+              "shrink-0 transition-colors",
               active ? "text-[rgb(var(--primary))]" : "text-[rgb(var(--muted))]"
             )}
           >
@@ -554,15 +579,15 @@ function SidebarItem({ item, pathname }: { item: NavItem; pathname: string }) {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         className={cn(
-          "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition",
+          "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150",
           active
-            ? "bg-[rgb(var(--primary))]/[0.08] text-[rgb(var(--primary))]"
-            : "text-[rgb(var(--fg))] hover:bg-black/[0.03]"
+            ? "bg-[rgb(var(--primary))]/10 text-[rgb(var(--primary))] shadow-[0_0_0_1px_rgb(var(--primary)/0.15)]"
+            : "text-[rgb(var(--fg))]/80 hover:bg-black/[0.04] hover:text-[rgb(var(--fg))]"
         )}
       >
         <span
           className={cn(
-            "shrink-0",
+            "shrink-0 transition-colors",
             active ? "text-[rgb(var(--primary))]" : "text-[rgb(var(--muted))]"
           )}
         >
@@ -576,15 +601,15 @@ function SidebarItem({ item, pathname }: { item: NavItem; pathname: string }) {
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="1.8"
-            className={cn("h-3.5 w-3.5 shrink-0 transition-transform", open && "rotate-90")}
+            strokeWidth="2"
+            className={cn("h-3.5 w-3.5 shrink-0 transition-transform duration-200", open && "rotate-90")}
           >
             <path d="M9 6l6 6-6 6" />
           </svg>
         )}
       </button>
       {open && (
-        <ul className="ml-4 mt-0.5 space-y-0.5 border-l-2 border-[rgb(var(--border))]/50 pl-3">
+        <ul className="ml-4 mt-1 space-y-0.5 border-l-2 border-[rgb(var(--border))]/60 pl-3">
           {item.children.map((child) => {
             const childPath = child.href.split("?")[0];
             const isActive = pathname === childPath || pathname.startsWith(childPath + "/");
@@ -593,13 +618,13 @@ function SidebarItem({ item, pathname }: { item: NavItem; pathname: string }) {
                 <Link
                   href={child.href}
                   className={cn(
-                    "flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition",
+                    "flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-all duration-150",
                     isActive
                       ? "font-semibold text-[rgb(var(--primary))]"
                       : "text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]"
                   )}
                 >
-                  <span className="shrink-0">{child.icon}</span>
+                  <span className="shrink-0 opacity-70">{child.icon}</span>
                   <span className="flex-1 truncate">{child.label}</span>
                   {child.badge && <Badge tone={child.badge.tone}>{child.badge.label}</Badge>}
                 </Link>
@@ -647,26 +672,32 @@ export function VendorPageHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="mb-6">
-      <div className="text-xs text-[rgb(var(--muted))]">
+    <div className="mb-7">
+      <nav className="flex items-center gap-1 text-xs text-[rgb(var(--muted))]">
         {breadcrumb.map((b, i) => (
-          <span key={i}>
-            {i > 0 && <span className="mx-1.5">/</span>}
+          <span key={i} className="flex items-center gap-1">
+            {i > 0 && (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-3 w-3 shrink-0 opacity-40">
+                <path d="M9 6l6 6-6 6" />
+              </svg>
+            )}
             <span
               className={cn(
-                i === breadcrumb.length - 1 && "text-[rgb(var(--primary))] font-medium"
+                i === breadcrumb.length - 1
+                  ? "font-semibold text-[rgb(var(--primary))]"
+                  : "hover:text-[rgb(var(--fg))] transition-colors"
               )}
             >
               {b}
             </span>
           </span>
         ))}
-      </div>
-      <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
+      </nav>
+      <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
           {subtitle && (
-            <p className="mt-0.5 text-sm text-[rgb(var(--muted))]">{subtitle}</p>
+            <p className="mt-1 text-sm text-[rgb(var(--muted))]">{subtitle}</p>
           )}
         </div>
         {action}
