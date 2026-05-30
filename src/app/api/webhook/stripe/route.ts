@@ -214,6 +214,17 @@ export async function POST(req: NextRequest) {
     return created;
   });
 
+  // 4 bis) Récompenses parrainage : si l'acheteur a un parrain et que c'est
+  // sa 1ère commande non annulée, on crédite 10€ aux deux parties.
+  // Best-effort : ne doit pas faire échouer le webhook si la DB rencontre
+  // un souci sur cette étape.
+  try {
+    const { processReferralReward } = await import("@/lib/referral");
+    await processReferralReward(buyerId, order.id);
+  } catch (refErr) {
+    console.error("[webhook/stripe] referral reward fail:", refErr);
+  }
+
   // 5) Emails transactionnels — best-effort, sans bloquer la réponse webhook
   //    si Resend rate (les emails ne doivent pas faire échouer le webhook).
   try {

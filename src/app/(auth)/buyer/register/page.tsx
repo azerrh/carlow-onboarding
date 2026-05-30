@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Brand } from "@/components/ui/Brand";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -11,16 +11,38 @@ import { Field } from "@/components/ui/Field";
 import { cn } from "@/lib/cn";
 
 export default function BuyerRegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <BuyerRegisterInner />
+    </Suspense>
+  );
+}
+
+function BuyerRegisterInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [form, setForm] = useState({
     name: "",
     email: "",
     password: "",
     phone: "",
     address: "",
+    referralCode: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showReferral, setShowReferral] = useState(false);
+
+  // Pré-remplit le code parrain si l'utilisateur arrive via un lien
+  // /buyer/register?ref=CARLOW-XXXX
+  useEffect(() => {
+    const refFromUrl = searchParams.get("ref");
+    if (refFromUrl) {
+      const cleanCode = refFromUrl.trim().toUpperCase();
+      setForm((f) => ({ ...f, referralCode: cleanCode }));
+      setShowReferral(true);
+    }
+  }, [searchParams]);
 
   function update<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -162,6 +184,58 @@ export default function BuyerRegisterPage() {
                 autoComplete="street-address"
               />
             </Field>
+
+            {/* Code parrainage — collapsible */}
+            <div className="rounded-2xl border border-dashed border-[rgb(var(--primary))]/25 bg-gradient-to-br from-[rgb(var(--primary))]/[0.03] to-transparent p-3">
+              {showReferral ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--primary))]">
+                      🎁 Code parrainage
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowReferral(false);
+                        update("referralCode", "");
+                      }}
+                      className="text-[10px] font-medium text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]"
+                    >
+                      Retirer
+                    </button>
+                  </div>
+                  <Input
+                    value={form.referralCode}
+                    onChange={(e) =>
+                      update(
+                        "referralCode",
+                        e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, "")
+                      )
+                    }
+                    placeholder="CARLOW-XXXXXX"
+                    maxLength={14}
+                    className="font-mono uppercase tracking-wider"
+                  />
+                  <p className="text-[10px] text-[rgb(var(--muted))]">
+                    💰 Recevez <strong className="text-[rgb(var(--success))]">10€ de crédit</strong> dès votre 1ère commande livrée. Votre parrain reçoit aussi 10€.
+                  </p>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowReferral(true)}
+                  className="flex w-full items-center justify-between gap-2 text-left"
+                >
+                  <span className="flex items-center gap-2 text-xs font-semibold text-[rgb(var(--primary))]">
+                    <span className="text-base">🎁</span>
+                    Vous avez un code parrainage ?
+                  </span>
+                  <span className="text-[11px] font-medium text-[rgb(var(--muted))]">
+                    + Ajouter
+                  </span>
+                </button>
+              )}
+            </div>
 
             {error && (
               <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">

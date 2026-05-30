@@ -50,12 +50,56 @@ model Buyer {
   phone         String?
   address       String?
   createdAt     DateTime       @default(now())
+  // Parrainage
+  // Code unique de cet acheteur pour parrainer d'autres personnes.
+  // Format lisible style "CARLOW-AB12CD".
+  referralCode       String?     @unique
+  // Code parrain saisi à l'inscription (si l'acheteur a été parrainé).
+  // Ce champ est immutable après création (référence historique).
+  referredByCode     String?
+  // Solde de crédit cumulé en centimes. Décrémenté au checkout quand
+  // l'acheteur applique son crédit.
+  referralCreditCents Int        @default(0)
+  // Total des récompenses gagnées (pour affichage stats historique).
+  referralEarnedCents Int        @default(0)
+
   orders        Order[]
   notifications Notification[]
   favorites     Favorite[]
   reviews       Review[]
   quotes        Quote[]
   alerts        ProductAlert[]
+  referralsAsReferrer ReferralEvent[] @relation("ReferralAsReferrer")
+  referralsAsReferred ReferralEvent[] @relation("ReferralAsReferred")
+}
+
+/* ============================================================
+   PARRAINAGE
+   ============================================================ */
+
+model ReferralEvent {
+  id              String   @id @default(cuid())
+  // L'acheteur qui a parrainé (celui dont le code a été saisi).
+  referrerId      String
+  referrer        Buyer    @relation("ReferralAsReferrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  // Le filleul (celui qui s'est inscrit avec le code).
+  referredId      String
+  referred        Buyer    @relation("ReferralAsReferred", fields: [referredId], references: [id], onDelete: Cascade)
+  // Commande qui a déclenché la récompense (la 1ère commande LIVREE du filleul).
+  triggerOrderId  String?
+  // Montant offert à chacun (en centimes, ex: 1000 = 10€).
+  rewardCents     Int      @default(1000)
+  // pending : filleul inscrit, pas encore commandé
+  // rewarded : 1ère commande validée, crédits distribués
+  // cancelled : annulé (compte supprimé, etc.)
+  status          String   @default("pending")
+  createdAt       DateTime @default(now())
+  rewardedAt      DateTime?
+
+  // Un filleul ne génère qu'un seul événement de parrainage
+  @@unique([referredId])
+  @@index([referrerId])
+  @@index([status])
 }
 
 /* ============================================================

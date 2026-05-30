@@ -156,6 +156,9 @@ export default function BuyerDashboardPage() {
               <Link href="/buyer/avis" className="rounded-xl px-3 py-1.5 font-medium text-[rgb(var(--muted))] transition hover:bg-black/[0.04] hover:text-[rgb(var(--fg))]">
                 Avis
               </Link>
+              <Link href="/buyer/parrainage" className="rounded-xl px-3 py-1.5 font-medium text-[rgb(var(--muted))] transition hover:bg-black/[0.04] hover:text-[rgb(var(--fg))]">
+                🎁 Parrainage
+              </Link>
             </nav>
           </div>
           <div className="flex items-center gap-2">

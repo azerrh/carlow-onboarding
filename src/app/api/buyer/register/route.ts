@@ -8,6 +8,7 @@ import {
 import { createToken } from "@/lib/tokens";
 import { sendVerifyEmailEmail } from "@/lib/email";
 import { applyRateLimit } from "@/lib/rateLimit";
+import { ensureReferralCode, registerReferral } from "@/lib/referral";
 
 /**
  * Inscription acheteur (compte client de la marketplace).
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
   if (blocked) return blocked;
 
   try {
-    const { name, email, password, phone, address } = await req.json();
+    const { name, email, password, phone, address, referralCode } = await req.json();
 
     if (!name || !email || !password) {
       return NextResponse.json(
@@ -64,6 +65,22 @@ export async function POST(req: NextRequest) {
       },
       select: { id: true, name: true, email: true },
     });
+
+    // Génère un code parrainage unique pour ce nouvel acheteur (best-effort).
+    try {
+      await ensureReferralCode(buyer.id);
+    } catch (refErr) {
+      console.error("[register buyer] ensureReferralCode fail:", refErr);
+    }
+
+    // Si un code parrain a été fourni, on enregistre l'événement de parrainage.
+    // (Best-effort : ne bloque pas l'inscription si le code est invalide.)
+    if (referralCode) {
+      const refResult = await registerReferral(buyer.id, referralCode);
+      if (!refResult.success) {
+        console.log("[register buyer] referral skipped:", refResult.reason);
+      }
+    }
 
     // Envoi du lien de vérification (best-effort, n'échoue jamais le register).
     try {
