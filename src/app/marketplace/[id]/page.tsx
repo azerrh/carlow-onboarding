@@ -9,6 +9,7 @@ import { useCart, useCartSummary, getApplicableDiscount, getEffectivePrice, Volu
 import { ProductReviews } from "@/components/marketplace/ProductReviews";
 import { RecentlyViewed } from "@/components/marketplace/RecentlyViewed";
 import { TranslateButton } from "@/components/marketplace/TranslateButton";
+import { VendorBadges, type BadgeData } from "@/components/marketplace/VendorBadges";
 import { trackView } from "@/hooks/useRecentlyViewed";
 import { cn } from "@/lib/cn";
 
@@ -57,6 +58,7 @@ function ProductDetailInner() {
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
   const [volumeDiscounts, setVolumeDiscounts] = useState<VolumeDiscountTier[]>([]);
+  const [vendorBadges, setVendorBadges] = useState<BadgeData[]>([]);
 
   const addItem = useCart((s) => s.addItem);
   const { totalItems } = useCartSummary();
@@ -75,11 +77,21 @@ function ProductDetailInner() {
         const p = data.product;
         // Le vendeur est imbriqué dans catalog.vendor côté Prisma.
         // On le hisse au niveau racine pour correspondre à l'interface Product.
+        const vendorId = p.catalog?.vendor?.id;
         setProduct({
           ...p,
           vendor: p.catalog?.vendor ?? { id: "", name: "Inconnu", companyName: null },
         });
         setRelated(data.related ?? []);
+        // Fetch les badges du vendeur en parallèle (non bloquant)
+        if (vendorId) {
+          fetch(`/api/marketplace/vendors/${vendorId}/badges`)
+            .then((r) => r.json())
+            .then((bd) => {
+              if (bd.success) setVendorBadges(bd.badges ?? []);
+            })
+            .catch(() => {});
+        }
       } else {
         setError(data.error || "Produit non trouve");
       }
@@ -296,7 +308,7 @@ function ProductDetailInner() {
             <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{product.name}</h1>
 
             {/* Vendor */}
-            <div className="mt-2 flex items-center gap-2 text-sm text-[rgb(var(--muted))]">
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-[rgb(var(--muted))]">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
                 <path d="M3 8l1.5-3h15L21 8" />
                 <path d="M4 8v11h16V8" />
@@ -308,6 +320,9 @@ function ProductDetailInner() {
               >
                 {vendorName} →
               </Link>
+              {vendorBadges.length > 0 && (
+                <VendorBadges badges={vendorBadges} variant="full" size="sm" className="ml-1" />
+              )}
             </div>
 
             {/* Price */}

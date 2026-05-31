@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { computeTopVendorBadges, type Badge } from "@/lib/vendorBadges";
 
 /**
  * Liste publique des produits exposés sur la marketplace.
@@ -70,6 +71,22 @@ export async function GET(req: NextRequest) {
       )
     );
 
+    // Calcule les badges (top 2) pour chaque vendeur unique présent.
+    // On mémoïse pour ne pas refaire le calcul N fois si même vendeur.
+    const uniqueVendorIds = Array.from(
+      new Set(filtered.map((p) => p.catalog.vendor.id))
+    );
+    const badgesByVendor = new Map<string, Badge[]>();
+    await Promise.all(
+      uniqueVendorIds.map(async (vid) => {
+        try {
+          badgesByVendor.set(vid, await computeTopVendorBadges(vid));
+        } catch {
+          badgesByVendor.set(vid, []);
+        }
+      })
+    );
+
     return NextResponse.json({
       success: true,
       products: filtered.map((p) => {
@@ -91,6 +108,7 @@ export async function GET(req: NextRequest) {
           vendor: {
             id: p.catalog.vendor.id,
             name: p.catalog.vendor.companyName ?? p.catalog.vendor.name,
+            badges: badgesByVendor.get(p.catalog.vendor.id) ?? [],
           },
           catalog: {
             id: p.catalog.id,

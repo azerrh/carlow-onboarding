@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { StarRating } from "@/components/ui/StarRating";
 import { ProductCardSkeleton, Skeleton } from "@/components/ui/Skeleton";
+import { VendorBadges, type BadgeData } from "@/components/marketplace/VendorBadges";
 import { cn } from "@/lib/cn";
 
 interface VendorPublic {
@@ -56,13 +57,16 @@ export default function PublicVendorPage() {
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [badges, setBadges] = useState<BadgeData[]>([]);
 
   useEffect(() => {
     if (!vendorId) return;
     setLoading(true);
-    fetch(`/api/marketplace/vendors/${vendorId}`)
-      .then((res) => res.json())
-      .then((data) => {
+    Promise.all([
+      fetch(`/api/marketplace/vendors/${vendorId}`).then((r) => r.json()),
+      fetch(`/api/marketplace/vendors/${vendorId}/badges`).then((r) => r.json()),
+    ])
+      .then(([data, badgesData]) => {
         if (data.success) {
           setVendor(data.vendor);
           setProducts(data.products ?? []);
@@ -70,6 +74,7 @@ export default function PublicVendorPage() {
         } else {
           setError(data.error || "Vendeur introuvable");
         }
+        if (badgesData.success) setBadges(badgesData.badges ?? []);
       })
       .catch(() => setError("Erreur réseau"))
       .finally(() => setLoading(false));
@@ -160,6 +165,16 @@ export default function PublicVendorPage() {
                         Compte vérifié
                       </span>
                     </div>
+
+                    {/* Badges automatiques du vendeur */}
+                    {badges.length > 0 && (
+                      <div className="mt-3">
+                        <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--muted))]">
+                          🏆 Distinctions
+                        </p>
+                        <VendorBadges badges={badges} variant="full" size="md" />
+                      </div>
+                    )}
                   </div>
                 </div>
 

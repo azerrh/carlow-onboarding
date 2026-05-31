@@ -15,6 +15,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { SearchAutocomplete } from "@/components/marketplace/SearchAutocomplete";
 import { Chatbot } from "@/components/marketplace/Chatbot";
+import { VendorBadges, type BadgeData } from "@/components/marketplace/VendorBadges";
 
 interface Product {
   id: string;
@@ -26,7 +27,7 @@ interface Product {
   stock: number;
   active: boolean;
   imageUrl: string | null;
-  vendor: { id: string; name: string };
+  vendor: { id: string; name: string; badges?: BadgeData[] };
   catalog: { id: string; name: string | null };
   ratingAvg?: number;
   ratingCount?: number;
@@ -604,8 +605,17 @@ function MarketplaceInner() {
                       <div className="text-base font-bold tracking-tight text-[rgb(var(--fg))]">
                         {p.price.toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}
                       </div>
-                      <div className="truncate text-[10px] font-medium text-[rgb(var(--muted))]">
-                        {p.vendor.name}
+                      <div className="flex items-center gap-1.5">
+                        <span className="truncate text-[10px] font-medium text-[rgb(var(--muted))]">
+                          {p.vendor.name}
+                        </span>
+                        {p.vendor.badges && p.vendor.badges.length > 0 && (
+                          <VendorBadges
+                            badges={p.vendor.badges}
+                            variant="compact"
+                            size="sm"
+                          />
+                        )}
                       </div>
                     </div>
                     <Button
