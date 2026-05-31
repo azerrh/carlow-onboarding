@@ -894,97 +894,168 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-[rgb(var(--border))] bg-white/60">
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <div>
+      <footer className="relative overflow-hidden border-t border-[rgb(var(--border))]/70 bg-gradient-to-b from-[rgb(var(--card))] to-[rgb(var(--bg))]">
+        {/* Décor : grande typo Carlow en filigrane */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 select-none overflow-hidden">
+          <span className="block translate-y-1/4 text-center text-[18vw] font-black leading-none tracking-tighter text-[rgb(var(--primary))]/[0.03]">
+            CARLOW
+          </span>
+        </div>
+
+        <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
+          {/* Bandeau de confiance */}
+          <div className="grid gap-4 border-b border-[rgb(var(--border))]/50 py-8 sm:grid-cols-3">
+            {[
+              { icon: "🛡️", title: "Paiement sécurisé", desc: "Stripe · PCI-DSS niveau 1" },
+              { icon: "✓", title: "Vendeurs vérifiés", desc: "Documents & certifications contrôlés" },
+              { icon: "🇪🇺", title: "Couverture européenne", desc: "27 pays de l'Union Européenne" },
+            ].map((item) => (
+              <div key={item.title} className="flex items-center gap-3">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[rgb(var(--primary))]/15 to-[rgb(var(--primary))]/8 text-lg">
+                  {item.icon}
+                </span>
+                <div>
+                  <p className="text-sm font-bold tracking-tight">{item.title}</p>
+                  <p className="text-xs text-[rgb(var(--muted))]">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Liens */}
+          <div className="grid gap-8 py-10 sm:grid-cols-2 lg:grid-cols-5">
+            {/* Marque + réseaux */}
+            <div className="lg:col-span-2">
               <Brand variant="compact" />
-              <p className="mt-3 text-xs text-[rgb(var(--muted))]">
-                Marketplace B2B des équipements d&apos;énergies
-                renouvelables.
+              <p className="mt-4 max-w-xs text-sm leading-relaxed text-[rgb(var(--muted))]">
+                La marketplace B2B de référence pour les équipements
+                d&apos;énergies renouvelables. Photovoltaïque, stockage,
+                IRVE et plus.
               </p>
+
+              {/* Réseaux sociaux */}
+              <div className="mt-5 flex gap-2">
+                {[
+                  { label: "LinkedIn", href: "https://linkedin.com", icon: (
+                    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2zM4 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4z" />
+                  )},
+                  { label: "Twitter", href: "https://twitter.com", icon: (
+                    <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z" />
+                  )},
+                  { label: "Instagram", href: "https://instagram.com", icon: (
+                    <>
+                      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                    </>
+                  )},
+                  { label: "YouTube", href: "https://youtube.com", icon: (
+                    <>
+                      <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z" />
+                      <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
+                    </>
+                  )},
+                ].map((social) => (
+                  <a
+                    key={social.label}
+                    href={social.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={social.label}
+                    className="grid h-9 w-9 place-items-center rounded-xl border border-[rgb(var(--border))]/70 bg-[rgb(var(--card))] text-[rgb(var(--muted))] transition-all duration-150 hover:-translate-y-0.5 hover:border-[rgb(var(--primary))]/40 hover:bg-[rgb(var(--primary))]/8 hover:text-[rgb(var(--primary))]"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                      {social.icon}
+                    </svg>
+                  </a>
+                ))}
+              </div>
             </div>
+
+            {/* Plateforme */}
+            <FooterColumn
+              title="Plateforme"
+              links={[
+                { label: "Marketplace", href: "/marketplace" },
+                { label: "Devenir vendeur", href: "/register" },
+                { label: "Connexion vendeur", href: "/login" },
+                { label: "Connexion acheteur", href: "/buyer/login" },
+              ]}
+            />
+
+            {/* Légal */}
+            <FooterColumn
+              title="Informations légales"
+              links={[
+                { label: "Mentions légales", href: "/legal/mentions-legales" },
+                { label: "CGV", href: "/legal/cgv" },
+                { label: "CGU", href: "/legal/cgu" },
+                { label: "Confidentialité", href: "/legal/confidentialite" },
+                { label: "Cookies", href: "/legal/cookies" },
+              ]}
+            />
+
+            {/* Contact */}
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-[rgb(var(--muted))]">
-                Plateforme
-              </p>
-              <ul className="mt-3 space-y-1.5 text-xs">
-                <li>
-                  <Link href="/marketplace" className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]">
-                    Marketplace
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/register" className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]">
-                    Devenir vendeur
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/login" className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]">
-                    Connexion vendeur
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/buyer/login" className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]">
-                    Connexion acheteur
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-[rgb(var(--muted))]">
-                Informations légales
-              </p>
-              <ul className="mt-3 space-y-1.5 text-xs">
-                <li>
-                  <Link href="/legal/mentions-legales" className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]">
-                    Mentions légales
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/legal/cgv" className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]">
-                    CGV
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/legal/cgu" className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]">
-                    CGU
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/legal/confidentialite" className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]">
-                    Confidentialité
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/legal/cookies" className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]">
-                    Cookies
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-[rgb(var(--muted))]">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[rgb(var(--fg))]/70">
                 Contact
               </p>
-              <ul className="mt-3 space-y-1.5 text-xs">
+              <ul className="mt-4 space-y-3 text-sm">
                 <li>
-                  <a href="mailto:contact@carlow.fr" className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]">
+                  <a
+                    href="mailto:contact@carlow.fr"
+                    className="group flex items-center gap-2 text-[rgb(var(--muted))] transition hover:text-[rgb(var(--primary))]"
+                  >
+                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[rgb(var(--primary))]/8 text-[rgb(var(--primary))] transition group-hover:bg-[rgb(var(--primary))]/15">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-3.5 w-3.5">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                        <polyline points="22,6 12,13 2,6" />
+                      </svg>
+                    </span>
                     contact@carlow.fr
                   </a>
                 </li>
                 <li>
-                  <a href="https://carlow.fr" target="_blank" rel="noreferrer" className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]">
+                  <a
+                    href="https://carlow.fr"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="group flex items-center gap-2 text-[rgb(var(--muted))] transition hover:text-[rgb(var(--primary))]"
+                  >
+                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[rgb(var(--primary))]/8 text-[rgb(var(--primary))] transition group-hover:bg-[rgb(var(--primary))]/15">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-3.5 w-3.5">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z" />
+                      </svg>
+                    </span>
                     carlow.fr
                   </a>
                 </li>
               </ul>
+
+              {/* Sélecteur de thème inline */}
+              <div className="mt-5">
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[rgb(var(--fg))]/70">
+                  Apparence
+                </p>
+                <ThemeToggle size="sm" />
+              </div>
             </div>
           </div>
-          <div className="mt-8 border-t border-[rgb(var(--border))]/40 pt-5">
-            <p className="text-[11px] text-[rgb(var(--muted))]">
-              © 2026 Carlow · Tous droits réservés
+
+          {/* Barre de copyright */}
+          <div className="flex flex-col items-center justify-between gap-3 border-t border-[rgb(var(--border))]/50 py-6 sm:flex-row">
+            <p className="text-xs text-[rgb(var(--muted))]">
+              © 2026 <span className="font-semibold text-[rgb(var(--fg))]">Carlow</span> · Tous droits réservés
             </p>
+            <div className="flex items-center gap-4 text-xs text-[rgb(var(--muted))]">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[rgb(var(--success))]" />
+                Tous les systèmes opérationnels
+              </span>
+              <span className="hidden sm:inline">·</span>
+              <span className="hidden sm:inline">Fait avec 🧡 en France</span>
+            </div>
           </div>
         </div>
       </footer>
@@ -1004,6 +1075,35 @@ function Trust({ label, sub }: { label: string; sub: string }) {
         {label}
       </p>
       <p className="text-xs text-[rgb(var(--muted))]">{sub}</p>
+    </div>
+  );
+}
+
+function FooterColumn({
+  title,
+  links,
+}: {
+  title: string;
+  links: { label: string; href: string }[];
+}) {
+  return (
+    <div>
+      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[rgb(var(--fg))]/70">
+        {title}
+      </p>
+      <ul className="mt-4 space-y-2.5 text-sm">
+        {links.map((link) => (
+          <li key={link.href}>
+            <Link
+              href={link.href}
+              className="group inline-flex items-center gap-1.5 text-[rgb(var(--muted))] transition hover:text-[rgb(var(--primary))]"
+            >
+              <span className="h-px w-0 bg-[rgb(var(--primary))] transition-all duration-200 group-hover:w-3" />
+              {link.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
