@@ -269,36 +269,29 @@ function RoleToggle({ current }: { current: "vendor" | "buyer" }) {
       <div className="mb-2 text-xs font-medium uppercase tracking-wider text-[rgb(var(--muted))]">
         Je m&apos;inscris en tant que
       </div>
-      <div className="grid grid-cols-2 gap-2 rounded-2xl border border-[rgb(var(--border))] bg-black/[0.02] p-1">
+      <div className="grid grid-cols-2 gap-1.5 rounded-2xl border border-[rgb(var(--border))]/70 bg-[rgb(var(--bg))]/60 p-1">
         <Link
           href="/buyer/register"
           className={cn(
-            "flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition",
+            "flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-150",
             current === "buyer"
-              ? "bg-white text-[rgb(var(--fg))] shadow-sm"
+              ? "bg-[rgb(var(--card))] text-[rgb(var(--fg))] shadow-sm"
               : "text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]"
           )}
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
-            <circle cx="9" cy="20" r="1.5" />
-            <circle cx="17" cy="20" r="1.5" />
-            <path d="M3 4h2l2.5 11h11l2-8H6" />
-          </svg>
+          <span className="text-base">🛒</span>
           Acheteur
         </Link>
         <Link
           href="/register"
           className={cn(
-            "flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition",
+            "flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-150",
             current === "vendor"
-              ? "bg-white text-[rgb(var(--fg))] shadow-sm"
+              ? "bg-[rgb(var(--card))] text-[rgb(var(--fg))] shadow-sm"
               : "text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]"
           )}
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
-            <path d="M3 8l1.5-3h15L21 8" />
-            <path d="M4 8v11h16V8" />
-          </svg>
+          <span className="text-base">🏪</span>
           Vendeur
         </Link>
       </div>

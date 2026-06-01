@@ -108,23 +108,51 @@ export function ThemeToggle({
       aria-pressed={isDark}
       title={isDark ? "Mode clair" : "Mode sombre"}
       className={cn(
-        "grid place-items-center rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--card))] text-[rgb(var(--muted))] transition hover:text-[rgb(var(--fg))]",
+        "group relative grid place-items-center overflow-hidden rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--card))] text-[rgb(var(--muted))] transition-all duration-200 hover:border-[rgb(var(--primary))]/40 hover:text-[rgb(var(--primary))]",
         size === "sm" ? "h-8 w-8" : "h-9 w-9",
         className
       )}
     >
-      {isDark ? (
-        // Soleil (mode clair)
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4">
+      {/* Halo coloré au survol */}
+      <span
+        className={cn(
+          "absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100",
+          isDark
+            ? "bg-gradient-to-br from-indigo-400/10 to-blue-500/10"
+            : "bg-gradient-to-br from-amber-300/15 to-orange-400/15"
+        )}
+      />
+      <span className="relative grid h-4 w-4 place-items-center">
+        {/* Soleil */}
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          className={cn(
+            "absolute h-4 w-4 transition-all duration-300",
+            isDark
+              ? "rotate-0 scale-100 opacity-100"
+              : "rotate-90 scale-0 opacity-0"
+          )}
+        >
           <circle cx="12" cy="12" r="4" />
           <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
         </svg>
-      ) : (
-        // Lune (mode sombre)
-        <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+        {/* Lune */}
+        <svg
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className={cn(
+            "absolute h-4 w-4 transition-all duration-300",
+            isDark
+              ? "-rotate-90 scale-0 opacity-0"
+              : "rotate-0 scale-100 opacity-100"
+          )}
+        >
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
         </svg>
-      )}
+      </span>
     </button>
   );
 }

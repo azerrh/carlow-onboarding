@@ -58,7 +58,7 @@ export function StarRating({
               )}
             >
               <svg viewBox="0 0 24 24" fill="currentColor" className={dim}>
-                <path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z" />
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
               </svg>
             </button>
           );
@@ -72,7 +72,7 @@ export function StarRating({
               fill="currentColor"
               className={cn(dim, "text-[rgb(var(--border))]")}
             >
-              <path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z" />
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
             </svg>
             {(isFull || fraction > 0) && (
               <span
@@ -84,7 +84,7 @@ export function StarRating({
                   fill="currentColor"
                   className={cn(dim, "text-amber-400")}
                 >
-                  <path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z" />
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                 </svg>
               </span>
             )}
