@@ -407,6 +407,21 @@ export default function VendorOrdersPage() {
                     />
 
                     <div className="mt-4 flex flex-wrap gap-2">
+                      {/* Télécharger la facture vendeur */}
+                      {vendorId && order.status !== "ANNULEE" && (
+                        <a
+                          href={`/api/vendor/orders/${order.id}/invoice?vendorId=${vendorId}`}
+                          className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-[rgb(var(--border))]/80 bg-[rgb(var(--card))] px-3.5 text-sm font-semibold text-[rgb(var(--fg))] transition hover:border-[rgb(var(--primary))]/40 hover:bg-[rgb(var(--primary))]/8 hover:text-[rgb(var(--primary))]"
+                          title="Télécharger la facture vendeur PDF"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                          </svg>
+                          Facture PDF
+                        </a>
+                      )}
                       <Button
                         variant="secondary"
                         size="sm"

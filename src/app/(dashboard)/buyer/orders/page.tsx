@@ -392,8 +392,24 @@ function OrdersInner() {
                       </div>
 
                       {/* Actions */}
-                      {canCancel && (
-                        <div className="mt-4 flex justify-end">
+                      <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+                        {/* Télécharger la facture */}
+                        {buyerId && order.status !== "ANNULEE" && (
+                          <a
+                            href={`/api/buyer/orders/${order.id}/invoice?buyerId=${buyerId}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-[rgb(var(--border))]/80 bg-[rgb(var(--card))] px-4 py-2 text-sm font-semibold text-[rgb(var(--fg))] transition hover:border-[rgb(var(--primary))]/40 hover:bg-[rgb(var(--primary))]/8 hover:text-[rgb(var(--primary))]"
+                            title="Télécharger la facture PDF"
+                          >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4">
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                              <polyline points="7 10 12 15 17 10" />
+                              <line x1="12" y1="15" x2="12" y2="3" />
+                            </svg>
+                            Facture PDF
+                          </a>
+                        )}
+                        {canCancel && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -403,8 +419,8 @@ function OrdersInner() {
                           >
                             Annuler la commande
                           </button>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   )}
                 </Card>
