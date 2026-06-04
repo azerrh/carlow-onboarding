@@ -80,6 +80,8 @@ export async function POST(req: NextRequest) {
     // Token unique pour accès sans compte
     const accessToken = crypto.randomBytes(32).toString("hex");
 
+    // Création du devis — opération critique, on laisse l'erreur remonter
+    // pour qu'elle soit explicite (et pas masquée par un générique 500).
     const quote = await prisma.quote.create({
       data: {
         productId,
@@ -96,8 +98,9 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Emails en parallèle (silencieux si RESEND absent)
-    await Promise.all([
+    // Emails — best-effort, ne doivent JAMAIS faire échouer la demande de devis.
+    // Si Resend rate (clé manquante, rate limit, etc.), on log mais on continue.
+    Promise.all([
       sendQuoteReceivedVendor({
         vendorEmail: vendor.email,
         vendorName: vendor.companyName ?? vendor.name,
@@ -117,15 +120,21 @@ export async function POST(req: NextRequest) {
         quantity,
         accessToken,
       }),
-    ]);
-
-    // Notification in-app pour le vendeur
-    await prisma.notification.create({
-      data: {
-        vendorId: vendor.id,
-        content: `Nouvelle demande de devis pour "${product.name}" de ${buyerName.trim()} (${quantity} unité${quantity > 1 ? "s" : ""})`,
-      },
+    ]).catch((emailErr) => {
+      console.error("[api/quotes POST] emails fail:", emailErr);
     });
+
+    // Notification in-app pour le vendeur — best-effort aussi.
+    try {
+      await prisma.notification.create({
+        data: {
+          vendorId: vendor.id,
+          content: `Nouvelle demande de devis pour "${product.name}" de ${buyerName.trim()} (${quantity} unité${quantity > 1 ? "s" : ""})`,
+        },
+      });
+    } catch (notifErr) {
+      console.error("[api/quotes POST] notification fail:", notifErr);
+    }
 
     return NextResponse.json({
       success: true,
@@ -134,6 +143,31 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("[api/quotes POST] error:", error);
+
+    // Renvoie le vrai message d'erreur (utile en prod pour debug Vercel).
+    // En particulier : si DATABASE_URL est absent ou l'env est mal configuré,
+    // le user verra la cause réelle au lieu d'un "Erreur serveur" muet.
+    if (error instanceof Error) {
+      // Erreurs Prisma connues (code P2000+) → renvoie un message lisible.
+      const msg = error.message;
+      if (msg.includes("Foreign key constraint")) {
+        return NextResponse.json(
+          { error: "Référence invalide (produit ou vendeur introuvable)." },
+          { status: 400 }
+        );
+      }
+      if (msg.includes("Unique constraint")) {
+        return NextResponse.json(
+          { error: "Une demande similaire existe déjà." },
+          { status: 409 }
+        );
+      }
+      return NextResponse.json(
+        { error: `Erreur de création du devis : ${msg}` },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
