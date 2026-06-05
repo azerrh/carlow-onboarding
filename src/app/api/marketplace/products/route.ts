@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { computeTopVendorBadges, type Badge } from "@/lib/vendorBadges";
 
 /**
  * Liste publique des produits exposés sur la marketplace.
@@ -71,21 +70,14 @@ export async function GET(req: NextRequest) {
       )
     );
 
-    // Calcule les badges (top 2) pour chaque vendeur unique présent.
-    // On mémoïse pour ne pas refaire le calcul N fois si même vendeur.
-    const uniqueVendorIds = Array.from(
-      new Set(filtered.map((p) => p.catalog.vendor.id))
-    );
-    const badgesByVendor = new Map<string, Badge[]>();
-    await Promise.all(
-      uniqueVendorIds.map(async (vid) => {
-        try {
-          badgesByVendor.set(vid, await computeTopVendorBadges(vid));
-        } catch {
-          badgesByVendor.set(vid, []);
-        }
-      })
-    );
+    // ⚠️ Les badges vendeurs NE SONT PAS calculés ici : leur computation
+    // implique 7 queries Prisma par vendeur (count commandes, agrégats
+    // reviews, etc.). Sur une liste de 100 produits avec 20 vendeurs uniques,
+    // ça représentait 140 queries en parallèle → épuisement du pool de
+    // connexions sur Vercel serverless.
+    //
+    // Les badges sont chargés à la demande via /api/marketplace/vendors/[id]/badges
+    // sur la fiche produit et la page vendeur publique (1 query par page).
 
     return NextResponse.json({
       success: true,
@@ -108,7 +100,6 @@ export async function GET(req: NextRequest) {
           vendor: {
             id: p.catalog.vendor.id,
             name: p.catalog.vendor.companyName ?? p.catalog.vendor.name,
-            badges: badgesByVendor.get(p.catalog.vendor.id) ?? [],
           },
           catalog: {
             id: p.catalog.id,
@@ -122,9 +113,12 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error("[marketplace/products] error:", error);
-    return NextResponse.json(
-      { error: "Erreur serveur" },
-      { status: 500 }
-    );
+    if (error instanceof Error) {
+      return NextResponse.json(
+        { error: `Erreur de chargement : ${error.message}` },
+        { status: 500 }
+      );
+    }
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
