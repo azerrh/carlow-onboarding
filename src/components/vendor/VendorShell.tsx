@@ -407,7 +407,7 @@ export function VendorShell({
       </aside>
 
       {/* Contenu principal */}
-      <div className="flex min-h-screen flex-1 flex-col overflow-hidden">
+      <div className="flex min-h-screen flex-1 flex-col">
         <header className="sticky top-0 z-20 flex h-[56px] items-center gap-3 border-b border-[rgb(var(--border))]/70 bg-[rgb(var(--card))]/85 px-4 backdrop-blur-md lg:justify-end lg:px-6">
           <button
             onClick={() => setMobileOpen(true)}
