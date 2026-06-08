@@ -148,11 +148,13 @@ export default function StepCertificationsPage() {
 
   return (
     <div className="portal-page grid min-h-screen place-items-center px-4 py-10">
-      <Card className="w-full max-w-[640px] p-8 sm:p-10">
-        <Brand className="mb-5" />
+      <Card className="w-full max-w-[640px] animate-fade-in overflow-hidden p-0">
+        <div className="h-1.5 w-full bg-gradient-to-r from-[rgb(var(--primary))] via-[#e8923a] to-[#c05510]" />
+        <div className="p-8 sm:p-10">
+        <Brand className="mb-6" />
         <StepperBar current={3} />
 
-        <h1 className="mt-4 text-2xl font-semibold tracking-tight">
+        <h1 className="mt-2 text-2xl font-bold tracking-tight">
           Certifications produits EnR
         </h1>
         <p className="mt-1 text-sm text-[rgb(var(--muted))]">
@@ -300,6 +302,7 @@ export default function StepCertificationsPage() {
           >
             {certs.length > 0 ? "Continuer →" : "Passer cette étape →"}
           </Button>
+        </div>
         </div>
       </Card>
     </div>
