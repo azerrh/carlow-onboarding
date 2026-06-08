@@ -2,24 +2,21 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 /**
- * Client Prisma singleton — version production-ready pour Vercel serverless.
+ * Client Prisma singleton — DB Supabase Postgres via transaction pooler.
  *
- * Diagnostic du problème "Too many connections opened for role prisma_migration" :
- *  - La DB est Prisma Postgres (db.prisma.io)
- *  - L'URL `postgres://...` est la connexion DIRECTE (limitée à ~5 connexions)
- *  - Sur Vercel, chaque Lambda peut spawn son propre pool
- *  - Sans précautions, on sature instantanément la limite de la DB
+ * Setup :
+ *  - DATABASE_URL pointe vers le transaction pooler Supabase (port 6543,
+ *    pgbouncer=true) qui multiplexe les connexions → idéal pour Vercel
+ *    serverless (résout les "too many connections").
+ *  - Pour les migrations (prisma db push / migrate), utiliser l'URL session
+ *    pooler (port 5432) via le flag --url ou DIRECT_URL.
  *
- * Stratégie de mitigation (sans changer de DB ni passer à Accelerate) :
- *  1. Singleton global maintenu en TOUS environnements
- *  2. Pool ultra-minimal : max=1 connexion par Lambda
- *     → Lambdas concurrentes × 1 connexion ≪ limite directe (~5)
- *  3. idleTimeout court (5s) pour libérer rapidement les ressources
- *  4. allowExitOnIdle pour fermer le pool quand la Lambda gèle
- *
- * Pour une solution scalable définitive : activer Prisma Accelerate
- * et remplacer DATABASE_URL par une URL prisma://... (recommandé).
- * Voir : https://www.prisma.io/docs/accelerate
+ * Stratégie :
+ *  1. Singleton global maintenu en TOUS environnements (Vercel warm starts
+ *     réutilisent le contexte → pas de nouveau pool par requête)
+ *  2. Pool modéré (max=3) : pgbouncer gère déjà le multiplexing, donc
+ *     pas besoin d'un gros pool côté Lambda
+ *  3. idleTimeout court pour libérer rapidement les connexions inactives
  */
 
 const globalForPrisma = globalThis as unknown as {
@@ -34,12 +31,10 @@ function createPrismaClient() {
 
   const adapter = new PrismaPg({
     connectionString,
-    // ⚠️ POOL ULTRA-MINIMAL pour Prisma Postgres + Vercel serverless.
-    // La direct connection de Prisma Postgres limite à ~5 connexions.
-    // Avec 1 connexion max par Lambda, on supporte 5 Lambdas concurrentes
-    // sans saturation. Si plus de trafic → activer Prisma Accelerate.
-    max: 1,
-    idleTimeoutMillis: 5_000,
+    // pgbouncer (transaction pooler Supabase) multiplexe déjà les connexions,
+    // donc un petit pool par Lambda suffit largement.
+    max: 3,
+    idleTimeoutMillis: 10_000,
     allowExitOnIdle: true,
   });
 
