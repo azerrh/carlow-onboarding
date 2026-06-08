@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Brand } from "@/components/ui/Brand";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { BuyerNav } from "@/components/buyer/BuyerNav";
 import { cn } from "@/lib/cn";
 
 interface Buyer {
@@ -135,45 +135,7 @@ export default function BuyerDashboardPage() {
 
   return (
     <div className="portal-page min-h-screen">
-      {/* Header */}
-      <div className="sticky top-0 z-10 border-b border-[rgb(var(--border))]/70 bg-[rgb(var(--card))]/85 backdrop-blur-md">
-        <div className="mx-auto flex max-w-[1100px] items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-5">
-            <Brand variant="compact" />
-            <nav className="hidden items-center gap-1 text-sm sm:flex">
-              <Link href="/buyer/dashboard" className="rounded-xl px-3 py-1.5 font-semibold text-[rgb(var(--primary))] transition hover:bg-[rgb(var(--primary))]/8">
-                Tableau de bord
-              </Link>
-              <Link href="/buyer/orders" className="rounded-xl px-3 py-1.5 font-medium text-[rgb(var(--muted))] transition hover:bg-black/[0.04] hover:text-[rgb(var(--fg))]">
-                Commandes
-              </Link>
-              <Link href="/buyer/devis" className="rounded-xl px-3 py-1.5 font-medium text-[rgb(var(--muted))] transition hover:bg-black/[0.04] hover:text-[rgb(var(--fg))]">
-                Devis
-              </Link>
-              <Link href="/buyer/favoris" className="rounded-xl px-3 py-1.5 font-medium text-[rgb(var(--muted))] transition hover:bg-black/[0.04] hover:text-[rgb(var(--fg))]">
-                Favoris
-              </Link>
-              <Link href="/buyer/avis" className="rounded-xl px-3 py-1.5 font-medium text-[rgb(var(--muted))] transition hover:bg-black/[0.04] hover:text-[rgb(var(--fg))]">
-                Avis
-              </Link>
-              <Link href="/buyer/parrainage" className="rounded-xl px-3 py-1.5 font-medium text-[rgb(var(--muted))] transition hover:bg-black/[0.04] hover:text-[rgb(var(--fg))]">
-                🎁 Parrainage
-              </Link>
-            </nav>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link href="/marketplace">
-              <Button variant="ghost" size="sm">Marketplace</Button>
-            </Link>
-            <Link href="/buyer/account">
-              <Button variant="secondary" size="sm">Mon compte</Button>
-            </Link>
-            <Button variant="ghost" size="sm" onClick={handleLogout} className="hidden sm:inline-flex text-[rgb(var(--muted))] hover:text-red-500">
-              Déconnexion
-            </Button>
-          </div>
-        </div>
-      </div>
+      <BuyerNav />
 
       <div className="mx-auto max-w-[1100px] px-4 py-8">
         {/* Welcome */}

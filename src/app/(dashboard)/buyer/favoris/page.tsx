@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Brand } from "@/components/ui/Brand";
+import { BuyerNav } from "@/components/buyer/BuyerNav";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ProductCardSkeleton } from "@/components/ui/Skeleton";
@@ -120,46 +120,7 @@ export default function BuyerFavoritesPage() {
 
   return (
     <div className="portal-page min-h-screen">
-      <header className="sticky top-0 z-10 border-b border-[rgb(var(--border))]/60 bg-white/80 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
-          <div className="flex items-center gap-4">
-            <Brand variant="compact" />
-            <nav className="hidden items-center gap-3 text-sm sm:flex">
-              <Link
-                href="/buyer/dashboard"
-                className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]"
-              >
-                Tableau de bord
-              </Link>
-              <Link
-                href="/buyer/orders"
-                className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]"
-              >
-                Mes commandes
-              </Link>
-              <Link href="/buyer/favoris" className="font-semibold text-[rgb(var(--primary))]">
-                Favoris
-              </Link>
-              <Link
-                href="/marketplace"
-                className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]"
-              >
-                Marketplace
-              </Link>
-            </nav>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link href="/buyer/account">
-              <Button variant="ghost" size="sm">
-                Mon compte
-              </Button>
-            </Link>
-            <Button variant="secondary" size="sm" onClick={handleLogout}>
-              Déconnexion
-            </Button>
-          </div>
-        </div>
-      </header>
+      <BuyerNav />
 
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">

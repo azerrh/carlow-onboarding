@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Brand } from "@/components/ui/Brand";
+import { BuyerNav } from "@/components/buyer/BuyerNav";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { cn } from "@/lib/cn";
@@ -78,28 +78,7 @@ export default function BuyerAlertesPage() {
 
   return (
     <div className="portal-page min-h-screen">
-      {/* Header */}
-      <div className="sticky top-0 z-10 border-b border-[rgb(var(--border))] bg-white/80 backdrop-blur">
-        <div className="mx-auto flex max-w-[900px] items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3 text-sm">
-            <Link href="/buyer/dashboard"><Brand variant="compact" /></Link>
-            <span className="text-[rgb(var(--muted))]">/</span>
-            <Link href="/buyer/dashboard" className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]">Mon espace</Link>
-            <span className="text-[rgb(var(--muted))]">/</span>
-            <span className="font-medium">Mes alertes</span>
-          </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => {
-              localStorage.removeItem("buyerId");
-              router.push("/buyer/login");
-            }}
-          >
-            Déconnexion
-          </Button>
-        </div>
-      </div>
+      <BuyerNav />
 
       <div className="mx-auto max-w-[900px] px-4 py-8">
         {/* Titre */}

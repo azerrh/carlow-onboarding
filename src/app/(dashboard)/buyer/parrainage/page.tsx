@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Brand } from "@/components/ui/Brand";
+import { BuyerNav } from "@/components/buyer/BuyerNav";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { cn } from "@/lib/cn";
@@ -111,43 +111,7 @@ export default function BuyerReferralPage() {
 
   return (
     <div className="portal-page min-h-screen">
-      {/* Header */}
-      <div className="sticky top-0 z-10 border-b border-[rgb(var(--border))]/70 bg-[rgb(var(--card))]/85 backdrop-blur-md">
-        <div className="mx-auto flex max-w-[1100px] items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-4">
-            <Brand variant="compact" />
-            <nav className="hidden items-center gap-1 text-sm sm:flex">
-              <Link
-                href="/buyer/dashboard"
-                className="rounded-lg px-2.5 py-1.5 font-medium text-[rgb(var(--muted))] transition hover:bg-black/[0.04] hover:text-[rgb(var(--fg))]"
-              >
-                Tableau de bord
-              </Link>
-              <span className="text-[rgb(var(--border))]">/</span>
-              <span className="rounded-lg px-2.5 py-1.5 text-sm font-semibold text-[rgb(var(--primary))]">
-                Parrainage
-              </span>
-            </nav>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link href="/marketplace">
-              <Button variant="ghost" size="sm">
-                Marketplace
-              </Button>
-            </Link>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => {
-                localStorage.removeItem("buyerId");
-                router.push("/buyer/login");
-              }}
-            >
-              Déconnexion
-            </Button>
-          </div>
-        </div>
-      </div>
+      <BuyerNav />
 
       <div className="mx-auto max-w-[1100px] px-4 py-8">
         {/* Title + intro */}

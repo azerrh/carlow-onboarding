@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Brand } from "@/components/ui/Brand";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Field } from "@/components/ui/Field";
+import { BuyerNav } from "@/components/buyer/BuyerNav";
 import { cn } from "@/lib/cn";
 
 interface Buyer {
@@ -120,65 +120,7 @@ export default function BuyerAccountPage() {
 
   return (
     <div className="portal-page min-h-screen">
-      {/* Header */}
-      <header className="sticky top-0 z-10 border-b border-[rgb(var(--border))]/60 bg-white/70 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-4">
-            <Link href="/buyer/dashboard">
-              <Brand variant="compact" />
-            </Link>
-            <nav className="hidden items-center gap-3 text-sm md:flex">
-              <Link
-                href="/buyer/dashboard"
-                className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]"
-              >
-                Tableau de bord
-              </Link>
-              <Link
-                href="/buyer/orders"
-                className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]"
-              >
-                Mes commandes
-              </Link>
-              <Link
-                href="/buyer/devis"
-                className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]"
-              >
-                Mes devis
-              </Link>
-              <Link
-                href="/buyer/favoris"
-                className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]"
-              >
-                Favoris
-              </Link>
-              <Link
-                href="/buyer/alertes"
-                className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]"
-              >
-                Alertes
-              </Link>
-              <Link
-                href="/marketplace"
-                className="text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]"
-              >
-                Marketplace
-              </Link>
-              <Link
-                href="/buyer/account"
-                className="font-semibold text-[rgb(var(--primary))]"
-              >
-                Mon compte
-              </Link>
-            </nav>
-          </div>
-          <nav className="flex items-center gap-2">
-            <Button variant="secondary" size="sm" onClick={handleLogout}>
-              Déconnexion
-            </Button>
-          </nav>
-        </div>
-      </header>
+      <BuyerNav />
 
       <main className="mx-auto max-w-5xl px-6 py-10">
         {/* Bandeau profil */}
