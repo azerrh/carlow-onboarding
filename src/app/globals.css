@@ -233,14 +233,39 @@ img {
   height: auto;
 }
 
-/* ---- Scrollbar personnalisé ---- */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb {
-  background: rgb(var(--border));
-  border-radius: 99px;
+/* ---- Scrollbar personnalisé ----
+   Largeur confortable (14px) pour pouvoir attraper et glisser la barre
+   à la souris facilement, sans avoir à utiliser la molette. */
+::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
 }
-::-webkit-scrollbar-thumb:hover { background: rgb(var(--muted) / 0.5); }
+::-webkit-scrollbar-track {
+  background: rgb(var(--border) / 0.2);
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--muted) / 0.45);
+  border-radius: 99px;
+  /* Bordure transparente = padding visuel autour du pouce (effet plus fin
+     mais zone cliquable large) */
+  border: 3px solid transparent;
+  background-clip: content-box;
+  min-height: 40px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--primary) / 0.7);
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:active {
+  background: rgb(var(--primary));
+  background-clip: content-box;
+}
+
+/* Firefox : scrollbar fine mais visible */
+* {
+  scrollbar-width: auto;
+  scrollbar-color: rgb(var(--muted) / 0.45) rgb(var(--border) / 0.2);
+}
 
 /* ---- Utilitaires visuels ---- */
 
