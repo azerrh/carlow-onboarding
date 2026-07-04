@@ -300,7 +300,13 @@ function Inner() {
                       </td>
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-1.5">
-                          <IconBtn tone="info" title="Voir">
+                          <IconBtn
+                            tone="info"
+                            title="Voir la fiche vendeur"
+                            onClick={() =>
+                              window.open(`/marketplace/vendeur/${v.id}`, "_blank", "noopener")
+                            }
+                          >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-3.5 w-3.5">
                               <circle cx="12" cy="12" r="3" />
                               <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
