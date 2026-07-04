@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
+import { SmartImage } from "@/components/ui/SmartImage";
 
 /**
  * Input de recherche marketplace avec autocomplete.
@@ -161,13 +162,13 @@ export function SearchAutocomplete({
                       onClick={() => setOpen(false)}
                       className="flex items-center gap-3 px-3 py-2 transition hover:bg-[rgb(var(--primary))]/[0.04]"
                     >
-                      <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-lg bg-black/[0.04]">
+                      <div className="relative grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-lg bg-black/[0.04]">
                         {p.imageUrl ? (
-                          /* eslint-disable-next-line @next/next/no-img-element */
-                          <img
+                          <SmartImage
                             src={p.imageUrl}
                             alt={p.name}
-                            className="h-full w-full object-cover"
+                            sizes="40px"
+                            className="object-cover"
                           />
                         ) : (
                           <span className="text-lg">📦</span>

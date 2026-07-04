@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { Brand } from "@/components/ui/Brand";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { StarRating } from "@/components/ui/StarRating";
 import { ProductCardSkeleton, Skeleton } from "@/components/ui/Skeleton";
 import { VendorBadges, type BadgeData } from "@/components/marketplace/VendorBadges";
@@ -273,11 +274,11 @@ export default function PublicVendorPage() {
                     >
                       <div className="relative aspect-[4/3] bg-[#f8f9fc]">
                         {p.imageUrl ? (
-                          /* eslint-disable-next-line @next/next/no-img-element */
-                          <img
+                          <SmartImage
                             src={p.imageUrl}
                             alt={p.name}
-                            className="h-full w-full object-cover transition group-hover:scale-[1.03]"
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 300px"
+                            className="object-cover transition group-hover:scale-[1.03]"
                           />
                         ) : (
                           <div className="grid h-full place-items-center text-4xl text-[rgb(var(--muted))]/40">

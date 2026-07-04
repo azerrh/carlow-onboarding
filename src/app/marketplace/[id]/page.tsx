@@ -11,6 +11,7 @@ import { RecentlyViewed } from "@/components/marketplace/RecentlyViewed";
 import { TranslateButton } from "@/components/marketplace/TranslateButton";
 import { VendorBadges, type BadgeData } from "@/components/marketplace/VendorBadges";
 import { trackView } from "@/hooks/useRecentlyViewed";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { cn } from "@/lib/cn";
 
 interface Product {
@@ -256,17 +257,17 @@ function ProductDetailInner() {
 
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Image */}
-          <div className="overflow-hidden rounded-2xl border border-[rgb(var(--border))] bg-[#f8f9fc]">
+          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-[rgb(var(--border))] bg-[#f8f9fc]">
             {primaryImage ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <SmartImage
                 src={primaryImage}
                 alt={product.name}
-                className="h-full w-full object-cover"
-                style={{ minHeight: "400px" }}
+                priority
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover"
               />
             ) : (
-              <div className="grid h-96 place-items-center text-[rgb(var(--muted))]">
+              <div className="grid h-full place-items-center text-[rgb(var(--muted))]">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="h-24 w-24">
                   <rect x="3" y="5" width="18" height="14" rx="2" />
                   <circle cx="8.5" cy="10.5" r="1.5" />
@@ -520,13 +521,13 @@ function ProductDetailInner() {
                   href={`/marketplace/${r.id}`}
                   className="group rounded-xl border border-[rgb(var(--border))] overflow-hidden transition hover:border-[rgb(var(--primary))]/30 hover:shadow-sm"
                 >
-                  <div className="aspect-[4/3] bg-[#f8f9fc]">
+                  <div className="relative aspect-[4/3] overflow-hidden bg-[#f8f9fc]">
                     {r.photos[0]?.url || r.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <SmartImage
                         src={r.photos[0]?.url ?? r.imageUrl ?? ""}
                         alt={r.name}
-                        className="h-full w-full object-cover transition group-hover:scale-[1.02]"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 280px"
+                        className="object-cover transition group-hover:scale-[1.02]"
                       />
                     ) : (
                       <div className="grid h-full place-items-center text-[rgb(var(--muted))]">
@@ -927,7 +928,7 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-40" onClick={onClose}>
       <div className="absolute inset-0 bg-black/40" />
-      <div className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
+      <div className="absolute right-0 top-0 h-full w-full max-w-lg bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between border-b border-[rgb(var(--border))] px-6 py-4">
             <h2 className="text-lg font-semibold">Mon panier</h2>
@@ -944,10 +945,9 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
               <div className="space-y-4">
                 {items.map((item) => (
                   <div key={item.productId} className="flex gap-3">
-                    <div className="h-16 w-16 flex-shrink-0 rounded-lg bg-[#f8f9fc]">
+                    <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-[#f8f9fc]">
                       {item.imageUrl && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={item.imageUrl} alt={item.name} className="h-full w-full rounded-lg object-cover" />
+                        <SmartImage src={item.imageUrl} alt={item.name} sizes="64px" className="rounded-lg object-cover" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">

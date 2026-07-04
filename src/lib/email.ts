@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
 /**
  * Helpers d'envoi d'emails transactionnels via Resend.
@@ -25,8 +26,36 @@ import { Resend } from "resend";
  *
  * Le format Resend accepte "Nom <email@domaine>" ou juste "email@domaine".
  */
-const FROM = process.env.RESEND_FROM_EMAIL ?? "Carlow <onboarding@resend.dev>";
+// Expéditeur. Avec Gmail SMTP, l'adresse DOIT être le compte authentifié
+// (Gmail réécrit sinon le From), d'où la dérivation depuis SMTP_USER.
+const SMTP_USER = process.env.SMTP_USER;
+const FROM =
+  process.env.EMAIL_FROM ??
+  process.env.RESEND_FROM_EMAIL ??
+  (SMTP_USER ? `Carlow <${SMTP_USER}>` : "Carlow <onboarding@resend.dev>");
 const SITE_URL = "https://carlowonboarding.vercel.app";
+
+/**
+ * Transport SMTP (ex : Gmail via mot de passe d'application).
+ * Activé dès que SMTP_HOST + SMTP_USER + SMTP_PASS sont définis.
+ * Avantage vs Resend en plan gratuit : envoie vers N'IMPORTE QUEL destinataire.
+ */
+let _transporter: nodemailer.Transporter | null = null;
+function getTransporter(): nodemailer.Transporter | null {
+  if (_transporter) return _transporter;
+  const host = process.env.SMTP_HOST;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  if (!host || !user || !pass) return null;
+  const port = Number(process.env.SMTP_PORT ?? 465);
+  _transporter = nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465, // 465 = SSL direct, 587 = STARTTLS
+    auth: { user, pass },
+  });
+  return _transporter;
+}
 
 /** Lazy init : on évite de crash au build si la clé est absente. */
 function getResend(): Resend | null {
@@ -47,9 +76,27 @@ async function send(opts: {
   html: string;
   context: string;
 }): Promise<{ sent: boolean }> {
+  // 1) SMTP (Gmail…) en priorité s'il est configuré → envoie à tout le monde.
+  const smtp = getTransporter();
+  if (smtp) {
+    try {
+      await smtp.sendMail({
+        from: FROM,
+        to: opts.to,
+        subject: opts.subject,
+        html: opts.html,
+      });
+      console.log(`[email] ✓ (SMTP) ${opts.context} → ${opts.to}`);
+      return { sent: true };
+    } catch (error) {
+      console.error(`[email] ✗ (SMTP) ${opts.context} → ${opts.to}`, error);
+      // on tente Resend en repli ci-dessous
+    }
+  }
+
+  // 2) Repli Resend (limité à l'email du compte tant que le domaine n'est pas vérifié).
   const client = getResend();
   if (!client) return { sent: false };
-
   try {
     await client.emails.send({
       from: FROM,
@@ -57,10 +104,10 @@ async function send(opts: {
       subject: opts.subject,
       html: opts.html,
     });
-    console.log(`[email] ✓ ${opts.context} → ${opts.to}`);
+    console.log(`[email] ✓ (Resend) ${opts.context} → ${opts.to}`);
     return { sent: true };
   } catch (error) {
-    console.error(`[email] ✗ ${opts.context} → ${opts.to}`, error);
+    console.error(`[email] ✗ (Resend) ${opts.context} → ${opts.to}`, error);
     return { sent: false };
   }
 }

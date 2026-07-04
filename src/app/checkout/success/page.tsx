@@ -158,7 +158,7 @@ function SuccessContent() {
             <Link href="/marketplace">
               <Button className="w-full">Continuer mes achats</Button>
             </Link>
-            <Link href="/buyer/login">
+            <Link href="/buyer/orders">
               <Button variant="secondary" className="w-full">
                 Suivi de mes commandes
               </Button>

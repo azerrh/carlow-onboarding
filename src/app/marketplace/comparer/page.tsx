@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Brand } from "@/components/ui/Brand";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useCart } from "@/hooks/useCart";
 import { useCompare } from "@/hooks/useCompare";
@@ -201,11 +202,11 @@ export default function ComparePage() {
                       <div className="overflow-hidden rounded-2xl border border-[rgb(var(--border))]/60 bg-white">
                         <div className="relative aspect-[4/3] bg-[#f8f9fc]">
                           {p.imageUrl ? (
-                            /* eslint-disable-next-line @next/next/no-img-element */
-                            <img
+                            <SmartImage
                               src={p.imageUrl}
                               alt={p.name}
-                              className="h-full w-full object-cover"
+                              sizes="200px"
+                              className="object-cover"
                             />
                           ) : (
                             <div className="grid h-full place-items-center text-3xl text-[rgb(var(--muted))]/40">

@@ -136,14 +136,6 @@ export default function BuyerAccountPage() {
               <p className="text-sm text-[rgb(var(--muted))]">{buyer.email}</p>
             </div>
           </div>
-          <div
-            className={cn(
-              "rounded-full border px-3 py-1 text-xs font-semibold",
-              "border-[rgb(var(--success))]/30 bg-[rgb(var(--success))]/10 text-[rgb(var(--success))]"
-            )}
-          >
-            ● Compte acheteur actif
-          </div>
         </div>
 
         {error && (

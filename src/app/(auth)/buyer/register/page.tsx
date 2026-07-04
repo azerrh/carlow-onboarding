@@ -65,7 +65,9 @@ function BuyerRegisterInner() {
         return;
       }
       localStorage.setItem("buyerId", data.buyerId);
-      router.push("/buyer/account");
+      // Retour à la page d'origine si fournie (ex: panier marketplace), sinon compte.
+      const redirect = new URLSearchParams(window.location.search).get("redirect");
+      router.push(redirect || "/buyer/account");
     } catch {
       setError("Erreur réseau.");
       setLoading(false);
@@ -124,7 +126,9 @@ function BuyerRegisterInner() {
       {/* Formulaire */}
       <div className="grid place-items-center px-4 py-10">
         <Card className="w-full max-w-[440px] p-8 sm:p-10">
-          <Brand className="mb-7" />
+          <Link href="/" aria-label="Retour à l'accueil" className="mb-7 inline-block transition hover:opacity-80">
+            <Brand />
+          </Link>
 
           {/* Toggle */}
           <RoleToggle current="buyer" />

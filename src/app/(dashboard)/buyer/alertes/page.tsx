@@ -94,30 +94,6 @@ export default function BuyerAlertesPage() {
           </Link>
         </div>
 
-        {/* Nav rapide */}
-        <div className="mt-4 flex flex-wrap gap-2 text-xs">
-          {[
-            { href: "/buyer/dashboard", label: "🏠 Tableau de bord" },
-            { href: "/buyer/orders", label: "🛒 Commandes" },
-            { href: "/buyer/favoris", label: "❤️ Favoris" },
-            { href: "/buyer/devis", label: "📋 Devis" },
-            { href: "/buyer/alertes", label: "🔔 Alertes", active: true },
-          ].map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className={cn(
-                "rounded-lg px-3 py-1.5 font-medium transition",
-                l.active
-                  ? "bg-amber-500 text-white"
-                  : "bg-black/[0.04] text-[rgb(var(--muted))] hover:bg-black/[0.08]"
-              )}
-            >
-              {l.label}
-            </Link>
-          ))}
-        </div>
-
         {/* Explications */}
         <Card className="mt-5 border-amber-200 bg-amber-50 p-4">
           <div className="flex items-start gap-3">
@@ -162,7 +138,7 @@ export default function BuyerAlertesPage() {
                     <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-[rgb(var(--border))] bg-[#f8f9fc]">
                       {product.photos[0]?.url ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={product.photos[0].url} alt={product.name} className="h-full w-full object-cover" />
+                        <img src={product.photos[0].url} alt={product.name} loading="lazy" decoding="async" className="h-full w-full object-cover" />
                       ) : (
                         <div className="grid h-full place-items-center text-2xl text-[rgb(var(--muted))]">📦</div>
                       )}

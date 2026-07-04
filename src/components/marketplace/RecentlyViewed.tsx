@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRecentlyViewedDetails } from "@/hooks/useRecentlyViewed";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { SmartImage } from "@/components/ui/SmartImage";
 
 /**
  * Section "Vous avez consulté" — affiche les 4 derniers produits vus
@@ -58,11 +59,11 @@ export function RecentlyViewed({ exclude }: { exclude?: string }) {
             >
               <div className="relative aspect-[4/3] bg-[rgb(var(--bg))]/50">
                 {p.imageUrl ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
+                  <SmartImage
                     src={p.imageUrl}
                     alt={p.name}
-                    className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 280px"
+                    className="object-cover transition duration-500 group-hover:scale-[1.04]"
                   />
                 ) : (
                   <div className="grid h-full place-items-center text-3xl text-[rgb(var(--muted))]/40">

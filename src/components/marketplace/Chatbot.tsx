@@ -370,6 +370,8 @@ function ChatBubble({ message }: { message: ChatMessage }) {
                     <img
                       src={p.imageUrl}
                       alt={p.name}
+                      loading="lazy"
+                      decoding="async"
                       className="h-full w-full object-cover transition group-hover:scale-105"
                     />
                   ) : (

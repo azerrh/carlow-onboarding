@@ -11,6 +11,7 @@ import { useCart, useCartSummary, CartItem, getEffectivePrice } from "@/hooks/us
 import { useFavorites } from "@/hooks/useFavorites";
 import { useCompare, COMPARE_MAX } from "@/hooks/useCompare";
 import { ProductCardSkeleton } from "@/components/ui/Skeleton";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { SearchAutocomplete } from "@/components/marketplace/SearchAutocomplete";
@@ -52,6 +53,15 @@ function MarketplaceInner() {
   const [inStockOnly, setInStockOnly] = useState(false);
   const [sortBy, setSortBy] = useState<"recent" | "priceAsc" | "priceDesc" | "name" | "rating">("recent");
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // État de connexion acheteur (id stocké au login) pour adapter le header :
+  // un acheteur connecté voit "Mon espace" au lieu de "Connexion acheteur".
+  const [buyerLoggedIn, setBuyerLoggedIn] = useState(false);
+  useEffect(() => {
+    setBuyerLoggedIn(
+      typeof window !== "undefined" && !!localStorage.getItem("buyerId")
+    );
+  }, []);
 
   const { totalItems, totalPrice } = useCartSummary();
   const addItem = useCart((s) => s.addItem);
@@ -203,8 +213,16 @@ function MarketplaceInner() {
       <header className="sticky top-0 z-20 border-b border-[rgb(var(--border))]/70 bg-[rgb(var(--card))]/85 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <div className="flex items-center gap-5">
-            <Brand variant="compact" />
+            <Link href="/" aria-label="Retour à l'accueil" className="transition hover:opacity-80">
+              <Brand variant="compact" />
+            </Link>
             <nav className="hidden items-center gap-1 text-sm sm:flex">
+              <Link
+                href="/"
+                className="rounded-lg px-3 py-1.5 font-medium text-[rgb(var(--muted))] transition hover:bg-black/[0.04] hover:text-[rgb(var(--fg))]"
+              >
+                Accueil
+              </Link>
               <Link
                 href="/marketplace"
                 className="rounded-lg px-3 py-1.5 font-semibold text-[rgb(var(--primary))] transition hover:bg-[rgb(var(--primary))]/8"
@@ -221,12 +239,21 @@ function MarketplaceInner() {
           </div>
           <div className="flex items-center gap-2 sm:gap-2.5">
             <ThemeToggle size="sm" />
-            <Link href="/buyer/login" className="hidden sm:inline-flex">
-              <Button variant="ghost" size="sm">Connexion acheteur</Button>
+            {/* Connecté → "Mon espace" (vers le tableau de bord). Sinon → connexion. */}
+            <Link
+              href={buyerLoggedIn ? "/buyer/dashboard" : "/buyer/login"}
+              className="hidden sm:inline-flex"
+            >
+              <Button variant="ghost" size="sm">
+                {buyerLoggedIn ? "Mon espace" : "Connexion acheteur"}
+              </Button>
             </Link>
-            <Link href="/buyer/login" className="sm:hidden">
+            <Link
+              href={buyerLoggedIn ? "/buyer/dashboard" : "/buyer/login"}
+              className="sm:hidden"
+            >
               <button
-                aria-label="Connexion acheteur"
+                aria-label={buyerLoggedIn ? "Mon espace acheteur" : "Connexion acheteur"}
                 className="grid h-9 w-9 place-items-center rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--card))] text-[rgb(var(--muted))] hover:bg-black/[0.03] transition"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
@@ -505,11 +532,11 @@ function MarketplaceInner() {
                     className="relative block aspect-[4/3] overflow-hidden bg-[rgb(var(--bg))]"
                   >
                     {p.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <SmartImage
                         src={p.imageUrl}
                         alt={p.name}
-                        className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 300px"
+                        className="object-cover transition duration-300 group-hover:scale-[1.04]"
                       />
                     ) : (
                       <div className="grid h-full place-items-center text-[rgb(var(--muted))]/40">
@@ -733,6 +760,32 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
   const [buyerPhone, setBuyerPhone] = useState("");
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
+  // Compte acheteur OBLIGATOIRE pour commander : on lit l'id stocké au login.
+  // Si présent, on pré-remplit les coordonnées depuis le compte connecté et on
+  // lie la commande à ce compte. Sinon, le panier affiche un appel à se connecter.
+  const [buyerId, setBuyerId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const id =
+      typeof window !== "undefined" ? localStorage.getItem("buyerId") : null;
+    if (!id) return;
+    setBuyerId(id);
+    fetch(`/api/buyer/me?id=${encodeURIComponent(id)}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.success && d.buyer) {
+          setBuyerEmail(d.buyer.email ?? "");
+          setBuyerName(d.buyer.name ?? "");
+          setBuyerAddress(d.buyer.address ?? "");
+          setBuyerPhone(d.buyer.phone ?? "");
+        }
+        // En cas d'échec on NE déconnecte PAS l'acheteur (on garde buyerId) :
+        // un aléa réseau ou une réponse inattendue ne doit jamais fermer la
+        // session. On se contente de ne pas pré-remplir.
+      })
+      .catch(() => {});
+  }, []);
+
   // Codes promo appliqués (un seul code par vendeur)
   const [promoInput, setPromoInput] = useState("");
   const [promoVendorId, setPromoVendorId] = useState<string>("");
@@ -835,6 +888,7 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
 
   async function handleCheckout() {
     if (items.length === 0) return;
+    if (!buyerId) return; // garde-fou : un compte acheteur est obligatoire
     setCheckoutLoading(true);
     try {
       const res = await fetch("/api/checkout/stripe", {
@@ -851,6 +905,7 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
           buyerName,
           buyerAddress,
           buyerPhone,
+          buyerId,
         }),
       });
       const data = await res.json();
@@ -870,7 +925,7 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 z-40" onClick={onClose}>
       <div className="absolute inset-0 bg-black/40" />
       <div
-        className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl"
+        className="absolute right-0 top-0 h-full w-full max-w-lg bg-white shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex h-full flex-col">
@@ -910,13 +965,13 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
               <div className="space-y-4">
                 {items.map((item) => (
                   <div key={item.productId} className="flex gap-3">
-                    <div className="h-16 w-16 flex-shrink-0 rounded-lg bg-[#f8f9fc]">
+                    <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-[#f8f9fc]">
                       {item.imageUrl && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
+                        <SmartImage
                           src={item.imageUrl}
                           alt={item.name}
-                          className="h-full w-full rounded-lg object-cover"
+                          sizes="64px"
+                          className="rounded-lg object-cover"
                         />
                       )}
                     </div>
@@ -961,11 +1016,12 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
                 ))}
               </div>
             )}
-          </div>
 
-          {/* Footer */}
-          {items.length > 0 && (
-            <div className="border-t border-[rgb(var(--border))] px-6 py-4 space-y-4">
+            {/* Formulaire + code promo : à l'intérieur de la zone scrollable
+                pour ne pas écraser la liste des produits sur les petits écrans */}
+            {items.length > 0 && (
+              <div className="mt-5 space-y-4 border-t border-[rgb(var(--border))] pt-5">
+                {buyerId && (
               <div className="space-y-2">
                 <input
                   type="email"
@@ -995,6 +1051,7 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
                   className="h-10 w-full rounded-xl border border-[rgb(var(--border))] bg-white px-3 text-sm"
                 />
               </div>
+              )}
 
               {/* Codes promo */}
               <div className="rounded-xl border border-[rgb(var(--border))]/70 bg-[rgb(var(--bg))]/50 p-3">
@@ -1091,7 +1148,13 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
                   </div>
                 )}
               </div>
+              </div>
+            )}
+          </div>
 
+          {/* Footer épinglé : total + paiement toujours visibles */}
+          {items.length > 0 && (
+            <div className="border-t border-[rgb(var(--border))] px-6 py-4 space-y-4">
               {/* Total */}
               <div className="space-y-1.5">
                 {totalDiscountCents > 0 && (
@@ -1120,14 +1183,36 @@ function CartDrawer({ onClose }: { onClose: () => void }) {
                   </span>
                 </div>
               </div>
-              <Button
-                className="w-full"
-                onClick={handleCheckout}
-                disabled={checkoutLoading || !buyerEmail}
-                size="lg"
-              >
-                {checkoutLoading ? "Redirection…" : "Payer avec Stripe →"}
-              </Button>
+              {buyerId ? (
+                <Button
+                  className="w-full"
+                  onClick={handleCheckout}
+                  disabled={checkoutLoading || !buyerEmail}
+                  size="lg"
+                >
+                  {checkoutLoading ? "Redirection…" : "Payer avec Stripe →"}
+                </Button>
+              ) : (
+                <div className="space-y-2 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--bg))]/60 p-3 text-center">
+                  <p className="text-sm font-medium">
+                    🔒 Un compte acheteur est nécessaire pour passer commande.
+                  </p>
+                  <div className="flex gap-2">
+                    <Link
+                      href="/buyer/login?redirect=/marketplace"
+                      className="flex-1 rounded-xl border border-[rgb(var(--border))] bg-white px-3 py-2 text-sm font-semibold transition hover:bg-[rgb(var(--bg))]"
+                    >
+                      Se connecter
+                    </Link>
+                    <Link
+                      href="/buyer/register?redirect=/marketplace"
+                      className="flex-1 rounded-xl bg-[rgb(var(--primary))] px-3 py-2 text-sm font-bold text-white transition hover:brightness-[1.06]"
+                    >
+                      Créer un compte
+                    </Link>
+                  </div>
+                </div>
+              )}
               <button
                 onClick={clearCart}
                 className="w-full text-center text-xs text-[rgb(var(--muted))] hover:text-red-600"

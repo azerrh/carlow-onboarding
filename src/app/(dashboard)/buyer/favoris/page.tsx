@@ -7,6 +7,7 @@ import { BuyerNav } from "@/components/buyer/BuyerNav";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ProductCardSkeleton } from "@/components/ui/Skeleton";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { useCart } from "@/hooks/useCart";
 import { cn } from "@/lib/cn";
 
@@ -186,11 +187,11 @@ export default function BuyerFavoritesPage() {
                         className="relative block aspect-[4/3] bg-[#f8f9fc]"
                       >
                         {p.imageUrl ? (
-                          /* eslint-disable-next-line @next/next/no-img-element */
-                          <img
+                          <SmartImage
                             src={p.imageUrl}
                             alt={p.name}
-                            className="h-full w-full object-cover transition group-hover:scale-[1.02]"
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 280px"
+                            className="object-cover transition group-hover:scale-[1.02]"
                           />
                         ) : (
                           <div className="grid h-full place-items-center text-3xl text-[rgb(var(--muted))]/50">

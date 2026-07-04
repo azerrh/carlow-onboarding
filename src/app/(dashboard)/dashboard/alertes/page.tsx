@@ -123,7 +123,7 @@ export default function VendorAlertesPage() {
                     <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-[rgb(var(--border))] bg-[#f8f9fc]">
                       {product.photos[0]?.url ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={product.photos[0].url} alt={product.name} className="h-full w-full object-cover" />
+                        <img src={product.photos[0].url} alt={product.name} loading="lazy" decoding="async" className="h-full w-full object-cover" />
                       ) : (
                         <div className="grid h-full place-items-center text-xl text-[rgb(var(--muted))]">📦</div>
                       )}

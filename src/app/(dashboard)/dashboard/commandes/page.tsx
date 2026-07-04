@@ -362,6 +362,8 @@ export default function VendorOrdersPage() {
                                 <img
                                   src={line.imageUrl}
                                   alt={line.productName}
+                                  loading="lazy"
+                                  decoding="async"
                                   className="h-full w-full object-cover"
                                 />
                               ) : (

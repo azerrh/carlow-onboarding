@@ -141,9 +141,11 @@ export default function AccountPage() {
               <p className="text-sm text-[rgb(var(--muted))]">{vendor.email}</p>
             </div>
           </div>
-          <div className={cn("rounded-full border px-3 py-1 text-xs font-semibold", statusStyle.bg, statusStyle.text)}>
-            ● {statusStyle.label}
-          </div>
+          {vendor.status !== "active" && (
+            <div className={cn("rounded-full border px-3 py-1 text-xs font-semibold", statusStyle.bg, statusStyle.text)}>
+              ● {statusStyle.label}
+            </div>
+          )}
         </div>
 
         {/* Progression onboarding */}

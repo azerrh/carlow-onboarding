@@ -49,7 +49,9 @@ export default function LoginPage() {
         <div className="h-1.5 w-full bg-gradient-to-r from-[rgb(var(--primary))] via-[#e8923a] to-[#c05510]" />
 
         <div className="p-8 sm:p-10">
-          <Brand className="mb-7" />
+          <Link href="/" aria-label="Retour à l'accueil" className="mb-7 inline-block transition hover:opacity-80">
+            <Brand />
+          </Link>
 
           <RoleLoginToggle current="vendor" />
 

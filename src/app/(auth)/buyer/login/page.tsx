@@ -34,7 +34,9 @@ export default function BuyerLoginPage() {
         return;
       }
       localStorage.setItem("buyerId", data.buyerId);
-      router.push("/buyer/account");
+      // Retour à la page d'origine si fournie (ex: panier marketplace), sinon compte.
+      const redirect = new URLSearchParams(window.location.search).get("redirect");
+      router.push(redirect || "/buyer/account");
     } catch {
       setError("Erreur réseau.");
       setLoading(false);
@@ -55,7 +57,9 @@ export default function BuyerLoginPage() {
         <div className="h-1.5 w-full bg-gradient-to-r from-[rgb(var(--success))] via-[#28c87a] to-[#1a9656]" />
 
         <div className="p-8 sm:p-10">
-          <Brand className="mb-7" />
+          <Link href="/" aria-label="Retour à l'accueil" className="mb-7 inline-block transition hover:opacity-80">
+            <Brand />
+          </Link>
 
           <RoleLoginToggle current="buyer" />
 
@@ -105,7 +109,7 @@ export default function BuyerLoginPage() {
             )}
 
             <Button type="submit" disabled={loading} className="mt-1 w-full" size="lg">
-              {loading ? "Connexion en cours…" : "Accéder à la marketplace →"}
+              {loading ? "Connexion en cours…" : "Se connecter"}
             </Button>
           </form>
 

@@ -7,6 +7,7 @@ import { Brand } from "@/components/ui/Brand";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ProductCardSkeleton } from "@/components/ui/Skeleton";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Chatbot } from "@/components/marketplace/Chatbot";
 import { cn } from "@/lib/cn";
@@ -548,11 +549,11 @@ export default function HomePage() {
               >
                 <div className="relative aspect-square w-full overflow-hidden bg-gradient-to-br from-black/[0.03] to-black/[0.06]">
                   {p.imageUrl ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img
+                    <SmartImage
                       src={p.imageUrl}
                       alt={p.name}
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 300px"
+                      className="object-cover transition duration-500 group-hover:scale-[1.04]"
                     />
                   ) : (
                     <div className="grid h-full place-items-center text-5xl text-[rgb(var(--muted))]/40">

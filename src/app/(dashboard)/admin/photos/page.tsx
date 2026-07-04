@@ -80,6 +80,8 @@ export default function AdminPhotosPage() {
                   <img
                     src={p.url}
                     alt={p.product.name}
+                    loading="lazy"
+                    decoding="async"
                     className="h-full w-full object-cover"
                   />
                   {p.primary && (

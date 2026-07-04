@@ -209,16 +209,20 @@ export default function DashboardPage() {
         title={vendor ? `Bonjour, ${vendor.name} !` : "Bonjour"}
         subtitle="Voici l'état de votre activité vendeur Carlow."
         action={
-          <div
-            className="rounded-full border px-3 py-1 text-xs font-semibold"
-            style={{
-              borderColor: `${statusColor}40`,
-              backgroundColor: `${statusColor}10`,
-              color: statusColor,
-            }}
-          >
-            ● {statusLabel}
-          </div>
+          // On masque le badge "Compte actif" quand le compte est actif ;
+          // on garde l'indicateur pour les statuts en attente (informe le vendeur).
+          vendor?.status === "active" ? undefined : (
+            <div
+              className="rounded-full border px-3 py-1 text-xs font-semibold"
+              style={{
+                borderColor: `${statusColor}40`,
+                backgroundColor: `${statusColor}10`,
+                color: statusColor,
+              }}
+            >
+              ● {statusLabel}
+            </div>
+          )
         }
       />
 

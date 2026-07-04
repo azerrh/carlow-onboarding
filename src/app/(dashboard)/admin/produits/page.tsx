@@ -265,6 +265,8 @@ export default function AdminProduitsPage() {
                         <img
                           src={p.photos[0].url}
                           alt={p.name}
+                          loading="lazy"
+                          decoding="async"
                           className="h-10 w-10 rounded-lg object-cover"
                         />
                       ) : (

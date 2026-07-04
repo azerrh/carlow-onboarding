@@ -100,29 +100,6 @@ export default function BuyerDevisPage() {
           </Link>
         </div>
 
-        {/* Nav rapide */}
-        <div className="mt-4 flex flex-wrap gap-2 text-xs">
-          {[
-            { href: "/buyer/dashboard", label: "🏠 Tableau de bord" },
-            { href: "/buyer/orders", label: "🛒 Commandes" },
-            { href: "/buyer/favoris", label: "❤️ Favoris" },
-            { href: "/buyer/devis", label: "📋 Devis", active: true },
-          ].map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className={cn(
-                "rounded-lg px-3 py-1.5 font-medium transition",
-                l.active
-                  ? "bg-[rgb(var(--primary))] text-white"
-                  : "bg-black/[0.04] text-[rgb(var(--muted))] hover:bg-black/[0.08]"
-              )}
-            >
-              {l.label}
-            </Link>
-          ))}
-        </div>
-
         {/* Filtres */}
         <Card className="mt-5 p-4">
           <div className="flex flex-wrap gap-2">
@@ -182,7 +159,7 @@ export default function BuyerDevisPage() {
                     <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-[rgb(var(--border))] bg-[#f8f9fc]">
                       {q.product.photos[0]?.url ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={q.product.photos[0].url} alt={q.product.name} className="h-full w-full object-cover" />
+                        <img src={q.product.photos[0].url} alt={q.product.name} loading="lazy" decoding="async" className="h-full w-full object-cover" />
                       ) : (
                         <div className="grid h-full place-items-center text-2xl text-[rgb(var(--muted))]">📦</div>
                       )}

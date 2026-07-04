@@ -139,6 +139,7 @@ export default function QuotePage() {
                 {quote.product.photos[0]?.url && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={quote.product.photos[0].url} alt={quote.product.name}
+                    loading="lazy" decoding="async"
                     className="h-20 w-20 shrink-0 rounded-xl object-cover border border-[rgb(var(--border))]" />
                 )}
                 <div>

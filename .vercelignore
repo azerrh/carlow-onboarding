@@ -1,0 +1,4 @@
+# Dossiers lourds non nécessaires au build de l'application
+rapport de stage/
+.tmp/
+.preview/

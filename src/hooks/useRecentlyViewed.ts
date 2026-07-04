@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 /**
  * Hook produits récemment consultés.
@@ -81,7 +81,13 @@ export function useRecentlyViewed(exclude?: string): string[] {
     };
   }, []);
 
-  return exclude ? ids.filter((id) => id !== exclude) : ids;
+  // ⚠️ useMemo OBLIGATOIRE : sans ça, `ids.filter()` renvoie un nouveau tableau
+  // à chaque render → relance fetchDetails en boucle → "loading" bloqué (cartes
+  // vides) + spam de l'API. La mémoïsation rend la référence stable.
+  return useMemo(
+    () => (exclude ? ids.filter((id) => id !== exclude) : ids),
+    [ids, exclude]
+  );
 }
 
 /**

@@ -210,6 +210,8 @@ export default function BuyerReviewsPage() {
                         <img
                           src={r.productImageUrl}
                           alt={r.productName}
+                          loading="lazy"
+                          decoding="async"
                           className="h-full w-full object-cover"
                         />
                       ) : (
@@ -306,6 +308,8 @@ export default function BuyerReviewsPage() {
                       <img
                         src={p.imageUrl}
                         alt={p.name}
+                        loading="lazy"
+                        decoding="async"
                         className="h-full w-full object-cover"
                       />
                     ) : (

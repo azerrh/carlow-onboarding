@@ -470,7 +470,7 @@ export function AdminShell({
             {userMenuOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
-                <div className="absolute right-0 top-full mt-2 w-56 overflow-hidden rounded-xl border border-[rgb(var(--border))] bg-white shadow-lg">
+                <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-[rgb(var(--border))] bg-white shadow-lg">
                   <div className="border-b border-[rgb(var(--border))] px-4 py-3">
                     <div className="text-sm font-semibold">{adminUser?.name ?? "Admin User"}</div>
                     <div className="text-xs text-[rgb(var(--muted))]">{adminUser?.email ?? "admin@example.com"}</div>

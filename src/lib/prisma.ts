@@ -14,9 +14,17 @@ import { PrismaPg } from "@prisma/adapter-pg";
  * Stratégie :
  *  1. Singleton global maintenu en TOUS environnements (Vercel warm starts
  *     réutilisent le contexte → pas de nouveau pool par requête)
- *  2. Pool modéré (max=3) : pgbouncer gère déjà le multiplexing, donc
- *     pas besoin d'un gros pool côté Lambda
- *  3. idleTimeout court pour libérer rapidement les connexions inactives
+ *  2. Pool = 1 connexion par instance (max=1) : sur Vercel, une fonction est
+ *     GELÉE après sa réponse (pas tuée) → ses connexions restent ouvertes
+ *     côté Supabase et le minuteur d'idle est gelé aussi. Avec un gros pool,
+ *     chaque cold start accumulait jusqu'à `max` connexions → on saturait la
+ *     limite client du pooler Supabase (200) → erreur EMAXCONN. Avec max=1,
+ *     chaque instance ne retient qu'1 connexion (pgbouncer multiplexe déjà
+ *     en mode transaction, donc 1 suffit). Recommandation Prisma/Supabase
+ *     pour le serverless (équivalent de connection_limit=1).
+ *  3. idleTimeout court + allowExitOnIdle pour libérer dès que possible.
+ *  4. connectionTimeout : si le pooler est saturé, on échoue vite (10s) au
+ *     lieu de bloquer la Lambda (ce qui aggraverait la saturation).
  */
 
 const globalForPrisma = globalThis as unknown as {
@@ -31,10 +39,13 @@ function createPrismaClient() {
 
   const adapter = new PrismaPg({
     connectionString,
-    // pgbouncer (transaction pooler Supabase) multiplexe déjà les connexions,
-    // donc un petit pool par Lambda suffit largement.
-    max: 3,
+    // pgbouncer (transaction pooler Supabase) multiplexe déjà les connexions :
+    // 1 connexion par instance suffit et évite de saturer la limite client du
+    // pooler (200) à cause des instances Vercel gelées qui retiennent leurs
+    // connexions. Voir l'en-tête du fichier.
+    max: 1,
     idleTimeoutMillis: 10_000,
+    connectionTimeoutMillis: 10_000,
     allowExitOnIdle: true,
   });
 

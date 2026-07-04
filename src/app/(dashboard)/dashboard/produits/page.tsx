@@ -325,6 +325,8 @@ function ProductsInner({ preselectedCatalog }: { preselectedCatalog: string | nu
                           <img
                             src={p.photos[0].url}
                             alt={p.name}
+                            loading="lazy"
+                            decoding="async"
                             className="h-10 w-10 rounded-lg object-cover"
                           />
                         ) : (
@@ -971,6 +973,8 @@ function ProductModal({
                       <img
                         src={p.url}
                         alt=""
+                        loading="lazy"
+                        decoding="async"
                         className="h-full w-full object-cover"
                       />
                       {p.primary && (
