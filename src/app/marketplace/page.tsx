@@ -77,6 +77,31 @@ function MarketplaceInner() {
     }
   }, [canceled]);
 
+  // Charge les badges des vendeurs uniques APRÈS l'affichage des produits
+  // (non-bloquant) puis les fusionne dans le state. L'API /api/marketplace/products
+  // n'inclut pas les badges (trop de requêtes) : on les récupère ici en un seul
+  // appel groupé pour les seuls vendeurs visibles.
+  const loadVendorBadges = useCallback(async (list: Product[]) => {
+    const ids = Array.from(new Set(list.map((p) => p.vendor.id)));
+    if (ids.length === 0) return;
+    try {
+      const res = await fetch(
+        `/api/marketplace/vendor-badges?ids=${encodeURIComponent(ids.join(","))}`
+      );
+      const data = await res.json();
+      if (!res.ok || !data.success) return;
+      const map: Record<string, BadgeData[]> = data.badges ?? {};
+      setProducts((prev) =>
+        prev.map((p) => ({
+          ...p,
+          vendor: { ...p.vendor, badges: map[p.vendor.id] ?? p.vendor.badges },
+        }))
+      );
+    } catch {
+      // Silencieux : les badges sont un enrichissement, pas une donnée critique.
+    }
+  }, []);
+
   const fetchData = useCallback(async () => {
     try {
       const res = await fetch("/api/marketplace/products");
@@ -84,6 +109,7 @@ function MarketplaceInner() {
       if (res.ok && data.success) {
         setProducts(data.products);
         setCategories(data.categories);
+        void loadVendorBadges(data.products);
       } else {
         setError(data?.error || "Erreur de chargement.");
       }
@@ -92,7 +118,7 @@ function MarketplaceInner() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [loadVendorBadges]);
 
   useEffect(() => {
     fetchData();

@@ -179,18 +179,16 @@ export default function DashboardPage() {
     (steps.filter((s) => s.done).length / steps.length) * 100
   );
 
-  const statusColor =
-    vendor?.status === "submitted"
-      ? "#22a06b"
-      : vendor?.status === "active"
-        ? "#E87A30"
-        : "#888";
-  const statusLabel =
-    vendor?.status === "submitted"
-      ? "Dossier soumis"
-      : vendor?.status === "active"
-        ? "Compte actif"
-        : "En cours";
+  // Indicateur de statut du dossier vendeur — reflète les 4 états du
+  // diagramme de classes (pending | submitted | active | rejected).
+  // Couleurs en hex 6 chiffres pour que l'ajout d'alpha (`40`/`10`) reste valide.
+  const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+    pending: { label: "En cours", color: "#888888" },
+    submitted: { label: "Dossier soumis", color: "#E8A030" },
+    active: { label: "Compte actif", color: "#22A06B" },
+    rejected: { label: "Refusé", color: "#E5484D" },
+  };
+  const statusInfo = STATUS_CONFIG[vendor?.status ?? "pending"] ?? STATUS_CONFIG.pending;
 
   const filteredOrders =
     orderFilter === "all"
@@ -209,20 +207,18 @@ export default function DashboardPage() {
         title={vendor ? `Bonjour, ${vendor.name} !` : "Bonjour"}
         subtitle="Voici l'état de votre activité vendeur Carlow."
         action={
-          // On masque le badge "Compte actif" quand le compte est actif ;
-          // on garde l'indicateur pour les statuts en attente (informe le vendeur).
-          vendor?.status === "active" ? undefined : (
-            <div
-              className="rounded-full border px-3 py-1 text-xs font-semibold"
-              style={{
-                borderColor: `${statusColor}40`,
-                backgroundColor: `${statusColor}10`,
-                color: statusColor,
-              }}
-            >
-              ● {statusLabel}
-            </div>
-          )
+          // Indicateur de statut affiché pour TOUS les états (cas d'usage
+          // « Suivre le statut du dossier » — cf. diagramme du rapport).
+          <div
+            className="rounded-full border px-3 py-1 text-xs font-semibold"
+            style={{
+              borderColor: `${statusInfo.color}40`,
+              backgroundColor: `${statusInfo.color}10`,
+              color: statusInfo.color,
+            }}
+          >
+            ● {statusInfo.label}
+          </div>
         }
       />
 
