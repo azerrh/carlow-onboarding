@@ -529,6 +529,11 @@ function ProductModal({
   const [photoLoading, setPhotoLoading] = useState(false);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [photoError, setPhotoError] = useState("");
+  // Mode création : la photo est choisie AVANT que le produit existe.
+  // On la garde en mémoire et on l'uploade juste après la création
+  // (l'upload exige l'id du produit, renvoyé par l'API POST).
+  const [pendingPhoto, setPendingPhoto] = useState<File | null>(null);
+  const [pendingPreview, setPendingPreview] = useState("");
 
   /** Recharge la liste depuis l'API — utilisé après upload/delete/setPrimary. */
   const refreshPhotos = useCallback(async () => {
@@ -575,6 +580,24 @@ function ProductModal({
     } finally {
       setPhotoUploading(false);
     }
+  }
+
+  /** Création : mémorise la photo choisie + aperçu (uploadée à la création). */
+  function selectPendingPhoto(file: File) {
+    const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowed.includes(file.type)) {
+      setPhotoError("Format non supporté. Utilisez JPG, PNG, WEBP ou GIF.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setPhotoError("Image trop volumineuse (max 5 MB).");
+      return;
+    }
+    setPhotoError("");
+    setPendingPhoto(file);
+    const r = new FileReader();
+    r.onload = () => setPendingPreview(String(r.result));
+    r.readAsDataURL(file);
   }
 
   async function handleDeletePhoto(photoId: string) {
@@ -716,6 +739,12 @@ function ProductModal({
         r.onerror = () => reject(new Error("read fail"));
         r.readAsDataURL(file);
       });
+      // En création : la photo analysée devient la photo du produit
+      // (uploadée automatiquement à la création). Plus besoin de rouvrir.
+      if (!isEdit) {
+        setPendingPhoto(file);
+        setPendingPreview(dataUrl);
+      }
       const res = await fetch("/api/ai/analyze-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -778,6 +807,20 @@ function ProductModal({
         setErr(data?.error || (isEdit ? "Modification impossible." : "Creation impossible."));
         setSubmitting(false);
         return;
+      }
+      // Création avec photo : on rattache la photo choisie/analysée au
+      // produit tout juste créé (l'upload exige l'id, renvoyé ici).
+      if (!isEdit && pendingPhoto && data.product?.id && vendorId) {
+        try {
+          const fd = new FormData();
+          fd.append("file", pendingPhoto);
+          fd.append("productId", data.product.id);
+          fd.append("vendorId", vendorId);
+          await fetch("/api/vendor/products/photos", { method: "POST", body: fd });
+        } catch {
+          // Non-bloquant : le produit est créé ; la photo pourra être
+          // ajoutée en édition si l'upload a échoué.
+        }
       }
       onCreated();
     } catch {
@@ -1009,9 +1052,60 @@ function ProductModal({
             </div>
           )}
           {!isEdit && (
-            <div className="sm:col-span-2 rounded-xl border border-dashed border-[rgb(var(--muted))]/30 bg-black/[0.02] p-3 text-[11px] text-[rgb(var(--muted))]">
-              📷 <strong>Photos :</strong> enregistrez d&apos;abord le produit,
-              puis rouvrez-le pour ajouter des photos.
+            <div className="sm:col-span-2 rounded-xl border border-dashed border-[rgb(var(--primary))]/30 bg-[rgb(var(--primary))]/[0.03] p-3">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wider text-[rgb(var(--primary))]">
+                  📷 Photo du produit
+                </span>
+                <label className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-[rgb(var(--primary))]/30 bg-white px-3 text-xs font-semibold text-[rgb(var(--primary))] hover:bg-[rgb(var(--primary))]/[0.06]">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) selectPendingPhoto(f);
+                      e.target.value = "";
+                    }}
+                  />
+                  {pendingPhoto ? "🔄 Changer la photo" : "📤 Ajouter une photo"}
+                </label>
+              </div>
+              <p className="mt-1 text-[10px] text-[rgb(var(--muted))]">
+                JPG, PNG, WEBP ou GIF — max 5 MB. Elle est enregistrée
+                automatiquement avec le produit.
+              </p>
+
+              {photoError && (
+                <p className="mt-2 text-[11px] text-red-600">{photoError}</p>
+              )}
+
+              {pendingPreview ? (
+                <div className="mt-3 flex items-center gap-3">
+                  <div className="relative h-20 w-20 overflow-hidden rounded-lg border border-[rgb(var(--border))] bg-black/[0.04]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={pendingPreview} alt="" className="h-full w-full object-cover" />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPendingPhoto(null);
+                      setPendingPreview("");
+                    }}
+                    className="text-[11px] font-semibold text-red-600 hover:underline"
+                  >
+                    Retirer
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-3 grid place-items-center rounded-lg border border-dashed border-[rgb(var(--border))] bg-white/50 px-4 py-5 text-center">
+                  <div className="text-2xl">🖼️</div>
+                  <p className="mt-1 text-[11px] text-[rgb(var(--muted))]">
+                    Ajoutez une photo — ou utilisez « Analyser une photo »
+                    ci-dessous, elle sera reprise automatiquement.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
