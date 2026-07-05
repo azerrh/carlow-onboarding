@@ -4,6 +4,28 @@ import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
+/**
+ * Nettoie un nom de fichier pour l'utiliser comme clé Supabase Storage.
+ * Supabase refuse les clés contenant des accents, espaces ou caractères
+ * spéciaux ("Invalid key"). On retire les accents et on ne garde que
+ * [A-Za-z0-9._-]. Le nom d'affichage original reste stocké en DB.
+ */
+function sanitizeStorageName(name: string): string {
+  const dot = name.lastIndexOf(".");
+  const base = dot > 0 ? name.slice(0, dot) : name;
+  const ext = dot > 0 ? name.slice(dot + 1) : "";
+  const strip = (s: string) =>
+    s
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "") // enlève les accents
+      .replace(/[^a-zA-Z0-9._-]+/g, "_")
+      .replace(/_+/g, "_")
+      .replace(/^[_.]+|[_.]+$/g, "");
+  const safeBase = strip(base) || "fichier";
+  const safeExt = ext.replace(/[^a-zA-Z0-9]+/g, "").toLowerCase();
+  return safeExt ? `${safeBase}.${safeExt}` : safeBase;
+}
+
 export async function POST(req: NextRequest) {
   try {
     // Vérification des variables d'environnement
@@ -33,7 +55,8 @@ export async function POST(req: NextRequest) {
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const filename = `${vendorId}/${type}/${Date.now()}_${file.name}`;
+    // Clé Supabase : nom de fichier nettoyé (accents/espaces → "Invalid key").
+    const filename = `${vendorId}/${type}/${Date.now()}_${sanitizeStorageName(file.name)}`;
 
     const { error: uploadError } = await supabaseAdmin.storage
       .from("documents")
