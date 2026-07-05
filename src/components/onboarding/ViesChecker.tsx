@@ -8,7 +8,7 @@ interface Props {
 }
 
 export function ViesChecker({ value, onChange, onValidated }: Props) {
-  const [status, setStatus] = useState<"idle"|"checking"|"valid"|"invalid">("idle");
+  const [status, setStatus] = useState<"idle"|"checking"|"valid"|"invalid"|"unavailable">("idle");
   const [companyName, setCompanyName] = useState("");
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -21,13 +21,21 @@ export function ViesChecker({ value, onChange, onValidated }: Props) {
         setStatus("valid");
         setCompanyName(data.name || "");
         onValidated(true, data.name);
+      } else if (data.error) {
+        // VIES injoignable / indisponible : impossible de conclure.
+        // On NE dit PAS "invalide" — le numéro sera vérifié plus tard.
+        setStatus("unavailable");
+        setCompanyName("");
+        onValidated(false);
       } else {
+        // VIES a répondu : le numéro n'est pas valide.
         setStatus("invalid");
         setCompanyName("");
         onValidated(false);
       }
     } catch {
-      setStatus("invalid");
+      // Échec réseau : on n'a pas pu vérifier.
+      setStatus("unavailable");
       onValidated(false);
     }
   }
@@ -52,10 +60,11 @@ export function ViesChecker({ value, onChange, onValidated }: Props) {
   }
 
   const badge = {
-    idle:     { text: "VIES",            bg: "#f1efe8", color: "#888" },
-    checking: { text: "Verification...", bg: "#fff7f0", color: "#E87A30" },
-    valid:    { text: "TVA valide",      bg: "#f0faf5", color: "#22a06b" },
-    invalid:  { text: "TVA invalide",    bg: "#fff0f0", color: "#cc0000" },
+    idle:        { text: "VIES",            bg: "#f1efe8", color: "#888" },
+    checking:    { text: "Verification...", bg: "#fff7f0", color: "#E87A30" },
+    valid:       { text: "TVA valide",      bg: "#f0faf5", color: "#22a06b" },
+    invalid:     { text: "TVA invalide",    bg: "#fff0f0", color: "#cc0000" },
+    unavailable: { text: "Non vérifié",     bg: "#fff7f0", color: "#E87A30" },
   }[status];
 
   return (
@@ -69,7 +78,7 @@ export function ViesChecker({ value, onChange, onValidated }: Props) {
           onChange={(e) => handleChange(e.target.value)}
           placeholder="FR12345678901"
           style={{flex:1,padding:"8px 10px",borderRadius:8,
-            border:`1px solid ${status==="valid"?"#22a06b":status==="invalid"?"#cc0000":"#e5e3df"}`,
+            border:`1px solid ${status==="valid"?"#22a06b":status==="invalid"?"#cc0000":status==="unavailable"?"#E87A30":"#e5e3df"}`,
             fontSize:13,boxSizing:"border-box" as const}}
         />
         <span style={{background:badge.bg,color:badge.color,padding:"4px 10px",
@@ -83,8 +92,13 @@ export function ViesChecker({ value, onChange, onValidated }: Props) {
         </div>
       )}
       {status === "invalid" && (
+        <div style={{fontSize:11,color:"#cc0000",marginTop:4}}>
+          Numéro de TVA non reconnu par VIES — vérifiez la saisie.
+        </div>
+      )}
+      {status === "unavailable" && (
         <div style={{fontSize:11,color:"#E87A30",marginTop:4}}>
-          Service VIES indisponible — le numero sera verifie ulterieurement
+          Service VIES indisponible — le numéro sera vérifié ultérieurement.
         </div>
       )}
     </div>
